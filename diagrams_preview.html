@@ -49,81 +49,67 @@
     <h1>CAB SYSTEM - TỔNG HỢP SƠ ĐỒ THIẾT KẾ & KIẾN TRÚC</h1>
 
     <div class="card">
-        <h2>1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA)</h2>
-        <p><i>Mô hình xương sống truyền tin phi đồng bộ giữa các Microservices bằng Event Bus</i></p>
+        <h2>1. Sơ đồ Phân rã Nghiệp vụ con (Domain Decomposition)</h2>
+        <p><i>Phân chia theo Domain-Driven Design: Core, Supporting và Generic Sub-domains</i></p>
         <div class="mermaid">
-graph TB
-    subgraph Producers [Event Producers]
-        P_Trip[Trip Service]
-        P_Match[Matching Service]
-        P_Pay[Payment Service]
-        P_Loc[Location Service]
+graph TD
+    subgraph CoreDomain [Nghiệp vụ Cốt lõi - Core Domains]
+        B_Match[3. Điều phối & Ghép chuyến]
+        B_Trip[4. Quản lý Chuyến đi]
+        B_Pricing[5. Định giá & Tính cước]
     end
 
-    subgraph HermesBus [Hermes Event-Driven Message Bus / Middleware]
-        E_TripCreated["Topic: trip.created"]
-        E_DriverFound["Topic: driver.matched"]
-        E_TripStatus["Topic: trip.status.updated"]
-        E_Payment["Topic: payment.completed"]
-        E_NotiQueue["Topic: notification.dispatch"]
+    subgraph SupportingDomain [Nghiệp vụ Hỗ trợ - Supporting Domains]
+        B_Loc[2. Định vị & Quản lý Tài xế]
+        B_Rating[8. Đánh giá & Phản hồi]
+        B_Admin[9. Giám sát & Vận hành]
     end
 
-    subgraph Consumers [Event Consumers / Handlers]
-        C_Match[Matching Service Handler]
-        C_Trip[Trip Service Handler]
-        C_Billing[Billing & Pricing Handler]
-        C_Noti[Notification Push Worker]
-        C_Audit[Audit & Analytics Worker]
-        C_Admin[Realtime Dashboard Stream]
+    subgraph GenericDomain [Nghiệp vụ Hạ tầng/Chung - Generic Domains]
+        B_Auth[1. Định danh & Xác thực]
+        B_Pay[6. Thanh toán & Đối soát]
+        B_Noti[7. Thông báo Đa kênh]
     end
 
-    P_Trip -->|Publish TripCreated| E_TripCreated
-    P_Match -->|Publish DriverMatched| E_DriverFound
-    P_Trip -->|Publish StatusUpdate| E_TripStatus
-    P_Pay -->|Publish PaymentSuccess| E_Payment
-    P_Loc -->|Publish DriverMoved| E_TripStatus
-
-    E_TripCreated -->|Subscribe| C_Match
-    E_DriverFound -->|Subscribe| C_Trip
-    E_DriverFound -->|Subscribe| C_NotiQueue
-    E_TripStatus -->|Subscribe| C_NotiQueue
-    E_TripStatus -->|Subscribe| C_Admin
-    E_Payment -->|Subscribe| C_Trip
-    E_Payment -->|Subscribe| C_Audit
-    E_Payment -->|Subscribe| C_NotiQueue
-    E_NotiQueue -->|Process & Send| C_Noti
+    B_Auth --> B_Trip
+    B_Loc --> B_Match
+    B_Match --> B_Trip
+    B_Trip --> B_Pricing
+    B_Pricing --> B_Pay
+    B_Pay --> B_Rating
+    B_Trip -.-> B_Noti
+    B_Match -.-> B_Noti
+    B_Pay -.-> B_Noti
+    B_Trip --> B_Admin
         </div>
     </div>
 
     <div class="card">
-        <h2>2. Sơ đồ Điều phối Giao dịch Phân tán (Hermes Saga Orchestration)</h2>
-        <p><i>Cơ chế giải quyết xung đột và bù trừ giao dịch thanh toán khi gặp lỗi</i></p>
+        <h2>2. Ma trận Ưu tiên & Giới hạn Phát triển Module (7 Tuần)</h2>
+        <p><i>Khoanh vùng phạm vi phát triển theo ma trận MoSCoW</i></p>
         <div class="mermaid">
-sequenceDiagram
-    autonumber
-    actor Customer as Khách hàng
-    participant HermesSaga as Hermes Saga Orchestrator
-    participant TripSvc as Trip Service
-    participant MatchSvc as Matching Service
-    participant PaySvc as Payment Service
-    participant NotiSvc as Notification Service
-
-    Customer->>HermesSaga: Yêu cầu hoàn thành chuyến & thanh toán
-    HermesSaga->>TripSvc: Chuyển trạng thái TRIP_COMPLETED
-    TripSvc-->>HermesSaga: Xác nhận thành công
-
-    HermesSaga->>PaySvc: Gửi lệnh trừ tiền / thu tiền
-    alt Thanh toán thành công
-        PaySvc-->>HermesSaga: Payment Succeeded
-        HermesSaga->>TripSvc: Cập nhật trạng thái PAID
-        HermesSaga->>NotiSvc: Gửi hóa đơn điện tử cho khách hàng
-        NotiSvc-->>Customer: Thông báo thanh toán thành công
-    else Thanh toán thất bại
-        PaySvc-->>HermesSaga: Payment Failed
-        HermesSaga->>TripSvc: Chuyển sang PAYMENT_PENDING_CASH (Trả tiền mặt)
-        HermesSaga->>NotiSvc: Báo khách & tài xế thanh toán lỗi, chuyển thu tiền mặt
-        NotiSvc-->>Customer: Báo lỗi thanh toán, vui lòng trả tiền mặt cho tài xế
-    end
+quadrantChart
+    title Ma trận Ưu tiên Phát triển Module (Khung 7 Tuần)
+    x-axis Độ phức tạp Thấp --> Độ phức tạp Cao
+    y-axis Giá trị Cốt lõi Thấp --> Giá trị Cốt lõi Cao
+    quadrant-1 Bắt buộc làm & Tập trung kiến trúc (Must-Have Core)
+    quadrant-2 Làm nhanh & Đơn giản hóa (Quick Wins)
+    quadrant-3 Cắt giảm / Bỏ qua (Out of Scope)
+    quadrant-4 Giả lập / Mocking (Simulated)
+    
+    "Trip Management Service": [0.65, 0.95]
+    "Matching & Dispatching": [0.75, 0.90]
+    "API Gateway & Event Bus": [0.70, 0.85]
+    "User & Auth Service": [0.35, 0.80]
+    "Pricing & Billing": [0.40, 0.75]
+    "Location Tracking": [0.55, 0.70]
+    "Payment Service (Sandbox)": [0.70, 0.40]
+    "Notification (WebSocket/FCM)": [0.45, 0.50]
+    "Rating Service": [0.20, 0.35]
+    "Admin Dashboard": [0.40, 0.30]
+    "Hệ thống Bản đồ riêng": [0.95, 0.15]
+    "AI Định giá thời tiết": [0.90, 0.20]
+    "Tổng đài gọi điện VoIP": [0.85, 0.10]
         </div>
     </div>
 
@@ -221,7 +207,86 @@ stateDiagram-v2
     </div>
 
     <div class="card">
-        <h2>5. Kế hoạch Quản lý Dự án theo Phương pháp HERMES (7 Tuần)</h2>
+        <h2>5. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA)</h2>
+        <p><i>Mô hình xương sống truyền tin phi đồng bộ giữa các Microservices bằng Event Bus</i></p>
+        <div class="mermaid">
+graph TB
+    subgraph Producers [Event Producers]
+        P_Trip[Trip Service]
+        P_Match[Matching Service]
+        P_Pay[Payment Service]
+        P_Loc[Location Service]
+    end
+
+    subgraph HermesBus [Hermes Event-Driven Message Bus / Middleware]
+        E_TripCreated["Topic: trip.created"]
+        E_DriverFound["Topic: driver.matched"]
+        E_TripStatus["Topic: trip.status.updated"]
+        E_Payment["Topic: payment.completed"]
+        E_NotiQueue["Topic: notification.dispatch"]
+    end
+
+    subgraph Consumers [Event Consumers / Handlers]
+        C_Match[Matching Service Handler]
+        C_Trip[Trip Service Handler]
+        C_Billing[Billing & Pricing Handler]
+        C_Noti[Notification Push Worker]
+        C_Audit[Audit & Analytics Worker]
+        C_Admin[Realtime Dashboard Stream]
+    end
+
+    P_Trip -->|Publish TripCreated| E_TripCreated
+    P_Match -->|Publish DriverMatched| E_DriverFound
+    P_Trip -->|Publish StatusUpdate| E_TripStatus
+    P_Pay -->|Publish PaymentSuccess| E_Payment
+    P_Loc -->|Publish DriverMoved| E_TripStatus
+
+    E_TripCreated -->|Subscribe| C_Match
+    E_DriverFound -->|Subscribe| C_Trip
+    E_DriverFound -->|Subscribe| C_NotiQueue
+    E_TripStatus -->|Subscribe| C_NotiQueue
+    E_TripStatus -->|Subscribe| C_Admin
+    E_Payment -->|Subscribe| C_Trip
+    E_Payment -->|Subscribe| C_Audit
+    E_Payment -->|Subscribe| C_NotiQueue
+    E_NotiQueue -->|Process & Send| C_Noti
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>6. Sơ đồ Điều phối Giao dịch Phân tán (Hermes Saga Orchestration)</h2>
+        <p><i>Cơ chế giải quyết xung đột và bù trừ giao dịch thanh toán khi gặp lỗi</i></p>
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    participant HermesSaga as Hermes Saga Orchestrator
+    participant TripSvc as Trip Service
+    participant MatchSvc as Matching Service
+    participant PaySvc as Payment Service
+    participant NotiSvc as Notification Service
+
+    Customer->>HermesSaga: Yêu cầu hoàn thành chuyến & thanh toán
+    HermesSaga->>TripSvc: Chuyển trạng thái TRIP_COMPLETED
+    TripSvc-->>HermesSaga: Xác nhận thành công
+
+    HermesSaga->>PaySvc: Gửi lệnh trừ tiền / thu tiền
+    alt Thanh toán thành công
+        PaySvc-->>HermesSaga: Payment Succeeded
+        HermesSaga->>TripSvc: Cập nhật trạng thái PAID
+        HermesSaga->>NotiSvc: Gửi hóa đơn điện tử cho khách hàng
+        NotiSvc-->>Customer: Thông báo thanh toán thành công
+    else Thanh toán thất bại
+        PaySvc-->>HermesSaga: Payment Failed
+        HermesSaga->>TripSvc: Chuyển sang PAYMENT_PENDING_CASH (Trả tiền mặt)
+        HermesSaga->>NotiSvc: Báo khách & tài xế thanh toán lỗi, chuyển thu tiền mặt
+        NotiSvc-->>Customer: Báo lỗi thanh toán, vui lòng trả tiền mặt cho tài xế
+    end
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>7. Kế hoạch Quản lý Dự án theo Phương pháp HERMES (7 Tuần)</h2>
         <div class="mermaid">
 gantt
     title KẾ HOẠCH TRIỂN KHAI ĐỒ ÁN CAB SYSTEM THEO PHƯƠNG PHÁP HERMES (7 TUẦN)
@@ -256,4 +321,3 @@ gantt
 
 </body>
 </html>
-

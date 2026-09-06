@@ -150,9 +150,80 @@ graph TD
 
 ---
 
-## 5. SƠ ĐỒ THIẾT KẾ MERMAID (MERMAID DIAGRAMS)
+## 5. KHOANH VÙNG PHẠM VI DỰ ÁN & GIỚI HẠN MODULE PHÁT TRIỂN (PROJECT SCOPE & BOUNDARIES)
 
-### 5.1. Sơ đồ Use Case Tổng thể (Use Case Diagram)
+Do thời gian thực hiện đồ án giới hạn trong **7 tuần** theo chuẩn môn học Kiến trúc Hướng Dịch Vụ (SOA), hệ thống được phân định rõ ràng các giới hạn phát triển theo mô hình **MoSCoW**:
+
+```mermaid
+quadrantChart
+    title Ma trận Ưu tiên Phát triển Module (Khung 7 Tuần)
+    x-axis Độ phức tạp Thấp --> Độ phức tạp Cao
+    y-axis Giá trị Cốt lõi Thấp --> Giá trị Cốt lõi Cao
+    quadrant-1 Bắt buộc làm & Tập trung kiến trúc (Must-Have Core)
+    quadrant-2 Làm nhanh & Đơn giản hóa (Quick Wins)
+    quadrant-3 Cắt giảm / Bỏ qua (Out of Scope)
+    quadrant-4 Giả lập / Mocking (Simulated)
+    
+    "Trip Management Service": [0.65, 0.95]
+    "Matching & Dispatching": [0.75, 0.90]
+    "API Gateway & Event Bus": [0.70, 0.85]
+    "User & Auth Service": [0.35, 0.80]
+    "Pricing & Billing": [0.40, 0.75]
+    "Location Tracking": [0.55, 0.70]
+    "Payment Service (Sandbox)": [0.70, 0.40]
+    "Notification (WebSocket/FCM)": [0.45, 0.50]
+    "Rating Service": [0.20, 0.35]
+    "Admin Dashboard": [0.40, 0.30]
+    "Hệ thống Bản đồ riêng": [0.95, 0.15]
+    "AI Định giá thời tiết": [0.90, 0.20]
+    "Tổng đài gọi điện VoIP": [0.85, 0.10]
+```
+
+### 5.1. Các Module BẮT BUỘC Phát triển (In-Scope: Must-Have)
+*Đây là các module tạo nên "xương sống" và quy trình cốt lõi mà đề bài yêu cầu:*
+1. **API Gateway & Event Bus (Hermes Message Bus - Hạ tầng SOA):**
+   - Routing API tập trung, kiểm tra JWT Token.
+   - Cấu hình Message Broker (Kafka/RabbitMQ) để các microservice giao tiếp phi đồng bộ và tách rời phụ thuộc.
+2. **Module Quản lý Định danh & Xác thực (User & Auth Service):**
+   - Đăng ký, đăng nhập JWT cho 3 roles: Khách hàng, Tài xế, Quản trị viên (RBAC).
+3. **Module Quản lý Vị trí & Trạng thái Tài xế (Location & Driver Service):**
+   - Bật/tắt trạng thái Online/Offline, lưu tọa độ GPS của tài xế vào Redis Cache, API tìm tài xế gần điểm đón.
+   - *Hỗ trợ demo:* Có công cụ/script **giả lập di chuyển GPS** của tài xế trên bản đồ.
+4. **Module Điều phối & Ghép xe (Matching & Dispatching Service):**
+   - Thuật toán tìm tài xế gần nhất, gửi lời mời nhận chuyến, quản lý đếm ngược (15s Timeout) và **tự động chuyển tiếp sang tài xế tiếp theo** khi bị từ chối.
+5. **Module Quản lý Vòng đời Chuyến đi (Trip Management Service):**
+   - Quản lý máy trạng thái chuyến (`CREATED` ➔ `ACCEPTED` ➔ `ARRIVED` ➔ `IN_TRIP` ➔ `COMPLETED` ➔ `PAID`), đồng bộ hành trình Khách - Tài xế.
+6. **Module Định giá & Tính cước (Pricing & Billing Service):**
+   - Ước tính cước ban đầu và tính cước chính thức sau chuyến đi theo công thức cố định: `Giá mở cửa + (Số km × Đơn giá) + Phụ phí giờ cao điểm`.
+
+### 5.2. Các Module Đơn giản hóa (In-Scope: Should-Have / Simplified)
+*Tối ưu hóa thời gian thực hiện nhưng vẫn đáp ứng đầy đủ kịch bản demo kiến trúc:*
+1. **Module Thanh toán (Payment Integration Service):**
+   - Hỗ trợ thanh toán **Tiền mặt (Cash)** có xác nhận của tài xế.
+   - Hỗ trợ thanh toán **Điện tử**: Tích hợp Cổng **Sandbox / Mock Payment Gateway** (VNPay Sandbox hoặc Mock Service giả lập thành công/thất bại) để demo kịch bản **Saga bù trừ giao dịch** khi cổng thanh toán lỗi.
+2. **Module Thông báo (Notification Service):**
+   - Đẩy thông báo thời gian thực qua **WebSocket (In-app)** hoặc **Firebase Cloud Messaging (FCM)**.
+3. **Module Đánh giá & Phản hồi (Rating Service):**
+   - Form chấm 1–5 sao và nhận xét cơ bản sau chuyến đi, tính điểm trung bình cho tài xế.
+4. **Module Quản trị Vận hành (Admin & Ops Portal):**
+   - Giao diện Web đơn giản để xem danh sách chuyến đang hoạt động, tài xế online và doanh thu cơ bản.
+
+### 5.3. Các Tính năng LOẠI BỎ khỏi phạm vi (Out-of-Scope: Won't-Have)
+*Không triển khai trong khung 7 tuần để tránh quá tải và không đúng trọng tâm kiến trúc dịch vụ:*
+
+| Tính năng ngoài phạm vi | Lý do loại bỏ / Giải pháp thay thế cho đồ án |
+| :--- | :--- |
+| ❌ **Tự xây dựng bản đồ số riêng (Map Engine)** | Tốn kém tài nguyên. **Giải pháp:** Sử dụng API có sẵn (Google Maps, OpenStreetMap/Leaflet, Mapbox). |
+| ❌ **Thuật toán AI dự đoán giá động thời tiết phức tạp** | Không thuộc trọng tâm môn học. **Giải pháp:** Áp dụng bảng phụ phí Surge Pricing cố định theo khung giờ. |
+| ❌ **Tổng đài thoại VoIP / Gọi trực tiếp qua SIM** | Khó khăn hạ tầng viễn thông. **Giải pháp:** Sử dụng Chat trong ứng dụng hoặc hiển thị SĐT. |
+| ❌ **Xử lý mất kết nối mạng kéo dài nhiều ngày (Offline Mesh)** | Đặt xe cần xử lý thời gian thực. **Giải pháp:** Timeout 30s tự hủy tìm kiếm hoặc hỗ trợ gửi lại lệnh (Retry). |
+| ❌ **Hệ thống Ví điện tử / Nạp - Rút ngân hàng đa tầng** | Rủi ro bảo mật tài chính. **Giải pháp:** Thanh toán chuyến nào quyết toán chuyến đó qua Cổng trung gian. |
+
+---
+
+## 6. SƠ ĐỒ THIẾT KẾ MERMAID (MERMAID DIAGRAMS)
+
+### 6.1. Sơ đồ Use Case Tổng thể (Use Case Diagram)
 
 ```mermaid
 graph TD
@@ -374,9 +445,9 @@ graph TB
     NotiSvc --> PushSMS
 ```
 
-## 5. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
+## 7. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
 
-### 5.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
+### 7.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
 Trong kiến trúc hướng dịch vụ hiện đại của CAB System, **Hermes Event-Driven Architecture** đóng vai trò là xương sống trung gian (Event Middleware / Service Bus) đảm bảo các dịch vụ hoạt động phi đồng bộ (asynchronous), chịu tải cao và tách biệt phụ thuộc (loose coupling):
 
 ```mermaid
@@ -426,7 +497,7 @@ graph TB
 
 ---
 
-### 5.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
+### 7.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
 Xử lý giao dịch phân tán giữa Trip Service, Matching Service, Payment Service và Notification Service để tránh lỗi dữ liệu khi có dịch vụ bên thứ ba bị gián đoạn:
 
 ```mermaid
@@ -462,7 +533,7 @@ sequenceDiagram
 
 ---
 
-### 5.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
+### 7.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
 Áp dụng tiêu chuẩn quản lý dự án **HERMES Project Lifecycle** (4 giai đoạn - Milestones) để phát triển và triển khai hệ thống trong khung thời gian 7 tuần:
 
 ```mermaid
@@ -498,7 +569,7 @@ gantt
 
 ---
 
-## 6. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
+## 8. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
 
 1. **Khả năng mở rộng & Tính sẵn sàng (Scalability & Availability):**
    - Kiến trúc hướng dịch vụ (SOA/Microservices) cho phép các dịch vụ (Payment, Notification, Matching) mở rộng độc lập khi lưu lượng tăng đột biến vào giờ cao điểm.
@@ -514,7 +585,7 @@ gantt
 
 ---
 
-## 7. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
+## 9. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
 
 1. **Công thức tính cước chi tiết:** Giá mở cửa, cước phí mỗi km tiếp theo, phụ phí thời gian chờ, hệ số nhân theo thời tiết và giờ cao điểm.
 2. **Thuật toán điều phối:** Tiêu chí ưu tiên tài xế ngoài khoảng cách (Điểm đánh giá sao, tỷ lệ nhận chuyến, thời gian tài xế chờ cuốc).
@@ -522,5 +593,6 @@ gantt
 4. **Chính sách hủy chuyến & Phí phạt:** Điều kiện hủy miễn phí và mức phí phạt nếu hủy sau khi tài xế đã di chuyển tới điểm đón.
 5. **Cơ chế xử lý mất kết nối (Offline Handling):** Phương án xử lý lưu tạm và đồng bộ lại tọa độ khi tài xế/khách hàng bị rớt mạng giữa đường.
 6. **Thời gian lưu trữ dữ liệu (Data Retention):** Quy định thời gian lưu trữ lịch sử GPS và nhật ký kiểm toán trước khi lưu trữ định kỳ (Archiving).
+
 
 
