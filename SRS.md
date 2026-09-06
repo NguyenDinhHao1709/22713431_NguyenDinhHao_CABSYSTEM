@@ -211,75 +211,144 @@ flowchart TD
 
 ---
 
-### 5. YÊU CẦU CHỨC NĂNG CHI TIẾT (FUNCTIONAL REQUIREMENTS)
+---
 
-### 5.1. Phân hệ Quản lý Tài khoản & Xác thực (Identity & User Management)
-* **FR-AUTH-01 (Đăng ký tài khoản):** 
-  * Khách hàng tự đăng ký tài khoản qua ứng dụng (Số điện thoại / Email / Mật khẩu).
-  * Tài xế đăng ký hồ sơ hoặc được nhân viên vận hành tạo tài khoản trên hệ thống.
-* **FR-AUTH-02 (Đăng nhập & Xác thực):** Xác thực an toàn đa vai trò (Customer, Driver, Operator, Admin) sử dụng cơ chế Token-based Authentication (JWT).
-* **FR-AUTH-03 (Quản lý hồ sơ cá nhân):** Cho phép người dùng xem và cập nhật thông tin cá nhân (Họ tên, ảnh đại diện, số liên lạc).
-* **FR-AUTH-04 (Quản lý hồ sơ tài xế & phương tiện):** Cho phép cập nhật và lưu trữ bằng lái xe, thông tin xe (biển số, hãng xe, màu xe) và phân loại xe (4 chỗ, 7 chỗ, xe máy,...).
+## 5. DANH MỤC CHỨC NĂNG DỊCH VỤ NGHIỆP VỤ (SERVICE REQUIREMENTS - SR)
+
+Dựa trên Quy trình Nghiệp vụ (BPM) và Yêu cầu Doanh nghiệp (`BR_01` - `BR_10`), toàn bộ hệ thống được phân rã thành **25 Chức năng Dịch vụ Nghiệp vụ (Service Requirements - SR)** chuẩn hóa:
+
+### 5.1. Nhóm Dịch vụ Định danh & Quản lý Người dùng (Identity & Access Services)
+* **`SR_01` (Đăng ký tài khoản & Nộp hồ sơ):**
+  * *Tác nhân:* Khách hàng, Tài xế.
+  * *Mô tả:* Khách hàng tự đăng ký qua số điện thoại/email/OTP. Tài xế nộp hồ sơ lý lịch, ảnh CCCD, bằng lái xe để chờ xét duyệt.
+  * *Ánh xạ:* `BR_05` | *Dịch vụ phụ trách:* `User & Auth Service`.
+* **`SR_02` (Xác thực tập trung & Cấp quyền JWT):**
+  * *Tác nhân:* Khách hàng, Tài xế, Quản trị viên (Admin), Nhân viên (Operator).
+  * *Mô tả:* Xác thực tài khoản, mã hóa mật khẩu (BCrypt), cấp cặp Token (Access Token JWT + Refresh Token) chứa vai trò (Role-Based Access Control) để truy cập API.
+  * *Ánh xạ:* `BR_05`, `BR_10` | *Dịch vụ phụ trách:* `User & Auth Service`, `API Gateway`.
+* **`SR_03` (Quản lý Hồ sơ & Thông tin Phương tiện):**
+  * *Tác nhân:* Tài xế, Quản trị viên.
+  * *Mô tả:* Lưu trữ và cập nhật thông tin cá nhân, bằng lái, biển số xe, dòng xe, màu sắc và phân loại dịch vụ (Xe máy, Xe 4 chỗ, Xe 7 chỗ).
+  * *Ánh xạ:* `BR_05` | *Dịch vụ phụ trách:* `User & Auth Service`.
 
 ---
 
-### 5.2. Phân hệ Quản lý Trạng thái & Vị trí Tài xế (Driver & Location Management)
-* **FR-DRV-01 (Cập nhật trạng thái làm việc):** Tài xế chuyển đổi trạng thái: *Sẵn sàng nhận chuyến (Online)*, *Đang bận (Busy)*, *Nghỉ làm (Offline)*.
-* **FR-DRV-02 (Cập nhật vị trí GPS thời gian thực):** Định kỳ gửi và lưu trữ tọa độ của tài xế khi ở trạng thái Online.
-* **FR-DRV-03 (Tìm kiếm tài xế lân cận):** Cung cấp khả năng tìm kiếm danh sách tài xế rảnh trong bán kính gần điểm đón của khách hàng.
+### 5.2. Nhóm Dịch vụ Vị trí & Giám sát Trạng thái Đội xe (Location & Telemetry Services)
+* **`SR_04` (Chuyển đổi Trạng thái Hoạt động Tài xế):**
+  * *Tác nhân:* Tài xế.
+  * *Mô tả:* Tài xế bật/tắt chuyển đổi giữa các trạng thái: *Sẵn sàng nhận chuyến (Online)*, *Đang bận chuyến (Busy)*, *Nghỉ ngơi (Offline)*.
+  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Driver State Service`.
+* **`SR_05` (Thu thập & Phát sóng Tọa độ GPS Thời gian thực):**
+  * *Tác nhân:* Thiết bị Tài xế (Driver App).
+  * *Mô tả:* Định kỳ mỗi 1–3 giây gửi tọa độ GPS lên hệ thống khi ở trạng thái Online; lưu vết vào Redis Geospatial Index để truy vấn với độ trễ cực thấp.
+  * *Ánh xạ:* `BR_01`, `BR_02` | *Dịch vụ phụ trách:* `Location & Telemetry Service`.
+* **`SR_06` (Tìm kiếm Tài xế Khả dụng theo Bán kính Điểm đón):**
+  * *Tác nhân:* Hệ thống Điều phối (Matching Service).
+  * *Mô tả:* Truy vấn danh sách tài xế đang Online, không bận, đúng loại xe yêu cầu trong bán kính `R` km quanh tọa độ điểm đón của khách hàng.
+  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Location & Telemetry Service`.
 
 ---
 
-### 5.3. Phân hệ Đặt xe & Điều phối Chuyến đi (Booking & Dispatching)
-* **FR-BOOK-01 (Tạo yêu cầu đặt xe):** Khách hàng nhập điểm đón, điểm đến, lựa chọn loại dịch vụ/xe và gửi yêu cầu.
-* **FR-BOOK-02 (Ước tính cước & thời gian di chuyển):** Tính toán và hiển thị giá cước dự kiến (Fare Estimate) và thời gian tài xế đến (ETA) trước khi xác nhận đặt xe.
-* **FR-BOOK-03 (Tự động tìm kiếm & Đề xuất tài xế):** Thuật toán tự động tìm tài xế tối ưu nhất dựa trên vị trí gần nhất, trạng thái sẵn sàng và tiêu chí vận hành.
-* **FR-BOOK-04 (Xử lý phản hồi từ tài xế):** Gửi thông báo cuốc xe tới tài xế; tài xế có thời gian quy định (Timeout) để *Chấp nhận (Accept)* hoặc *Từ chối (Reject)*.
-* **FR-BOOK-05 (Tự động chuyển tiếp tìm tài xế khác):** Nếu tài xế từ chối hoặc hết giờ phản hồi, hệ thống tự động tìm và chuyển chuyến sang tài xế tiếp theo mà khách hàng không cần tạo lại yêu cầu.
-* **FR-BOOK-06 (Xử lý không tìm thấy tài xế):** Thông báo rõ ràng cho khách hàng khi không có tài xế phù hợp sau thời gian tìm kiếm.
-* **FR-BOOK-07 (Hủy chuyến đi):** Cho phép khách hàng hoặc tài xế hủy chuyến theo quy định và lý do hủy chuyến.
+### 5.3. Nhóm Dịch vụ Đặt xe & Điều phối Ghép chuyến (Booking & Dispatching Services)
+* **`SR_07` (Ước tính Giá cước & Thời gian Đón xe ETA):**
+  * *Tác nhân:* Khách hàng.
+  * *Mô tả:* Tiếp nhận điểm đón và điểm đến; tính khoảng cách, thời gian dự kiến (thông qua Map API) và áp dụng công thức giá để hiển thị cước phí tạm tính cho khách xem trước.
+  * *Ánh xạ:* `BR_02`, `BR_03` | *Dịch vụ phụ trách:* `Pricing Service`, `Map Service`.
+* **`SR_08` (Khởi tạo Yêu cầu Đặt chuyến):**
+  * *Tác nhân:* Khách hàng.
+  * *Mô tả:* Khách hàng bấm xác nhận đặt xe; hệ thống tạo bản ghi chuyến đi với trạng thái `CREATED` và phát sự kiện `trip.created` lên Hermes Event Bus.
+  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Trip Management Service`.
+* **`SR_09` (Thuật toán Ghép xe Tối ưu & Gửi Lời mời Cuốc):**
+  * *Tác nhân:* Hệ thống (Matching Service).
+  * *Mô tả:* Sắp xếp danh sách tài xế tiềm năng theo thứ tự ưu tiên (khoảng cách gần nhất + điểm đánh giá cao); gửi thông báo mời nhận chuyến tới tài xế ưu tiên đầu tiên và kích hoạt bộ đếm ngược 15 giây.
+  * *Ánh xạ:* `BR_01`, `BR_06` | *Dịch vụ phụ trách:* `Matching & Dispatch Service`.
+* **`SR_10` (Xử lý Phản hồi Mời cuốc & Tự động Chuyển tiếp):**
+  * *Tác nhân:* Tài xế, Hệ thống Timer.
+  * *Mô tả:*
+    - Nếu tài xế bấm **Chấp nhận (Accept)**: Gán tài xế vào chuyến đi, chuyển trạng thái `ACCEPTED`.
+    - Nếu tài xế bấm **Từ chối (Reject)** hoặc **Hết 15 giây (Timeout)**: Hệ thống tự động chuyển tiếp lời mời sang tài xế tiếp theo trong danh sách mà không bắt khách tạo lại yêu cầu.
+    - Nếu hết danh sách tài xế: Thông báo "Không tìm thấy tài xế" cho khách hàng.
+  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Matching & Dispatch Service`, `Trip Management Service`.
+* **`SR_11` (Xử lý Hủy chuyến & Áp dụng Chính sách Hủy):**
+  * *Tác nhân:* Khách hàng, Tài xế.
+  * *Mô tả:* Cho phép hủy chuyến kèm lý do; hệ thống giải phóng trạng thái bận của tài xế và tính phí phạt (nếu hủy sau khi tài xế đã đến điểm đón).
+  * *Ánh xạ:* `BR_01`, `BR_04` | *Dịch vụ phụ trách:* `Trip Management Service`.
 
 ---
 
-### 5.4. Phân hệ Quản lý Tiến trình Chuyến đi (Trip Execution & Tracking)
-* **FR-TRIP-01 (Cập nhật trạng thái chuyến đi):** Tài xế cập nhật tuần tự các mốc trạng thái:
-  * `Đã nhận chuyến (Accepted)`
-  * `Đã đến điểm đón (Arrived at Pickup)`
-  * `Đã đón khách / Đang di chuyển (In Trip / Started)`
-  * `Hoàn thành chuyến (Completed)`
-* **FR-TRIP-02 (Theo dõi chuyến đi trực tuyến - Live Tracking):** Khách hàng theo dõi vị trí di chuyển của tài xế trên bản đồ và thời gian dự kiến đến điểm đón/điểm đến.
-* **FR-TRIP-03 (Lịch sử chuyến đi):** Cho phép khách hàng và tài xế tra cứu danh sách lịch sử các chuyến đã thực hiện (lộ trình, thời gian, chi phí, tài xế/khách hàng).
+### 5.4. Nhóm Dịch vụ Quản lý Hành trình & Theo dõi Trực tiếp (Trip Execution & Tracking Services)
+* **`SR_12` (Cập nhật Tiến trình Chuyến đi):**
+  * *Tác nhân:* Tài xế.
+  * *Mô tả:* Tài xế cập nhật tuần tự các mốc trạng thái: `ARRIVED_AT_PICKUP` (Đã đến điểm đón) ➔ `IN_TRIP` (Đã đón khách & Bắt đầu đi) ➔ `COMPLETED` (Đã đến nơi & Hoàn thành).
+  * *Ánh xạ:* `BR_02` | *Dịch vụ phụ trách:* `Trip Management Service`.
+* **`SR_13` (Truyền phát Lộ trình & Live Tracking Trực tuyến):**
+  * *Tác nhân:* Khách hàng.
+  * *Mô tả:* Đồng bộ liên tục tọa độ di chuyển của tài xế lên giao diện bản đồ của khách hàng thông qua WebSocket / Polling; cập nhật lại thời gian đến dự kiến (ETA) theo tình trạng giao thông.
+  * *Ánh xạ:* `BR_02` | *Dịch vụ phụ trách:* `Location Service`, `Trip Management Service`.
+* **`SR_14` (Tra cứu Lịch sử Chuyến đi):**
+  * *Tác nhân:* Khách hàng, Tài xế, Nhân viên vận hành.
+  * *Mô tả:* Cung cấp danh sách chi tiết các chuyến đi trong quá khứ: lộ trình, thời gian, cước phí, hình thức thanh toán, thông tin đối tác và hóa đơn điện tử.
+  * *Ánh xạ:* `BR_02`, `BR_04` | *Dịch vụ phụ trách:* `Trip Management Service`.
 
 ---
 
-### 5.5. Phân hệ Tính cước & Thanh toán (Pricing & Payment)
-* **FR-PAY-01 (Tính toán cước phí chính thức):** Tự động tính cước sau khi hoàn thành chuyến đi dựa trên loại dịch vụ, quãng đường thực tế, thời gian di chuyển và phụ phí phát sinh.
-* **FR-PAY-02 (Thanh toán tiền mặt - Cash):** Cho phép khách hàng trả tiền mặt trực tiếp cho tài xế; tài xế bấm xác nhận đã thu tiền.
-* **FR-PAY-03 (Thanh toán điện tử - Digital Payment):** Tích hợp cổng thanh toán bên thứ ba (Ví điện tử, Thẻ ngân hàng), tuân thủ nguyên tắc không lưu trữ thông tin nhạy cảm của thẻ trên CAB System.
-* **FR-PAY-04 (Xử lý lỗi thanh toán):** Thông báo ngay khi giao dịch điện tử thất bại và hỗ trợ thanh toán lại (Retry) hoặc chuyển sang trả tiền mặt.
+### 5.5. Nhóm Dịch vụ Định giá & Quyết toán Thanh toán (Pricing & Settlement Services)
+* **`SR_15` (Tính toán & Quyết toán Cước phí Thực tế):**
+  * *Tác nhân:* Hệ thống.
+  * *Mô tả:* Sau khi tài xế bấm Hoàn thành chuyến; tự động chốt cước dựa trên quãng đường GPS thực tế, thời gian di chuyển thực tế, loại phương tiện và phụ phí phát sinh.
+  * *Ánh xạ:* `BR_03` | *Dịch vụ phụ trách:* `Pricing & Billing Service`.
+* **`SR_16` (Xử lý Thanh toán Tiền mặt):**
+  * *Tác nhân:* Khách hàng, Tài xế.
+  * *Mô tả:* Hiển thị số tiền cần trả; khách đưa tiền mặt cho tài xế; tài xế bấm xác nhận "Đã thu đủ tiền" trên ứng dụng để chuyển trạng thái sang `PAID`.
+  * *Ánh xạ:* `BR_03` | *Dịch vụ phụ trách:* `Payment Service`.
+* **`SR_17` (Tích hợp Thanh toán Điện tử qua Cổng bên thứ ba):**
+  * *Tác nhân:* Khách hàng, Cổng thanh toán (VNPay / MoMo / Thẻ ngân hàng).
+  * *Mô tả:* Gửi lệnh trừ tiền qua Cổng thanh toán bên thứ ba; bảo đảm không lưu thông tin thẻ nhạy cảm trên máy chủ CAB; tiếp nhận Webhook kết quả giao dịch và xuất biên lai.
+  * *Ánh xạ:* `BR_03`, `BR_10` | *Dịch vụ phụ trách:* `Payment Integration Service`.
+* **`SR_18` (Điều phối Giao dịch Bù trừ khi Thanh toán Lỗi):**
+  * *Tác nhân:* Hệ thống (Hermes Saga Orchestrator).
+  * *Mô tả:* Khi cổng thanh toán điện tử bị lỗi/timeout; hệ thống kích hoạt giao dịch bù trừ (Compensating Transaction): tự động chuyển phương thức thanh toán sang Tiền mặt và gửi cảnh báo thu tiền cho tài xế.
+  * *Ánh xạ:* `BR_03`, `BR_08` | *Dịch vụ phụ trách:* `Hermes Saga Orchestrator`, `Payment Service`.
 
 ---
 
-### 5.6. Phân hệ Đánh giá & Phản hồi (Rating & Review)
-* **FR-REV-01 (Đánh giá sau chuyến đi):** Khách hàng đánh giá mức độ hài lòng (1 - 5 sao) và để lại phản hồi/nhận xét về tài xế sau khi hoàn thành chuyến.
-* **FR-REV-02 (Tổng hợp điểm chất lượng):** Hệ thống tính toán điểm trung bình sao của tài xế để đánh giá mức độ uy tín.
+### 5.6. Nhóm Dịch vụ Đánh giá & Quản lý Chất lượng (Rating & Quality Services)
+* **`SR_19` (Tiếp nhận Đánh giá & Phản hồi Khách hàng):**
+  * *Tác nhân:* Khách hàng.
+  * *Mô tả:* Cho phép khách hàng chấm từ 1 đến 5 sao và viết nhận xét về thái độ phục vụ/phương tiện của tài xế sau khi chuyến đi đã thanh toán thành công.
+  * *Ánh xạ:* `BR_06` | *Dịch vụ phụ trách:* `Rating & Feedback Service`.
+* **`SR_20` (Tổng hợp Điểm Uy tín & Hiệu suất Tài xế):**
+  * *Tác nhân:* Hệ thống.
+  * *Mô tả:* Tự động tính điểm trung bình sao và tỷ lệ nhận chuyến của từng tài xế; cung cấp dữ liệu đầu vào làm tiêu chí ưu tiên phân phối cuốc xe.
+  * *Ánh xạ:* `BR_01`, `BR_06` | *Dịch vụ phụ trách:* `Rating & Feedback Service`, `Matching Service`.
 
 ---
 
-### 5.7. Phân hệ Thông báo (Notification Service)
-* **FR-NOTI-01 (Thông báo cho Khách hàng):** Gửi thông báo đẩy (Push notification / SMS) khi: Yêu cầu được tiếp nhận, Có tài xế nhận, Tài xế đến điểm đón, Bắt đầu chuyến, Hoàn thành và Kết quả thanh toán.
-* **FR-NOTI-02 (Thông báo cho Tài xế):** Gửi thông báo khi: Có chuyến mới được phân phối, Khách hủy chuyến, Thay đổi lộ trình.
-* **FR-NOTI-03 (Mở rộng đa kênh thông báo):** Thiết kế độc lập cho phép cắm thêm các nhà cung cấp thông báo khác (FCM, Twilio SMS, Email) mà không ảnh hưởng luồng nghiệp vụ.
+### 5.7. Nhóm Dịch vụ Thông báo Sự kiện Đa kênh (Notification Services)
+* **`SR_21` (Phát Thông báo Đẩy Thời gian thực cho Khách hàng):**
+  * *Tác nhân:* Hệ thống.
+  * *Mô tả:* Tiêu thụ sự kiện từ Hermes Bus và gửi thông báo đẩy (Push Notification / SMS) tới khách hàng: Đã tìm thấy tài xế, Tài xế đã đến điểm đón, Bắt đầu di chuyển, Hóa đơn thanh toán.
+  * *Ánh xạ:* `BR_02`, `BR_07` | *Dịch vụ phụ trách:* `Notification Service`.
+* **`SR_22` (Phát Thông báo Điều phối & Cảnh báo cho Tài xế):**
+  * *Tác nhân:* Hệ thống.
+  * *Mô tả:* Gửi âm thanh/thông báo cuốc xe mới, thông báo khách hàng hủy chuyến, cảnh báo thay đổi lộ trình tới thiết bị tài xế.
+  * *Ánh xạ:* `BR_01`, `BR_07` | *Dịch vụ phụ trách:* `Notification Service`.
 
 ---
 
-### 5.8. Phân hệ Quản trị & Vận hành (Admin & Operations Portal)
-* **FR-ADM-01 (Quản lý người dùng & phương tiện):** Xem danh sách, kích hoạt/khóa tài khoản khách hàng, tài xế và phê duyệt phương tiện.
-* **FR-ADM-02 (Giám sát trực tiếp chuyến đi):** Theo dõi bản đồ trực quan các chuyến đi đang hoạt động và vị trí tài xế theo thời gian thực.
-* **FR-ADM-03 (Xử lý sự cố chuyến đi):** Can thiệp xử lý các chuyến bị lỗi, hủy chuyến khẩn cấp, gán lại tài xế thủ công.
-* **FR-ADM-04 (Đối soát giao dịch thanh toán):** Tra cứu, thống kê và đối soát lịch sử dòng tiền thanh toán.
-* **FR-ADM-05 (Báo cáo & Thống kê Dashboard):** Báo cáo số lượng chuyến, doanh thu, tỷ lệ hoàn thành/hủy chuyến, năng suất tài xế theo chu kỳ thời gian.
-* **FR-ADM-06 (Phân quyền & Nhật ký kiểm toán):** Phân quyền truy cập theo vai trò (RBAC) và ghi log kiểm toán (Audit Logs) cho các hành động nhạy cảm.
+### 5.8. Nhóm Dịch vụ Vận hành, Giám sát & Kiểm toán (Operations & Audit Services)
+* **`SR_23` (Giám sát Luồng Chuyến đi Trực tiếp trên Bản đồ):**
+  * *Tác nhân:* Nhân viên vận hành (Operator).
+  * *Mô tả:* Hiển thị toàn bộ các chuyến đi đang hoạt động, vị trí các xe Online trên giao diện bản đồ điều hành trực tiếp (Live Operations Map).
+  * *Ánh xạ:* `BR_04` | *Dịch vụ phụ trách:* `Admin & Operations Portal`.
+* **`SR_24` (Cảnh báo & Can thiệp Xử lý Sự cố Chuyến đi):**
+  * *Tác nhân:* Nhân viên vận hành.
+  * *Mô tả:* Tự động phát hiện và cảnh báo chuyến xe bị đứng yên bất thường / mất GPS; cho phép nhân viên vận hành can thiệp: Hủy chuyến cưỡng bức, điều phối thủ công xe cứu hộ hoặc gọi hỗ trợ.
+  * *Ánh xạ:* `BR_04`, `BR_08` | *Dịch vụ phụ trách:* `Incident & Operations Service`.
+* **`SR_25` (Ghi Nhật ký Kiểm toán & Báo cáo Thống kê Doanh thu):**
+  * *Tác nhân:* Quản trị viên (Admin), Hệ thống.
+  * *Mô tả:* Lưu vết toàn bộ các thao tác can thiệp quản trị (Audit Trail); tự động tổng hợp Dashboard báo cáo: Tổng số cuốc xe, doanh thu theo ngày/tháng, tỷ lệ hủy chuyến và hiệu suất tài xế.
+  * *Ánh xạ:* `BR_04`, `BR_10` | *Dịch vụ phụ trách:* `Audit & Analytics Service`.
 
 ---
 
