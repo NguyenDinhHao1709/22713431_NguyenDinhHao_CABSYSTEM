@@ -852,5 +852,87 @@ gantt
 5. **Cơ chế xử lý mất kết nối (Offline Handling):** Phương án xử lý lưu tạm và đồng bộ lại tọa độ khi tài xế/khách hàng bị rớt mạng giữa đường.
 6. **Thời gian lưu trữ dữ liệu (Data Retention):** Quy định thời gian lưu trữ lịch sử GPS và nhật ký kiểm toán trước khi lưu trữ định kỳ (Archiving).
 
+---
+
+## 12. BẢNG TỔNG HỢP CHI TIẾT CHỨC NĂNG DỊCH VỤ NGHIỆP VỤ (SERVICE REQUIREMENTS - SR)
+
+Dưới đây là bảng tổng hợp toàn bộ **25 Chức năng Dịch vụ Nghiệp vụ (Service Requirements - từ `SR_01` đến `SR_25`)** được phân rã từ Quy trình Nghiệp vụ (BPM) và đáp ứng 10 Yêu cầu Doanh nghiệp (`BR_01` - `BR_10`):
+
+### 12.1. Ma trận Tra cứu Nhanh Danh mục SR
+
+| Mã SR | Tên Chức năng Dịch vụ Nghiệp vụ | Tác nhân | Đầu vào (Input Data) | Đầu ra (Output / Event) | Ánh xạ BR | Microservice phụ trách |
+| :---: | :--- | :--- | :--- | :--- | :---: | :--- |
+| **`SR_01`** | **Đăng ký Tài khoản & Hồ sơ** | Khách hàng, Tài xế | SĐT, Email, Mật khẩu, Hồ sơ bằng lái, CCCD | Tài khoản kích hoạt, Hồ sơ chờ duyệt | `BR_05` | `User & Auth Service` |
+| **`SR_02`** | **Xác thực & Cấp quyền JWT** | Khách, Tài xế, Admin | Thông tin đăng nhập, Credentials | JWT Access Token, Refresh Token, Role RBAC | `BR_05`, `BR_10` | `User & Auth Service`, `API Gateway` |
+| **`SR_03`** | **Quản lý Hồ sơ & Phương tiện** | Tài xế, Admin | Biển số xe, Loại xe (4/7 chỗ, xe máy), Giấy tờ | Hồ sơ xe phê duyệt, Trạng thái phương tiện | `BR_05` | `User & Auth Service` |
+| **`SR_04`** | **Chuyển đổi Trạng thái Hoạt động** | Tài xế | Lệnh bật/tắt Online / Busy / Offline | Cập nhật trạng thái Driver State trên Redis | `BR_01` | `Driver State Service` |
+| **`SR_05`** | **Thu thập & Phát sóng GPS** | Driver App | Tọa độ (Lat, Long, Speed, Bearing) mỗi 1–3s | Cập nhật vị trí trên Redis Geospatial Index | `BR_01`, `BR_02` | `Location & Telemetry Service` |
+| **`SR_06`** | **Tìm Tài xế theo Bán kính** | Matching Service | Tọa độ điểm đón, Bán kính R, Loại xe | Danh sách [DriverID_1, DriverID_2, ...] | `BR_01` | `Location & Telemetry Service` |
+| **`SR_07`** | **Ước tính Giá cước & ETA** | Khách hàng | Điểm đón, Điểm đến, Loại xe | Cước phí tạm tính, Thời gian đón xe dự kiến | `BR_02`, `BR_03` | `Pricing Service`, `Map API` |
+| **`SR_08`** | **Khởi tạo Yêu cầu Đặt chuyến** | Khách hàng | Điểm đón/đến, Loại xe, Mã khách hàng | Bản ghi Trip (`CREATED`), Event `trip.created` | `BR_01` | `Trip Management Service` |
+| **`SR_09`** | **Ghép xe Tối ưu & Mời cuốc** | Matching Service | Danh sách tài xế gần, Điểm uy tín | Gửi thông báo mời nhận cuốc + Bật Timer 15s | `BR_01`, `BR_06` | `Matching & Dispatch Service` |
+| **`SR_10`** | **Xử lý Mời cuốc & Chuyển tiếp** | Tài xế, Timer | Phản hồi Accept / Reject / Quá 15s | Gán tài xế (`ACCEPTED`) HOẶC Chuyển tiếp D_next | `BR_01` | `Matching Service`, `Trip Service` |
+| **`SR_11`** | **Hủy chuyến & Phạt hủy** | Khách hàng, Tài xế | Lệnh hủy chuyến, Lý do hủy | Bản ghi Trip (`CANCELLED`), Phí phạt (nếu có) | `BR_01`, `BR_04` | `Trip Management Service` |
+| **`SR_12`** | **Cập nhật Tiến trình Chuyến** | Tài xế | Lệnh chuyển mốc trạng thái từ App tài xế | Chuyển `ARRIVED` ➔ `IN_TRIP` ➔ `COMPLETED` | `BR_02` | `Trip Management Service` |
+| **`SR_13`** | **Live Tracking & Lộ trình** | Khách hàng | Mã chuyến đi (Trip ID) | Luồng WebSocket tọa độ xe & Lộ trình trực tiếp | `BR_02` | `Location Service`, `Trip Service` |
+| **`SR_14`** | **Tra cứu Lịch sử Chuyến đi** | Khách, Tài xế, Admin | Bộ lọc thời gian, Mã người dùng | Danh sách chi tiết các chuyến đi, Biên lai | `BR_02`, `BR_04` | `Trip Management Service` |
+| **`SR_15`** | **Quyết toán Cước phí Thực tế** | Hệ thống Pricing | Lộ trình GPS thực tế, Thời gian thực tế, Phụ phí | Tổng cước phí cuối cùng cần thanh toán | `BR_03` | `Pricing & Billing Service` |
+| **`SR_16`** | **Xử lý Thanh toán Tiền mặt** | Khách hàng, Tài xế | Số tiền cước, Lệnh xác nhận thu tiền từ tài xế | Bản ghi Chuyến đi (`PAID`), Hóa đơn Tiền mặt | `BR_03` | `Payment Service` |
+| **`SR_17`** | **Thanh toán Cổng Điện tử** | Khách, Payment GW | Yêu cầu trừ tiền (VNPay/MoMo/Thẻ ngân hàng) | Webhook giao dịch thành công, Biên lai số | `BR_03`, `BR_10` | `Payment Integration Service` |
+| **`SR_18`** | **Điều phối Bù trừ khi Lỗi Cổng** | Hermes Saga Orchestrator | Sự kiện `payment.failed` hoặc Gateway Timeout | Chuyển sang Tiền mặt, Cảnh báo thu tiền | `BR_03`, `BR_08` | `Hermes Saga`, `Payment Service` |
+| **`SR_19`** | **Tiếp nhận Đánh giá & Góp ý** | Khách hàng | Điểm sao (1–5 sao), Nội dung nhận xét | Bản ghi Feedback, Đánh giá chất lượng | `BR_06` | `Rating & Feedback Service` |
+| **`SR_20`** | **Tổng hợp Điểm Uy tín Tài xế** | Hệ thống Rating | Lịch sử sao và tỷ lệ nhận/hủy chuyến | Điểm tín nhiệm trung bình, Hạng tài xế | `BR_01`, `BR_06` | `Rating Service`, `Matching Service` |
+| **`SR_21`** | **Phát Thông báo cho Khách hàng** | Hermes Event Bus | Sự kiện Chuyến đi, Tài xế đến, Hóa đơn | Push Notification (FCM), WebSocket, SMS | `BR_02`, `BR_07` | `Notification Service` |
+| **`SR_22`** | **Phát Thông báo cho Tài xế** | Hermes Event Bus | Sự kiện Cuốc xe mới, Khách hủy chuyến | Chuông báo cuốc xe, Alert In-App tài xế | `BR_01`, `BR_07` | `Notification Service` |
+| **`SR_23`** | **Giám sát Bản đồ Vận hành** | Operator | Bộ lọc khu vực, Trạng thái chuyến đi | Bản đồ trực tiếp toàn bộ xe & chuyến đang chạy | `BR_04` | `Admin & Operations Portal` |
+| **`SR_24`** | **Xử lý Sự cố Chuyến đi** | Operator | Cảnh báo xe đứng yên > 5 phút / Mất GPS | Lệnh Hủy cưỡng bức / Điều xe cứu hộ thủ công | `BR_04`, `BR_08` | `Incident & Operations Service` |
+| **`SR_25`** | **Kiểm toán & Báo cáo Thống kê** | Admin, Quản trị | Thao tác can thiệp, Dữ liệu giao dịch | Nhật ký Audit Log, Dashboard Báo cáo Doanh thu | `BR_04`, `BR_10` | `Audit & Analytics Service` |
+
+---
+
+### 12.2. Chi tiết Quy cách Nghiệp vụ của 25 SR
+
+#### 1. Nhóm Định danh & Quản lý Người dùng
+* **`SR_01` (Đăng ký Tài khoản & Hồ sơ):** Xác minh số điện thoại qua OTP SMS. Tài xế bắt buộc đính kèm ảnh bằng lái xe B2/C/A1 và giấy đăng kiểm xe.
+* **`SR_02` (Xác thực & Cấp quyền JWT):** Cung cấp Token JWT chứa `userId`, `role` (`CUSTOMER`, `DRIVER`, `OPERATOR`, `ADMIN`). Thời hạn Access Token 15 phút, Refresh Token 7 ngày.
+* **`SR_03` (Quản lý Hồ sơ & Phương tiện):** Phân loại phương tiện thành các nhóm: `BIKE` (Xe máy), `CAR_4` (Xe 4 chỗ tiêu chuẩn), `CAR_7` (Xe 7 chỗ rộng rãi).
+
+#### 2. Nhóm Vị trí & Giám sát Đội xe
+* **`SR_04` (Chuyển đổi Trạng thái Hoạt động):** Tài xế chỉ được chuyển sang `ONLINE` khi xe đã được Admin duyệt và tài khoản không bị khóa.
+* **`SR_05` (Thu thập & Phát sóng GPS):** Dữ liệu GPS bao gồm `latitude`, `longitude`, `speed`, `heading`, `timestamp`. Tọa độ được ghi đè vào khóa Geo-Redis với TTL (Time-to-Live) 10 giây để tránh lưu vết rác khi tắt app.
+* **`SR_06` (Tìm Tài xế theo Bán kính):** Sử dụng lệnh `GEOSEARCH` trong Redis để tìm kiếm tài xế trong bán kính từ 2km đến tối đa 10km.
+
+#### 3. Nhóm Đặt xe & Điều phối Ghép chuyến
+* **`SR_07` (Ước tính Giá cước & ETA):** Công thức tính: $\text{Giá dự kiến} = \text{Giá mở cửa} + (\text{Khoảng cách km} \times \text{Đơn giá}) \times \text{Hệ số cao điểm}$.
+* **`SR_08` (Khởi tạo Yêu cầu Đặt chuyến):** Sinh mã chuyến đi `TripID` duy nhất (UUID) và đặt trạng thái khởi tạo `CREATED`.
+* **`SR_09` (Ghép xe Tối ưu & Mời cuốc):** Tính điểm ưu tiên theo công thức: $\text{Score} = \frac{1}{\text{Khoảng cách}} \times 0.7 + \text{Điểm sao trung bình} \times 0.3$.
+* **`SR_10` (Xử lý Mời cuốc & Chuyển tiếp):** Nếu tài xế hiện tại không phản hồi trong vòng 15 giây, hệ thống tự động loại tài xế này khỏi lượt mời hiện tại và gửi cuốc cho tài xế tiếp theo.
+* **`SR_11` (Hủy chuyến & Phạt hủy):** Miễn phí hủy trong vòng 2 phút đầu sau khi ghép xe. Nếu hủy sau khi tài xế đã di chuyển tới điểm đón, áp dụng phí phạt 15.000 VNĐ vào chuyến đi kế tiếp.
+
+#### 4. Nhóm Quản lý Hành trình & Live Tracking
+* **`SR_12` (Cập nhật Tiến trình Chuyến):** Máy trạng thái bắt buộc chuyển theo thứ tự tuần tự: `ACCEPTED` ➔ `ARRIVED_AT_PICKUP` ➔ `IN_TRIP` ➔ `COMPLETED`.
+* **`SR_13` (Live Tracking & Lộ trình):** Phát dữ liệu tọa độ tài xế qua WebSocket Topic `/topic/trip/{tripId}` đến thiết bị khách hàng.
+* **`SR_14` (Tra cứu Lịch sử Chuyến đi):** Cho phép xuất hóa đơn điện tử (PDF/Email) cho từng chuyến đã thanh toán thành công.
+
+#### 5. Nhóm Định giá & Quyết toán Thanh toán
+* **`SR_15` (Quyết toán Cước phí Thực tế):** Dựa trên quãng đường đo đạc thực tế của chuyến đi, thời gian kẹt xe và các chi phí cầu đường (nếu có).
+* **`SR_16` (Xử lý Thanh toán Tiền mặt):** Tài xế chịu trách nhiệm thu tiền mặt và bấm xác nhận trên giao diện lái xe.
+* **`SR_17` (Thanh toán Cổng Điện tử):** Hỗ trợ cổng thanh toán qua Webhook IPN, xác thực chữ ký bảo mật HMAC-SHA256.
+* **`SR_18` (Điều phối Bù trừ khi Lỗi Cổng):** Kích hoạt cơ chế Hermes Saga Compensating để đảm bảo dữ liệu nhất quán phân tán.
+
+#### 6. Nhóm Đánh giá & Quản lý Chất lượng
+* **`SR_19` (Tiếp nhận Đánh giá & Góp ý):** Lưu điểm sao (1 đến 5 sao) và các nhãn đánh giá nhanh (Lái xe an toàn, Xe sạch sẽ, Thái độ tốt).
+* **`SR_20` (Tổng hợp Điểm Uy tín Tài xế):** Cập nhật lại chỉ số rating trung bình của tài xế vào bảng tổng hợp sau mỗi đánh giá mới.
+
+#### 7. Nhóm Thông báo Sự kiện Đa kênh
+* **`SR_21` (Phát Thông báo cho Khách hàng):** Tích hợp Firebase Cloud Messaging (FCM) gửi thông báo nổi trên điện thoại khách.
+* **`SR_22` (Phát Thông báo cho Tài xế):** Tích hợp thông báo toàn màn hình và âm thanh chuông báo cuốc xe khẩn cấp.
+
+#### 8. Nhóm Vận hành, Giám sát & Kiểm toán
+* **`SR_23` (Giám sát Bản đồ Vận hành):** Giao diện Web Socket hiển thị trực quan các biểu tượng xe di chuyển trên nền OpenStreetMap/Mapbox.
+* **`SR_24` (Xử lý Sự cố Chuyến đi):** Cho phép nhân viên điều hành gán đè tài xế khác trong trường hợp xe ban đầu gặp sự cố hỏng hóc giữa đường.
+* **`SR_25` (Kiểm toán & Báo cáo Thống kê):** Ghi nhận nhật ký với định dạng: `[Timestamp] [UserID] [Action] [TargetID] [IP_Address] [Details]` và vẽ biểu đồ Dashboard doanh thu.
+
+
 
 
