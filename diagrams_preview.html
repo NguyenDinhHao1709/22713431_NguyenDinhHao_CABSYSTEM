@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="vi">
+﻿<!DOCTYPE html>
+<html lang=vi>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset=UTF-8>
+    <meta name=viewport content=width=device-width, initial-scale=1.0>
     <title>Sơ Đồ Kiến Trúc & Thiết Kế Hệ Thống CAB System</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src=https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js></script>
     <script>
         mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
     </script>
@@ -42,16 +42,28 @@
             margin-top: 15px;
             overflow-x: auto;
         }
+        .badge {
+            display: inline-block;
+            background: #ebf8ff;
+            color: #2b6cb0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>CAB SYSTEM - TỔNG HỢP SƠ ĐỒ THIẾT KẾ & KIẾN TRÚC</h1>
+    <h1>CAB SYSTEM - TỔNG HỢP TOÀN BỘ SƠ ĐỒ THIẾT KẾ & KIẾN TRÚC</h1>
+    <p style=text-align: center; color: #718096;>Trang xem trực quan toàn bộ sơ đồ Mermaid trong tài liệu SRS.md (Service-Oriented Architecture - Đồ án 7 Tuần)</p>
 
-    <div class="card">
+    <!-- 1. Domain Decomposition -->
+    <div class=card>
+        <span class=badge>Kiến trúc Miền & Phân rã</span>
         <h2>1. Sơ đồ Phân rã Nghiệp vụ con (Domain Decomposition)</h2>
-        <p><i>Phân chia theo Domain-Driven Design: Core, Supporting và Generic Sub-domains</i></p>
-        <div class="mermaid">
+        <div class=mermaid>
 graph TD
     subgraph CoreDomain [Nghiệp vụ Cốt lõi - Core Domains]
         B_Match[3. Điều phối & Ghép chuyến]
@@ -84,10 +96,11 @@ graph TD
         </div>
     </div>
 
-    <div class="card">
+    <!-- 2. MoSCoW Quadrant Chart -->
+    <div class=card>
+        <span class=badge>Phạm vi & Giới hạn</span>
         <h2>2. Ma trận Ưu tiên & Giới hạn Phát triển Module (7 Tuần)</h2>
-        <p><i>Khoanh vùng phạm vi phát triển theo ma trận MoSCoW</i></p>
-        <div class="mermaid">
+        <div class=mermaid>
 quadrantChart
     title Ma trận Ưu tiên Phát triển Module (Khung 7 Tuần)
     x-axis Độ phức tạp Thấp --> Độ phức tạp Cao
@@ -97,85 +110,371 @@ quadrantChart
     quadrant-3 Cắt giảm / Bỏ qua (Out of Scope)
     quadrant-4 Giả lập / Mocking (Simulated)
     
-    "Trip Management Service": [0.65, 0.95]
-    "Matching & Dispatching": [0.75, 0.90]
-    "API Gateway & Event Bus": [0.70, 0.85]
-    "User & Auth Service": [0.35, 0.80]
-    "Pricing & Billing": [0.40, 0.75]
-    "Location Tracking": [0.55, 0.70]
-    "Payment Service (Sandbox)": [0.70, 0.40]
-    "Notification (WebSocket/FCM)": [0.45, 0.50]
-    "Rating Service": [0.20, 0.35]
-    "Admin Dashboard": [0.40, 0.30]
-    "Hệ thống Bản đồ riêng": [0.95, 0.15]
-    "AI Định giá thời tiết": [0.90, 0.20]
-    "Tổng đài gọi điện VoIP": [0.85, 0.10]
+    Trip Management Service: [0.65, 0.95]
+    Matching & Dispatch Service: [0.85, 0.90]
+    Pricing & Fare Calculation: [0.45, 0.85]
+    Driver Location Redis Stream: [0.70, 0.80]
+    User & Auth Service: [0.30, 0.75]
+    Simple Notification Service: [0.25, 0.65]
+    Admin Monitoring Dashboard: [0.55, 0.50]
+    Rating & Review Service: [0.20, 0.40]
+    Payment Gateway (Mock): [0.75, 0.35]
+    Third-party Map API (OpenStreetMap): [0.35, 0.60]
+    AI Route Optimization (Cut): [0.95, 0.20]
+    E-Wallet Balance Engine (Cut): [0.90, 0.15]
+    VoIP Call Masking (Cut): [0.85, 0.10]
         </div>
     </div>
 
-    <div class="card">
-        <h2>3. Sơ đồ Use Case Tổng Thể Hệ Thống</h2>
-        <div class="mermaid">
-graph TD
+    <!-- 3. BPMN Swimlane -->
+    <div class=card>
+        <span class=badge>Quy trình Nghiệp vụ</span>
+        <h2>3. Sơ đồ Quy trình Nghiệp vụ Tổng thể (BPMN Swimlane)</h2>
+        <div class=mermaid>
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    participant System as CAB System (SOA Platform)
+    actor Driver as Tài xế
+    participant PaymentGW as Cổng Thanh toán 3rd
+
+    Note over Customer, Driver: 1. Khởi tạo & Định giá Chuyến đi
+    Customer->>System: 1. Nhập điểm đón, điểm đến & Chọn loại xe (Bike, Car 4, Car 7)
+    System->>System: 2. Tính khoảng cách, thời gian & Ước tính cước phí (BR_03)
+    System-->>Customer: 3. Trả về cước phí dự kiến & Lộ trình đề xuất
+    Customer->>System: 4. Xác nhận Đặt chuyến (BR_01)
+
+    Note over System, Driver: 2. Điều phối & Ghép xe Thông minh
+    System->>System: 5. Quét tìm tài xế bán kính 2-5km & Xếp hạng ưu tiên
+    System->>Driver: 6. Gửi lời mời nhận cuốc (Countdown 15s) (BR_02)
+    alt Tài xế chấp nhận
+        Driver->>System: 7a. Chấp nhận chuyến
+        System-->>Customer: 8a. Báo ghép xe thành công (Biển số, Tên tài xế, SĐT)
+    else Hết thời gian / Từ chối
+        Driver-->>System: 7b. Từ chối hoặc Timeout 15s
+        System->>Driver: 8b. Chuyển tiếp cuốc cho tài xế ưu tiên tiếp theo
+    end
+
+    Note over Customer, Driver: 3. Đón khách & Thực hiện Chuyến đi
+    Driver->>System: 9. Báo Đã đến điểm đón (Arrived at Pickup)
+    System-->>Customer: 10. Thông báo Tài xế đã đến, vui lòng ra xe
+    Driver->>System: 11. Bắt đầu hành trình (In Trip)
+    loop Cập nhật Live Tracking (Mỗi 5 giây)
+        Driver->>System: 12. Gửi tọa độ GPS thời gian thực (BR_05)
+        System-->>Customer: 13. Cập nhật vị trí xe trên bản đồ
+    end
+    Driver->>System: 14. Kết thúc chuyến đi tại điểm đến
+
+    Note over Customer, PaymentGW: 4. Quyết toán Thanh toán & Đánh giá
+    System->>System: 15. Chốt cước phí thực tế & Áp dụng phí chờ/phụ phí (BR_04)
+    alt Khách chọn Tiền mặt
+        Customer->>Driver: 16a. Trả tiền mặt trực tiếp
+        Driver->>System: 17a. Xác nhận đã thu tiền mặt
+    else Khách chọn Ví điện tử / Thẻ
+        System->>PaymentGW: 16b. Trừ tiền tài khoản / Gửi yêu cầu thanh toán
+        PaymentGW-->>System: 17b. Phản hồi giao dịch thành công (IPN Webhook)
+    end
+    System-->>Customer: 18. Gửi hóa đơn điện tử
+    Customer->>System: 19. Đánh giá chất lượng dịch vụ (1 - 5 sao) (BR_07)
+        </div>
+    </div>
+
+    <!-- 4. Use Case Diagram -->
+    <div class=card>
+        <span class=badge>Mô hình Ca Sử dụng</span>
+        <h2>4. Sơ đồ Ca Sử Dụng Tổng quan (Use Case Diagram)</h2>
+        <div class=mermaid>
+graph LR
     Customer((Khách hàng))
     Driver((Tài xế))
-    Operator((Nhân viên vận hành))
-    Admin((Quản trị viên))
-    PaymentGW[Cổng thanh toán]
-    NotiService[Dịch vụ thông báo]
+    Admin((Quản trị viên / Ops))
 
-    subgraph Customer_UC [Phân hệ Khách hàng]
-        UC_RegCust[Đăng ký / Đăng nhập]
-        UC_BookTrip[Đặt chuyến & Xem giá dự kiến]
-        UC_TrackTrip[Theo dõi hành trình & Tài xế]
-        UC_CancelTrip[Hủy chuyến]
-        UC_Pay[Thanh toán Tiền mặt / Online]
-        UC_Rate[Đánh giá tài xế]
+    subgraph UC_Customer_Group [Phân hệ Khách hàng]
+        UC_C1[UC-01: Đặt xe & Ghép chuyến]
+        UC_C2[UC-02: Theo dõi Lộ trình Live]
+        UC_C3[UC-03: Hủy chuyến]
+        UC_C4[UC-04: Thanh toán Cước phí]
+        UC_C5[UC-05: Đánh giá & Phản hồi]
     end
 
-    subgraph Driver_UC [Phân hệ Tài xế]
-        UC_UpdateStatus[Bật / Tắt trạng thái Online]
-        UC_UpdateLoc[Cập nhật vị trí GPS]
-        UC_AcceptTrip[Nhận / Từ chối chuyến]
-        UC_UpdateTripStatus[Cập nhật trạng thái chuyến]
-        UC_ConfirmCash[Xác nhận thu tiền mặt]
+    subgraph UC_Driver_Group [Phân hệ Tài xế]
+        UC_D1[UC-06: Bật/Tắt Trạng thái Online]
+        UC_D2[UC-07: Tiếp nhận / Từ chối Chuyến đi]
+        UC_D3[UC-08: Cập nhật Trạng thái Chuyến đi]
+        UC_D4[UC-09: Xác nhận Thu tiền mặt]
     end
 
-    subgraph Admin_UC [Phân hệ Vận hành & Quản trị]
-        UC_LiveMonitor[Giám sát chuyến đi trực tiếp]
-        UC_ResolveIncident[Xử lý sự cố chuyến đi]
-        UC_ManageUsers[Quản lý Người dùng & Phương tiện]
-        UC_ViewReport[Xem Báo cáo Doanh thu & Vận hành]
+    subgraph UC_Admin_Group [Phân hệ Vận hành & Quản trị]
+        UC_A1[UC-10: Giám sát Chuyến đi Thời gian thực]
+        UC_A2[UC-11: Can thiệp Xử lý Sự cố Chuyến đi]
+        UC_A3[UC-12: Quản lý Duyệt Hồ sơ Tài xế & Xe]
+        UC_A4[UC-13: Xem Báo cáo Thống kê Doanh thu]
     end
 
-    Customer --> UC_RegCust
-    Customer --> UC_BookTrip
-    Customer --> UC_TrackTrip
-    Customer --> UC_CancelTrip
-    Customer --> UC_Pay
-    Customer --> UC_Rate
+    Customer --> UC_C1
+    Customer --> UC_C2
+    Customer --> UC_C3
+    Customer --> UC_C4
+    Customer --> UC_C5
 
-    Driver --> UC_UpdateStatus
-    Driver --> UC_UpdateLoc
-    Driver --> UC_AcceptTrip
-    Driver --> UC_UpdateTripStatus
-    Driver --> UC_ConfirmCash
+    Driver --> UC_D1
+    Driver --> UC_D2
+    Driver --> UC_D3
+    Driver --> UC_D4
 
-    Operator --> UC_LiveMonitor
-    Operator --> UC_ResolveIncident
-    Admin --> UC_ManageUsers
-    Admin --> UC_ViewReport
-    Admin --> UC_ResolveIncident
-
-    UC_Pay -.-> PaymentGW
-    UC_BookTrip -.-> NotiService
-    UC_UpdateTripStatus -.-> NotiService
+    Admin --> UC_A1
+    Admin --> UC_A2
+    Admin --> UC_A3
+    Admin --> UC_A4
         </div>
     </div>
 
-    <div class="card">
-        <h2>4. Sơ đồ Vòng Đời Trạng Thái Chuyến Đi (State Machine Diagram)</h2>
-        <div class="mermaid">
+    <!-- 5. Entity-Relationship Diagram (ERD) -->
+    <div class=card>
+        <span class=badge>Mô hình Dữ liệu Thực thể</span>
+        <h2>5. Sơ đồ Thực thể Kết hợp (Entity-Relationship Diagram - ERD)</h2>
+        <div class=mermaid>
+erDiagram
+    USERS ||--o| DRIVERS : extends
+    USERS ||--o{ TRIPS : requests as Customer
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ AUDIT_LOGS : triggers
+
+    DRIVERS ||--o{ VEHICLES : owns / operates
+    DRIVERS ||--o{ TRIPS : executes as Driver
+    DRIVERS ||--o{ DRIVER_LOCATIONS : broadcasts
+
+    TRIPS ||--|| PAYMENTS : settles via
+    TRIPS ||--o| RATINGS : evaluated by
+
+    USERS {
+        uuid user_id PK
+        string phone_number UK
+        string email UK
+        string full_name
+        string password_hash
+        string role CUSTOMER | DRIVER | OPERATOR | ADMIN
+        string status ACTIVE | LOCKED | PENDING
+        timestamp created_at
+    }
+
+    DRIVERS {
+        uuid driver_id PK, FK
+        string license_number UK
+        string license_class A1 | B2 | C
+        float rating_average Default 5.0
+        int total_trips
+        string activity_status ONLINE | BUSY | OFFLINE
+        boolean is_approved
+    }
+
+    VEHICLES {
+        uuid vehicle_id PK
+        uuid driver_id FK
+        string license_plate UK
+        string vehicle_type BIKE | CAR_4 | CAR_7
+        string brand_model
+        string color
+        boolean is_active
+    }
+
+    DRIVER_LOCATIONS {
+        uuid location_id PK
+        uuid driver_id FK
+        float latitude
+        float longitude
+        float speed
+        float heading
+        timestamp recorded_at
+    }
+
+    TRIPS {
+        uuid trip_id PK
+        uuid customer_id FK
+        uuid driver_id FK
+        uuid vehicle_id FK
+        string pickup_address
+        float pickup_lat
+        float pickup_lng
+        string dropoff_address
+        float dropoff_lat
+        float dropoff_lng
+        string vehicle_type BIKE | CAR_4 | CAR_7
+        decimal estimated_fare
+        decimal actual_fare
+        float distance_km
+        int duration_minutes
+        string status CREATED | ACCEPTED | ARRIVED | IN_TRIP | COMPLETED | PAID | CANCELLED
+        string cancel_reason
+        timestamp created_at
+        timestamp completed_at
+    }
+
+    PAYMENTS {
+        uuid payment_id PK
+        uuid trip_id FK, UK
+        decimal amount
+        string payment_method CASH | DIGITAL_WALLET | CREDIT_CARD
+        string payment_status PENDING | SUCCESS | FAILED | COMPENSATED_CASH
+        string transaction_ref UK
+        timestamp paid_at
+    }
+
+    RATINGS {
+        uuid rating_id PK
+        uuid trip_id FK, UK
+        int stars 1 to 5
+        string comment
+        string feedback_tags
+        timestamp rated_at
+    }
+
+    NOTIFICATIONS {
+        uuid notification_id PK
+        uuid user_id FK
+        string title
+        string message
+        string channel PUSH | SMS | IN_APP
+        boolean is_read
+        timestamp sent_at
+    }
+
+    AUDIT_LOGS {
+        uuid log_id PK
+        uuid user_id FK
+        string action
+        string target_entity
+        string target_id
+        string ip_address
+        string details
+        timestamp performed_at
+    }
+        </div>
+    </div>
+
+    <!-- 6. Overall SOA Architecture -->
+    <div class=card>
+        <span class=badge>Kiến trúc Hệ thống SOA</span>
+        <h2>6. Sơ đồ Kiến trúc Hướng Dịch Vụ Tổng thể (SOA / Microservices)</h2>
+        <div class=mermaid>
+graph TB
+    subgraph Clients [Tầng Ứng dụng Khách]
+        CustApp[Customer App / Web]
+        DriverApp[Driver App]
+        AdminPortal[Admin & Ops Web Dashboard]
+    end
+
+    subgraph APIGateway [API Gateway Layer]
+        Gateway[API Gateway / Reverse Proxy & Auth Check]
+    end
+
+    subgraph CoreServices [Tầng Dịch vụ Lõi - Microservices]
+        AuthSvc[User & Auth Service]
+        LocationSvc[Location & Tracking Service]
+        MatchingSvc[Matching & Dispatch Service]
+        TripSvc[Trip Management Service]
+        PricingSvc[Pricing & Billing Service]
+        PaymentSvc[Payment Integration Service]
+        NotiSvc[Notification Service]
+        AdminSvc[Admin & Reporting Service]
+    end
+
+    subgraph MessageBroker [Tầng Điều phối Sự kiện - Event Broker]
+        Kafka[Message Broker: Kafka / RabbitMQ]
+    end
+
+    subgraph Databases [Tầng Dữ liệu]
+        UserDB[(User DB)]
+        TripDB[(Trip DB)]
+        RedisCache[(Redis Cache - Tọa độ & Session)]
+        PaymentDB[(Payment DB)]
+    end
+
+    subgraph ExternalServices [Dịch vụ bên thứ ba]
+        MapsAPI[Google Maps / Mapbox API]
+        PayGateway[VNPay / MoMo / Stripe]
+        PushSMS[FCM / SMS Gateway]
+    end
+
+    CustApp --> Gateway
+    DriverApp --> Gateway
+    AdminPortal --> Gateway
+
+    Gateway --> AuthSvc
+    Gateway --> LocationSvc
+    Gateway --> MatchingSvc
+    Gateway --> TripSvc
+    Gateway --> PricingSvc
+    Gateway --> PaymentSvc
+    Gateway --> NotiSvc
+    Gateway --> AdminSvc
+
+    TripSvc <--> Kafka
+    MatchingSvc <--> Kafka
+    PaymentSvc <--> Kafka
+    NotiSvc <--> Kafka
+    LocationSvc <--> Kafka
+
+    AuthSvc --> UserDB
+    TripSvc --> TripDB
+    LocationSvc --> RedisCache
+    PaymentSvc --> PaymentDB
+
+    LocationSvc --> MapsAPI
+    PaymentSvc --> PayGateway
+    NotiSvc --> PushSMS
+        </div>
+    </div>
+
+    <!-- 7. Sequence Diagram -->
+    <div class=card>
+        <span class=badge>Luồng Tương tác Dịch vụ</span>
+        <h2>7. Sơ đồ Tuần tự Luồng Đặt xe & Ghép chuyến (Sequence Diagram)</h2>
+        <div class=mermaid>
+sequenceDiagram
+    autonumber
+    actor C as Khách hàng
+    participant App as CAB Mobile / Web App
+    participant Match as Matching & Dispatch Service
+    participant Loc as Location Service
+    participant Trip as Trip Service
+    actor D1 as Tài xế 1 (Gần nhất)
+    actor D2 as Tài xế 2 (Dự phòng)
+    participant Noti as Notification Service
+
+    C->>App: Chọn điểm đón, điểm đến, loại xe
+    App->>Trip: Yêu cầu ước tính giá & tạo chuyến
+    Trip-->>App: Trả về giá cước dự kiến & ID chuyến
+    C->>App: Xác nhận đặt xe
+    App->>Match: Gửi yêu cầu tìm tài xế
+    Match->>Loc: Lấy danh sách tài xế Online gần điểm đón
+    Loc-->>Match: Trả về danh sách [D1, D2, ...]
+
+    Match->>Noti: Gửi lời mời nhận chuyến tới D1
+    Noti->>D1: Thông báo chuyến đi mới (Hạn chờ 15s)
+    
+    alt D1 từ chối hoặc hết thời gian chờ
+        D1-->>Match: Từ chối / Timeout
+        Match->>Noti: Gửi lời mời nhận chuyến tới D2
+        Noti->>D2: Thông báo chuyến đi mới
+        D2->>Match: Chấp nhận chuyến (Accept)
+        Match->>Trip: Gán D2 cho chuyến đi (Trạng thái: ACCEPTED)
+        Trip->>Noti: Báo cho Khách hàng thông tin D2
+        Noti->>C: Tài xế D2 đã nhận chuyến!
+    else D1 chấp nhận chuyến
+        D1->>Match: Chấp nhận chuyến (Accept)
+        Match->>Trip: Gán D1 cho chuyến đi
+        Trip->>Noti: Báo cho Khách hàng thông tin D1
+        Noti->>C: Tài xế D1 đã nhận chuyến!
+    end
+        </div>
+    </div>
+
+    <!-- 8. State Machine Diagram -->
+    <div class=card>
+        <span class=badge>Máy Trạng thái Chuyến đi</span>
+        <h2>8. Sơ đồ Trạng thái Vòng đời Chuyến đi (Trip State Machine)</h2>
+        <div class=mermaid>
 stateDiagram-v2
     [*] --> CREATED: Khách hàng tạo yêu cầu đặt xe
     CREATED --> SEARCHING_DRIVER: Hệ thống tìm tài xế phù hợp
@@ -206,10 +505,11 @@ stateDiagram-v2
         </div>
     </div>
 
-    <div class="card">
-        <h2>5. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA)</h2>
-        <p><i>Mô hình xương sống truyền tin phi đồng bộ giữa các Microservices bằng Event Bus</i></p>
-        <div class="mermaid">
+    <!-- 9. Hermes Event Bus -->
+    <div class=card>
+        <span class=badge>Kiến trúc Hermes Event-Driven</span>
+        <h2>9. Sơ đồ Tương tác Dịch vụ Hướng sự kiện Hermes (Event Bus)</h2>
+        <div class=mermaid>
 graph TB
     subgraph Producers [Event Producers]
         P_Trip[Trip Service]
@@ -219,11 +519,11 @@ graph TB
     end
 
     subgraph HermesBus [Hermes Event-Driven Message Bus / Middleware]
-        E_TripCreated["Topic: trip.created"]
-        E_DriverFound["Topic: driver.matched"]
-        E_TripStatus["Topic: trip.status.updated"]
-        E_Payment["Topic: payment.completed"]
-        E_NotiQueue["Topic: notification.dispatch"]
+        E_TripCreated[Topic: trip.created]
+        E_DriverFound[Topic: driver.matched]
+        E_TripStatus[Topic: trip.status.changed]
+        E_Payment[Topic: payment.completed]
+        E_NotiQueue[Queue: push.notifications]
     end
 
     subgraph Consumers [Event Consumers / Handlers]
@@ -253,10 +553,12 @@ graph TB
         </div>
     </div>
 
-    <div class="card">
-        <h2>6. Sơ đồ Điều phối Giao dịch Phân tán (Hermes Saga Orchestration)</h2>
+    <!-- 10. Hermes Saga -->
+    <div class=card>
+        <span class=badge>Giao dịch Phân tán Saga</span>
+        <h2>10. Sơ đồ Điều phối Giao dịch Phân tán (Hermes Saga Orchestration)</h2>
         <p><i>Cơ chế giải quyết xung đột và bù trừ giao dịch thanh toán khi gặp lỗi</i></p>
-        <div class="mermaid">
+        <div class=mermaid>
 sequenceDiagram
     autonumber
     actor Customer as Khách hàng
@@ -285,9 +587,11 @@ sequenceDiagram
         </div>
     </div>
 
-    <div class="card">
-        <h2>7. Kế hoạch Quản lý Dự án theo Phương pháp HERMES (7 Tuần)</h2>
-        <div class="mermaid">
+    <!-- 11. Project Gantt Chart -->
+    <div class=card>
+        <span class=badge>Kế hoạch Dự án Hermes</span>
+        <h2>11. Kế hoạch Quản lý Dự án theo Phương pháp HERMES (7 Tuần)</h2>
+        <div class=mermaid>
 gantt
     title KẾ HOẠCH TRIỂN KHAI ĐỒ ÁN CAB SYSTEM THEO PHƯƠNG PHÁP HERMES (7 TUẦN)
     dateFormat  YYYY-MM-DD
