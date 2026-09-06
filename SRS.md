@@ -1243,7 +1243,39 @@ Tiêu chí chấp nhận (**Acceptance Criteria - AC**) là tập hợp các đi
 
 ---
 
-## 11.2. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi
+## 11.2. Ma trận Tiêu chí Chấp nhận Chi tiết cho 25 Chức năng Dịch vụ (AC-SR_01 – AC-SR_25)
+
+| Mã AC | Chức năng Dịch vụ (SR) | Tiêu chí Chấp nhận Hoàn tất Kỹ thuật (Acceptance Criteria) | Mã BR | Microservice Phụ trách |
+| :---: | :--- | :--- | :---: | :--- |
+| **`AC-SR_01`** | **Đăng ký Tài khoản & Hồ sơ** | Xác thực số điện thoại bằng OTP SMS thành công trong vòng 60 giây; hồ sơ tài xế bắt buộc upload đủ ảnh CCCD và bằng lái mới được lưu ở trạng thái `PENDING_APPROVAL`. | `BR_05` | User & Auth Service |
+| **`AC-SR_02`** | **Xác thực & Cấp quyền JWT** | Đăng nhập trả về JWT Access Token (hạn 15 phút) và Refresh Token (hạn 7 ngày); API Gateway xác thực chữ ký RS256/HS256 và chặn các request không có token. | `BR_05`, `BR_10` | User & Auth Service |
+| **`AC-SR_03`** | **Quản lý Hồ sơ & Phương tiện** | Lưu đúng phân loại xe (`BIKE`, `CAR_4`, `CAR_7`) và biển số; Admin có chức năng bấm duyệt (`is_approved = true`) hoặc từ chối hồ sơ xe. | `BR_05` | User & Auth Service |
+| **`AC-SR_04`** | **Bật/Tắt Trạng thái Làm việc** | Chỉ tài xế đã được Admin duyệt và không bị khóa mới bật được `ONLINE`; chuyển `ONLINE` tự động đưa tài xế vào Geo-Redis Pool; chuyển `OFFLINE` tự động xóa khỏi Pool. | `BR_01` | Location Service |
+| **`AC-SR_05`** | **Thu thập & Phát sóng GPS** | Ứng dụng tài xế gửi tọa độ định kỳ 5s/lần; server lưu đệm Geo-Redis với TTL = 10s; dữ liệu GPS có độ chính xác sai số $\le 10\text{m}$. | `BR_02` | Location Service |
+| **`AC-SR_06`** | **Tìm Tài xế theo Bán kính** | Lệnh `GEOSEARCH` trong Redis quét chính xác các tài xế `ONLINE` theo bán kính mở rộng từ 2km đến 10km trong thời gian $\le 200\text{ms}$. | `BR_01` | Location Service |
+| **`AC-SR_07`** | **Ước tính Giá cước & ETA** | Tính đúng cước phí theo biểu phí mở cửa + km tiếp theo + hệ số cao điểm $\times 1.2$; trả về ETA đón xe theo khoảng cách đường bộ thực tế. | `BR_03` | Pricing & Fare Engine |
+| **`AC-SR_08`** | **Khởi tạo Yêu cầu Đặt chuyến** | Sinh mã UUID duy nhất `TripID`, lưu bản ghi chuyến đi với trạng thái `CREATED` và phát sự kiện `trip.created` lên Message Bus. | `BR_01` | Trip Management Svc |
+| **`AC-SR_09`** | **Ghép xe Tối ưu & Xếp hạng** | Tính đúng điểm ưu tiên $\text{PriorityScore}$; sắp xếp danh sách tài xế giảm dần theo điểm và chọn tài xế điểm cao nhất để mời cuốc. | `BR_01` | Matching & Dispatch Svc |
+| **`AC-SR_10`** | **Xử lý Mời cuốc & Chuyển tiếp** | Bộ đếm 15s đếm ngược chính xác; tài xế bấm nhận ➔ chuyến sang `ACCEPTED`; tài xế bấm từ chối hoặc hết 15s ➔ tự động chuyển cuốc cho tài xế kế tiếp. | `BR_01` | Matching & Dispatch Svc |
+| **`AC-SR_11`** | **Hủy chuyến & Tính phí Phạt** | Hủy $\le 2$ phút không tính phí; hủy sau 2 phút (tài xế đã di chuyển) tự động ghi nhận phí phạt 15.000 VNĐ vào hóa đơn cuốc kế tiếp của khách. | `BR_01` | Trip Management Svc |
+| **`AC-SR_12`** | **Cập nhật Tiến trình Chuyến đi**| Chuyển đúng tuần tự máy trạng thái: `ACCEPTED` ➔ `ARRIVED_AT_PICKUP` ➔ `IN_TRIP` ➔ `COMPLETED`; không cho phép nhảy cóc trạng thái. | `BR_02` | Trip Management Svc |
+| **`AC-SR_13`** | **Live Tracking & Đồng bộ Vị trí**| Stream tọa độ tài xế thời gian thực qua WebSocket Topic `/topic/trip/{tripId}` đến khách hàng với độ trễ $\le 1\text{s}$. | `BR_02` | Trip & Location Svc |
+| **`AC-SR_14`** | **Tra cứu Lịch sử Chuyến đi** | Phân trang danh sách chuyến đi chính xác theo `userId`; hiển thị đầy đủ lộ trình, thời gian, tài xế và xuất biên lai PDF/Email. | `BR_02` | Trip Management Svc |
+| **`AC-SR_15`** | **Quyết toán Cước phí Thực tế** | Chốt cước phí thực tế dựa trên quãng đường GPS đã di chuyển và phụ phí thời gian chờ (nếu có); phát sự kiện `trip.completed`. | `BR_03` | Pricing & Billing Svc |
+| **`AC-SR_16`** | **Xử lý Thanh toán Tiền mặt** | Tài xế bấm xác nhận "Đã thu đủ tiền mặt" ➔ Chuyến đi cập nhật trạng thái `PAID` và phát sự kiện `payment.completed`. | `BR_03` | Payment Integration Svc |
+| **`AC-SR_17`** | **Thanh toán Cổng Điện tử** | Giao tiếp API an toàn với cổng thanh toán (VNPay/MoMo); nhận Webhook IPN, xác thực chữ ký HMAC-SHA256 và cập nhật trạng thái `PAID`. | `BR_03` | Payment Integration Svc |
+| **`AC-SR_18`** | **Điều phối Bù trừ khi Cổng Lỗi**| Khi cổng thanh toán timeout $> 30\text{s}$ hoặc lỗi kết nối, Saga Orchestrator tự động hủy trừ thẻ, đổi sang tiền mặt và báo tài xế thu tiền mặt. | `BR_08` | Hermes Saga Orchestrator |
+| **`AC-SR_19`** | **Tiếp nhận Đánh giá & Góp ý** | Lưu điểm số 1-5 sao, nhận xét văn bản và nhãn phản hồi vào bảng `RATINGS`; khóa đánh giá sau 24h kể từ khi hoàn tất chuyến. | `BR_06` | Rating & Review Svc |
+| **`AC-SR_20`** | **Tổng hợp Điểm Uy tín Tài xế** | Điểm trung bình của tài xế được tính toán lại ngay sau mỗi đánh giá mới: $\text{Rating}_{\text{new}} = \frac{\sum \text{Stars}}{N}$; tự động cảnh báo nếu điểm $< 4.0$. | `BR_06` | Rating & Review Svc |
+| **`AC-SR_21`** | **Phát Thông báo Khách hàng** | Gửi thông báo Push Notification qua FCM tới khách trong vòng $\le 2\text{s}$ khi có sự kiện (tài xế nhận, xe đến, hoàn tất chuyến). | `BR_07` | Notification Service |
+| **`AC-SR_22`** | **Phát Thông báo Tài xế** | Bắn âm thanh chuông báo và giao diện nhận cuốc nổi toàn màn hình trên app tài xế khi có lời mời cuốc xe mới. | `BR_07` | Notification Service |
+| **`AC-SR_23`** | **Giám sát Bản đồ Vận hành** | Giao diện Web Socket hiển thị toàn bộ xe đang `ONLINE` và `BUSY` trên bản đồ số, cập nhật vị trí thời gian thực. | `BR_04` | Admin & Operations Svc |
+| **`AC-SR_24`** | **Xử lý Sự cố & Can thiệp Cuốc**| Operator có quyền bấm nút hủy cuốc khẩn cấp hoặc gán đè tài xế thay thế khi xe bị hỏng giữa đường; yêu cầu nhập lý do can thiệp. | `BR_04` | Admin & Operations Svc |
+| **`AC-SR_25`** | **Kiểm toán & Báo cáo Thống kê**| Bảng `AUDIT_LOGS` ghi nhận 100% các hành động can thiệp; Dashboard thống kê vẽ đúng biểu đồ doanh thu theo ngày/tuần/tháng. | `BR_10` | Admin & Operations Svc |
+
+---
+
+## 11.3. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi
 
 ### 🎯 Kịch bản 1: Đặt chuyến & Ghép xe Thành công cho Tài xế Gần nhất (Happy Path)
 ```gherkin
