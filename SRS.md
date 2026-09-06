@@ -53,7 +53,12 @@
 - [CHƯƠNG 10: KẾ HOẠCH TRIỂN KHAI DỰ ÁN THEO PHƯƠNG PHÁP HERMES (7 TUẦN)](#chương-10-kế-hoạch-triển-khai-dự-án-theo-phương-pháp-hermes-7-tuần)
   - [10.1. Phân kỳ Giai đoạn & Cột mốc Quyết định (B1 – B4)](#101-phân-kỳ-giai-đoạn--cột-mốc-quyết-định-b1--b4)
   - [10.2. Sơ đồ Tiến độ Thực hiện Đồ án (Gantt Chart)](#102-sơ-đồ-tiến-độ-thực-hiện-đồ-án-gantt-chart)
-- [CHƯƠNG 11: CÁC VẤN ĐỀ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)](#chương-11-các-vấn-đề-cần-làm-rõ-với-khách-hàng-open-questions)
+- [CHƯƠNG 11: TIÊU CHÍ CHẤP NHẬN HOÀN TẤT YÊU CẦU (ACCEPTANCE CRITERIA - AC & DEFINITION OF DONE)](#chương-11-tiêu-chí-chấp-nhận-hoàn-tất-yêu-cầu-acceptance-criteria---ac--definition-of-done)
+  - [11.1. Ma trận Tiêu chí Chấp nhận cho 10 Yêu cầu Nghiệp vụ (AC-BR_01 – AC-BR_10)](#111-ma-trận-tiêu-chí-chấp-nhận-cho-10-yêu-cầu-nghiệp-vụ-ac-br_01--ac-br_10)
+  - [11.2. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi](#112-kịch-bản-kiểm-thử-chấp-nhận-bdd--gherkin-cho-các-luồng-cốt-lõi)
+  - [11.3. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)](#113-tiêu-chuẩn-hoàn-tất-kỹ-thuật-definition-of-done---dod)
+  - [11.4. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)](#114-tiêu-chí-nghiệm-thu-theo-4-cột-mốc-quyết-định-hermes-b1--b4)
+- [CHƯƠNG 12: CÁC VẤN ĐỀ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)](#chương-12-các-vấn-đề-cần-làm-rõ-với-khách-hàng-open-questions)
 
 ---
 
@@ -1215,9 +1220,136 @@ gantt
 
 ---
 
+# CHƯƠNG 11: TIÊU CHÍ CHẤP NHẬN HOÀN TẤT YÊU CẦU (ACCEPTANCE CRITERIA - AC & DEFINITION OF DONE)
+
+Tiêu chí chấp nhận (**Acceptance Criteria - AC**) là tập hợp các điều kiện và chỉ số kiểm chứng bắt buộc mà từng yêu cầu nghiệp vụ và dịch vụ kỹ thuật phải thỏa mãn để được xác nhận là **Đã hoàn tất** và sẵn sàng nghiệm thu bàn giao.
+
 ---
 
-# CHƯƠNG 11: CÁC VẤN ĐỀ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
+## 11.1. Ma trận Tiêu chí Chấp nhận cho 10 Yêu cầu Nghiệp vụ (AC-BR_01 – AC-BR_10)
+
+| Mã AC | Yêu cầu Nghiệp vụ | Tiêu chí Kiểm chứng Khi nào Hoàn tất (Acceptance Criteria) | Phương pháp Đo lường & Kiểm thử |
+| :---: | :--- | :--- | :--- |
+| **`AC-BR_01`** | **Tự động hóa Điều phối & Ghép xe** | 1. Hệ thống tự động quét và tìm đúng tài xế `ONLINE` gần nhất trong bán kính $2\text{km} - 10\text{km}$ mà không cần can thiệp thủ công.<br>2. Phát thông báo mời cuốc đến app tài xế trong vòng $\le 2\text{s}$.<br>3. Đồng hồ đếm ngược 15 giây hoạt động chính xác; nếu tài xế từ chối hoặc hết 15s, cuốc xe tự động chuyển tiếp sang tài xế kế tiếp trong danh sách ưu tiên. | Automated E2E Test, Kịch bản Timeout Simulating |
+| **`AC-BR_02`** | **Minh bạch Lộ trình & Live Tracking** | 1. Ứng dụng khách hiển thị chính xác lộ trình đề xuất, tên tài xế, biển số xe, loại xe và số điện thoại sau khi ghép xe thành công.<br>2. Tọa độ xe di chuyển hiển thị trực quan trên bản đồ số với độ trễ cập nhật $\le 1\text{s}$ so với tọa độ GPS phát từ app tài xế.<br>3. Thời gian dự kiến đón (ETA) tự động tính toán lại khi tài xế di chuyển. | WebSocket Live Stream Verification, Map UI Test |
+| **`AC-BR_03`** | **Tập trung Tài chính & Thanh toán Số** | 1. Cước phí tạm tính và cước phí quyết toán thực tế được tính chính xác theo đúng công thức tại `BRULE_03` và `BRULE_04`.<br>2. Thanh toán điện tử sinh mã giao dịch duy nhất, không lưu trữ thông tin thẻ nhạy cảm (PCI-DSS).<br>3. Khi cổng thanh toán báo lỗi hoặc timeout $> 30\text{s}$, hệ thống kích hoạt bù trừ Saga chuyển sang thu tiền mặt thành công. | Payment Gateway Mock Testing, Chaos Fault Injection |
+| **`AC-BR_04`** | **Giám sát Vận hành & Cảnh báo Tập trung** | 1. Cổng điều hành (Operations Dashboard) hiển thị toàn bộ xe đang hoạt động và vị trí thời gian thực trên bản đồ.<br>2. Tự động cảnh báo chuyến đi bất thường (dừng quá 15 phút, lệch lộ trình).<br>3. Cho phép Operator can thiệp gán lại tài xế hoặc hủy chuyến khẩn cấp, lưu vết 100% vào `AUDIT_LOGS`. | Admin UI Integration Test, Security Audit Verification |
+| **`AC-BR_05`** | **Quản lý Định danh & Phân quyền RBAC** | 1. Người dùng đăng ký/đăng nhập nhận Token JWT hợp lệ chứa đúng vai trò (`CUSTOMER`, `DRIVER`, `OPERATOR`, `ADMIN`).<br>2. Mọi yêu cầu gọi API vượt quyền bị chặn với mã trạng thái `HTTP 403 Forbidden`.<br>3. Tài xế chưa được duyệt hồ sơ không thể bật trạng thái `ONLINE`. | RBAC Security Penetration Test, JWT Token Validation |
+| **`AC-BR_06`** | **Quản lý Chất lượng qua Đánh giá** | 1. Khách hàng chấm điểm 1-5 sao và gắn nhãn phản hồi sau khi chuyến đi chuyển trạng thái `PAID`.<br>2. Điểm sao trung bình của tài xế được tính toán và cập nhật lại ngay lập tức.<br>3. Cảnh báo tự động kích hoạt nếu điểm sao tài xế giảm dưới chuẩn $< 4.0$. | Rating Computation Unit Test, Database Trigger Test |
+| **`AC-BR_07`** | **Hệ thống Thông báo Đa kênh Tức thời** | 1. Thông báo đẩy (Push Notification qua FCM/SSE) được gửi tới thiết bị trong vòng $\le 2\text{s}$ kể từ khi phát sinh sự kiện.<br>2. Đảm bảo 100% các sự kiện cốt lõi (Có tài xế nhận, Tài xế đến nơi, Khách hủy chuyến, Thanh toán thành công) đều kích hoạt thông báo. | Push Notification Latency Test, Event Bus Listener Test |
+| **`AC-BR_08`** | **Sẵn sàng Cao & Cô lập Lỗi (Fault Isolation)** | 1. Đạt chỉ số SLA $\ge 99.9\%$ trong môi trường kiểm thử tải.<br>2. Khi Payment Service hoặc Notification Service bị ngắt kết nối (Crash/Down), luồng Đặt xe, Ghép xe và Di chuyển vẫn hoạt động bình thường (Graceful Degradation). | Chaos Engineering Test (Killing dependent containers) |
+| **`AC-BR_09`** | **Kiến trúc Linh hoạt, Dễ Mở rộng** | 1. Toàn bộ 8 dịch vụ nghiệp vụ được đóng gói thành các Docker Container độc lập, sở hữu Database riêng biệt (Database-per-Service).<br>2. Cung cấp tài liệu OpenAPI 3.0 / Swagger UI đầy đủ cho tất cả các Endpoints API. | Container Deployment Test, Swagger Schema Validation |
+| **`AC-BR_10`** | **Bảo mật Dữ liệu & Nhật ký Kiểm toán** | 1. 100% mật khẩu được băm an toàn bằng BCrypt (Cost factor $\ge 12$).<br>2. Bảng `AUDIT_LOGS` lưu trữ bất biến các thông tin: `Timestamp`, `UserID`, `Action`, `TargetID`, `IP_Address`, `Reason`.<br>3. Toàn bộ kết nối HTTP/WebSocket chạy qua giao thức TLS 1.3 (HTTPS / WSS). | SSL Labs Security Scan, Database Immutability Test |
+
+---
+
+## 11.2. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi
+
+### 🎯 Kịch bản 1: Đặt chuyến & Ghép xe Thành công cho Tài xế Gần nhất (Happy Path)
+```gherkin
+Feature: Đặt xe và Điều phối Ghép chuyến Tự động
+  Scenario: Khách hàng đặt xe thành công và tài xế gần nhất chấp nhận cuốc
+    Given Khách hàng đã đăng nhập và đang ở màn hình đặt xe
+      And Có tài xế A (loại xe 4 chỗ, Rating 4.9, cách điểm đón 1.2 km) đang ONLINE
+      And Có tài xế B (loại xe 4 chỗ, Rating 4.8, cách điểm đón 2.5 km) đang ONLINE
+    When Khách hàng chọn điểm đón, điểm đến và bấm "Xác nhận đặt xe 4 chỗ"
+    Then Hệ thống tạo chuyến đi với trạng thái "CREATED"
+      And Hệ thống tính điểm ưu tiên và gửi lời mời cuốc xe đến Tài xế A trước
+      And Ứng dụng Tài xế A hiển thị màn hình nhận chuyến với đồng hồ đếm ngược 15 giây
+    When Tài xế A bấm "Chấp nhận" trong vòng 8 giây
+    Then Chuyến đi chuyển trạng thái sang "ACCEPTED"
+      And Tài xế A chuyển trạng thái làm việc sang "BUSY"
+      And Khách hàng nhận được thông báo kèm biển số xe, tên tài xế và vị trí xe của Tài xế A
+```
+
+---
+
+### 🎯 Kịch bản 2: Tài xế Thứ nhất Timeout ➔ Tự động Chuyển tiếp sang Tài xế Thứ hai
+```gherkin
+Feature: Chuyển tiếp Cuốc xe Tự động khi Timeout
+  Scenario: Tài xế thứ nhất không phản hồi trong 15 giây
+    Given Khách hàng đã gửi yêu cầu đặt xe
+      And Hệ thống đã gửi lời mời nhận cuốc đến Tài xế A (Ưu tiên 1)
+      And Có Tài xế B (Ưu tiên 2) đang ở trạng thái ONLINE gần điểm đón
+    When Tài xế A không bấm chấp nhận và đồng hồ đếm ngược vượt quá 15 giây
+    Then Hệ thống ghi nhận lượt mời của Tài xế A là "TIMEOUT"
+      And Hệ thống tự động chuyển tiếp lời mời cuốc xe sang Tài xế B
+      And Ứng dụng Khách hàng vẫn duy trì màn hình "Đang tìm tài xế gần bạn..." mà không bị hủy
+```
+
+---
+
+### 🎯 Kịch bản 3: Quyết toán Thanh toán Điện tử Bị lỗi ➔ Kích hoạt Bù trừ Saga Thu Tiền mặt
+```gherkin
+Feature: Điều phối Giao dịch Phân tán Hermes Saga
+  Scenario: Cổng thanh toán trực tuyến bị Timeout hoặc lỗi kết nối
+    Given Chuyến đi đang ở trạng thái "IN_TRIP" với phương thức thanh toán "DIGITAL_WALLET"
+    When Tài xế bấm nút "Hoàn thành chuyến đi"
+      And Hệ thống gửi yêu cầu trừ tiền sang Cổng thanh toán bên thứ ba
+      And Cổng thanh toán phản hồi lỗi HTTP 504 Gateway Timeout sau 30 giây
+    Then Hermes Saga Orchestrator kích hoạt Giao dịch bù trừ (Compensating Transaction)
+      And Trạng thái thanh toán của chuyến đi chuyển sang "PAYMENT_PENDING_CASH"
+      And Ứng dụng Tài xế nhận thông báo: "Cổng thanh toán lỗi. Vui lòng thu tiền mặt trực tiếp từ khách!"
+      And Ứng dụng Khách hàng hiển thị số tiền mặt cần thanh toán cho tài xế
+```
+
+---
+
+### 🎯 Kịch bản 4: Khách hàng Hủy chuyến sau 2 phút ➔ Áp dụng Phí phạt Hủy
+```gherkin
+Feature: Xử lý Hủy chuyến và Phạt hủy
+  Scenario: Khách hàng hủy chuyến sau khi tài xế đã di chuyển quá 2 phút
+    Given Chuyến đi đã được ghép với Tài xế A ở trạng thái "ACCEPTED"
+      And Thời gian kể từ lúc ghép xe thành công đã trôi qua 3 phút 30 giây
+    When Khách hàng bấm nút "Hủy chuyến đi" và xác nhận lý do
+    Then Hệ thống cập nhật trạng thái chuyến đi thành "CANCELLED"
+      And Hệ thống áp dụng phí phạt hủy chuyến 15.000 VNĐ vào tài khoản của Khách hàng
+      And Tài xế A nhận được thông báo cuốc bị hủy và được chuyển trạng thái về "ONLINE"
+```
+
+---
+
+## 11.3. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)
+
+Một chức năng dịch vụ hoặc User Story chỉ được xem là **HOÀN THÀNH (DONE)** khi đáp ứng đầy đủ **5 tiêu chí kỹ thuật** sau:
+1. **Code Quality & Architecture:** Mã nguồn viết theo cấu trúc phân tầng rõ ràng (Clean Architecture), không có cảnh báo nghiêm trọng từ Linter, tuân thủ SOLID principles.
+2. **Automated Testing:** Viết Unit Test và Integration Test đầy đủ; Code Coverage đạt tối thiểu $\ge 70\%$; 100% các Test Cases đều vượt qua (Pass).
+3. **API Documentation:** Cập nhật đầy đủ tài liệu API trên Swagger UI / OpenAPI 3.0 với đầy đủ Request Body, Response Code (200, 400, 401, 403, 500) và Schema dữ liệu.
+4. **Containerization & Deployment:** Dịch vụ được đóng gói thành Docker Image hợp lệ, khởi chạy thành công qua `docker-compose up` và cấu hình độc lập qua file `.env`.
+5. **Peer Review & Version Control:** Code được review thông qua Pull Request trên GitHub, không có xung đột mã nguồn (Merge Conflict) và đã được merge vào nhánh chính.
+
+---
+
+## 11.4. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)
+
+```mermaid
+graph LR
+    B1[Cột mốc B1: Phê duyệt Khởi tạo<br>Tuần 1] --> B2[Cột mốc B2: Phê duyệt Thiết kế Kiến trúc<br>Tuần 2]
+    B2 --> B3[Cột mốc B3: Sẵn sàng Triển khai<br>Tuần 5]
+    B3 --> B4[Cột mốc B4: Nghiệm thu Đồ án<br>Tuần 7]
+```
+
+- **Cột mốc B1 (Phê duyệt Khởi tạo - Tuần 1):**
+  - [x] Hoàn tất khảo sát yêu cầu khách hàng và xác định 10 Yêu cầu Nghiệp vụ (`BR_01` – `BR_10`).
+  - [x] Tài liệu SRS được phê duyệt và lưu trữ trên GitHub.
+  - [x] Phạm vi dự án (MoSCoW) và kế hoạch 7 tuần được thống nhất.
+- **Cột mốc B2 (Phê duyệt Thiết kế Kiến trúc - Tuần 2):**
+  - [x] Hoàn thành thiết kế Kiến trúc Hướng Dịch Vụ SOA và Message Bus.
+  - [x] Hoàn thành sơ đồ Thực thể Kết hợp (ERD) và từ điển dữ liệu (Data Dictionary).
+  - [x] Đặc tả danh mục 25 Chức năng Dịch vụ (`SR_01` – `SR_25`) và thiết kế Wireframe UI.
+- **Cột mốc B3 (Sẵn sàng Triển khai - Tuần 5):**
+  - [ ] Hoàn thành lập trình 8 microservices độc lập và tích hợp API Gateway.
+  - [ ] Tích hợp thành công Message Broker (Kafka/RabbitMQ) và cơ chế bù trừ Saga.
+  - [ ] Hoàn thành giao diện Customer App, Driver App và Operations Web Portal.
+  - [ ] Vượt qua các bài kiểm tra tải (Load Testing) và kiểm tra bảo mật cơ bản.
+- **Cột mốc B4 (Nghiệm thu Đồ án - Tuần 7):**
+  - [ ] Triển khai hệ thống thành công lên môi trường Cloud/Staging.
+  - [ ] Vượt qua 100% các kịch bản kiểm thử chấp nhận người dùng (UAT).
+  - [ ] Hoàn tất báo cáo tổng kết đồ án, video demo vận hành và bảo vệ trước Hội đồng.
+
+---
+
+# CHƯƠNG 12: CÁC VẤN ĐỀ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
 
 1. **Công thức tính cước chi tiết:** Giá mở cửa, cước phí mỗi km tiếp theo, phụ phí thời gian chờ, hệ số nhân theo thời tiết và giờ cao điểm.
 2. **Thuật toán điều phối:** Tiêu chí ưu tiên tài xế ngoài khoảng cách (Điểm đánh giá sao, tỷ lệ nhận chuyến, thời gian tài xế chờ cuốc).
@@ -1225,3 +1357,4 @@ gantt
 4. **Chính sách hủy chuyến & Phí phạt:** Điều kiện hủy miễn phí và mức phí phạt nếu hủy sau khi tài xế đã di chuyển tới điểm đón.
 5. **Cơ chế xử lý mất kết nối (Offline Handling):** Phương án xử lý lưu tạm và đồng bộ lại tọa độ khi tài xế/khách hàng bị rớt mạng giữa đường.
 6. **Thời gian lưu trữ dữ liệu (Data Retention):** Quy định thời gian lưu trữ lịch sử GPS và nhật ký kiểm toán trước khi lưu trữ định kỳ (Archiving).
+
