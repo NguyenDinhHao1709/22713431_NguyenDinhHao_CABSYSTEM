@@ -18,20 +18,19 @@
 - [CHƯƠNG 2: YÊU CẦU NGHIỆP VỤ DOANH NGHIỆP (BUSINESS REQUIREMENTS - BR)](#chương-2-yêu-cầu-nghiệp-vụ-doanh-nghiệp-business-requirements---br)
   - [2.1. Danh mục 10 Yêu cầu Nghiệp vụ Cốt lõi (BR_01 – BR_10)](#21-danh-mục-10-yêu-cầu-nghiệp-vụ-cốt-lõi-br_01--br_10)
   - [2.2. Phân rã Miền Nghiệp vụ con (Domain Decomposition)](#22-phân-rã-miền-nghiệp-vụ-con-domain-decomposition)
-  - [2.3. Ma trận Đánh giá Mức độ Tác động (Cross-Domain Impact Analysis)](#23-ma-trận-đánh-giá-mức-độ-tác-động-cross-domain-impact-analysis)
-  - [2.4. Khoanh vùng Phạm vi & Ma trận MoSCoW (Project Scope & Boundaries)](#24-khoanh-vùng-phạm-vi--ma-trận-moscow-project-scope--boundaries)
+  - [2.2.1. Phân rã Miền Nghiệp vụ con & Chiến lược Chịu lỗi](#221-phân-rã-miền-nghiệp-vụ-con--chiến-lược-chịu-lỗi)
+  - [2.3. Khoanh vùng Phạm vi & Ma trận MoSCoW (Project Scope & Boundaries)](#23-khoanh-vùng-phạm-vi--ma-trận-moscow-project-scope--boundaries)
 - [CHƯƠNG 3: MÔ HÌNH HÓA QUY TRÌNH NGHIỆP VỤ (BUSINESS PROCESS MODELING - BPM)](#chương-3-mô-hình-hóa-quy-trình-nghiệp-vụ-business-process-modeling---bpm)
   - [3.1. Sơ đồ Quy trình Nghiệp vụ Tổng thể (BPMN Swimlane Flow)](#31-sơ-đồ-quy-trình-nghiệp-vụ-tổng-thể-bpmn-swimlane-flow)
   - [3.2. Quy trình Điều phối & Ghép xe Tự động (BR_01)](#32-quy-trình-điều-phối--ghép-xe-tự-động-br_01)
   - [3.3. Quy trình Quyết toán Thanh toán & Bù trừ Giao dịch Saga (BR_03, BR_08)](#33-quy-trình-quyết-toán-thanh-toán--bù-trừ-giao-dịch-saga-br_03-br_08)
   - [3.4. Quy trình Giám sát Vận hành & Xử lý Sự cố (BR_04, BR_10)](#34-quy-trình-giám-sát-vận-hành--xử-lý-sự-cố-br_04-br_10)
-  - [3.5. Ma trận Ánh xạ Truy vết Nghiệp vụ (Traceability: BR ➔ BPM ➔ SOA Services)](#35-ma-trận-ánh-xạ-truy-vết-nghiệp-vụ-traceability-br--bpm--soa-services)
+  - [3.5. Ánh xạ Quy trình Nghiệp vụ sang Kiến trúc Dịch vụ SOA](#35-ánh-xạ-quy-trình-nghiệp-vụ-sang-kiến-trúc-dịch-vụ-soa)
 - [CHƯƠNG 4: THIẾT LẬP CÁC QUY TẮC & LUẬT NGHIỆP VỤ (BUSINESS RULES: BRULE_01 – BRULE_10)](#chương-4-thiết-lập-các-quy-tắc--luật-nghiệp-vụ-business-rules-brule_01--brule_10)
   - [4.1. Bảng Tổng hợp 10 Luật Nghiệp vụ Chi tiết](#41-bảng-tổng-hợp-10-luật-nghiệp-vụ-chi-tiết)
   - [4.2. Công thức Định giá & Thuật toán Xếp hạng Điều phối](#42-công-thức-định-giá--thuật-toán-xếp-hạng-điều-phối)
 - [CHƯƠNG 5: ĐẶC TẢ YÊU CẦU CHỨC NĂNG DỊCH VỤ (SERVICE REQUIREMENTS: SR_01 – SR_25)](#chương-5-đặc-tả-yêu-cầu-chức-năng-dịch-vụ-service-requirements-sr_01--sr_25)
-  - [5.1. Ma trận Tra cứu Nhanh 25 Chức năng Dịch vụ (Master SR Matrix)](#51-ma-trận-tra-cứu-nhanh-25-chức-năng-dịch-vụ-master-sr-matrix)
-  - [5.2. Đặc tả Chi tiết Quy cách Nghiệp vụ 25 SR theo 8 Nhóm Dịch vụ](#52-đặc-tả-chi-tiết-quy-cách-nghiệp-vụ-25-sr-theo-8-nhóm-dịch-vụ)
+  - [Bảng Đặc tả Chi tiết 25 Chức năng Dịch vụ Nghiệp vụ (Master SR Matrix)](#chương-5-đặc-tả-yêu-cầu-chức-năng-dịch-vụ-service-requirements-sr_01--sr_25)
 - [CHƯƠNG 6: THIẾT KẾ CA SỬ DỤNG (USE CASE SPECIFICATIONS & DIAGRAMS)](#chương-6-thiết-kế-ca-sử-dụng-use-case-specifications--diagrams)
   - [6.1. Sơ đồ Ca Sử dụng Tổng quan (Actor-Based Use Case Diagram)](#61-sơ-đồ-ca-sử-dụng-tổng-quan-actor-based-use-case-diagram)
   - [6.2. Danh mục 13 Ca Sử dụng Hệ thống (UC-01 – UC-13)](#62-danh-mục-13-ca-sử-dụng-hệ-thống-uc-01--uc-13)
@@ -86,8 +85,6 @@ Dưới đây là 5 Mục tiêu Kinh doanh Chiến lược (**Business Goals - B
 
 ---
 
----
-
 ## 1.2. Phân tích Các Tác nhân Hệ thống (System Actors & Stakeholders)
 | Tác nhân (Actor) | Mô tả vai trò |
 | :--- | :--- |
@@ -96,8 +93,6 @@ Dưới đây là 5 Mục tiêu Kinh doanh Chiến lược (**Business Goals - B
 | **Nhân viên vận hành (Operator)** | Giám sát các chuyến đi đang hoạt động, can thiệp xử lý sự cố, hỗ trợ điều phối và hỗ trợ khách hàng/tài xế. |
 | **Quản trị viên (Admin)** | Quản lý người dùng, duyệt hồ sơ tài xế/phương tiện, phân quyền hệ thống, xem báo cáo doanh thu & hiệu suất. |
 | **Hệ thống bên thứ ba (External Services)** | Cổng thanh toán (Payment Gateway), Dịch vụ bản đồ (Map API), Dịch vụ thông báo (Push/SMS Notification Provider). |
-
----
 
 ---
 
@@ -127,8 +122,6 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 | **BR_08** | **Đảm bảo Tính sẵn sàng cao & Cô lập lỗi hệ thống (Fault Isolation)** | `BG_05` | Hệ thống cũ dễ quá tải vào giờ cao điểm; lỗi một chức năng làm sập toàn bộ ứng dụng. | Hệ thống hoạt động ổn định khi tải tăng cao; **lỗi ở chức năng thanh toán hoặc thông báo KHÔNG ĐƯỢC LÀM DỪNG luồng đặt xe chính**; các dịch vụ có thể mở rộng độc lập. | Cam kết SLA hoạt động 99.9%; Không có điểm lỗi đơn (No Single Point of Failure). |
 | **BR_09** | **Kiến trúc linh hoạt, dễ mở rộng tính năng trong tương lai** | `BG_05` | Kiến trúc cũ nguyên khối (Monolithic), khó bảo trì và tốn kém khi muốn bổ sung nghiệp vụ mới. | Xây dựng theo **Kiến trúc Hướng Dịch Vụ (SOA/Microservices)** để dễ dàng bổ sung loại dịch vụ mới (giao hàng, xe điện), thêm cổng thanh toán và triển khai nâng cấp từng phần (Zero-downtime). | Giảm thời gian phát triển và triển khai tính năng mới (Time-to-Market) xuống 70%. |
 | **BR_10** | **Bảo mật toàn diện, bảo vệ quyền riêng tư & Nhật ký kiểm toán** | `BG_04`, `BG_05` | Dữ liệu vị trí, phương tiện và giao dịch chưa có cơ chế kiểm soát bảo mật và lưu vết truy vết. | Xác thực an toàn đa lớp; bảo vệ thông tin cá nhân, dữ liệu định vị và lịch sử giao dịch; **lưu vết kiểm toán (Audit Logs)** mọi thao tác quản trị nhạy cảm để phục vụ đối soát khi có tranh chấp. | Tuân thủ 100% quy định bảo vệ dữ liệu cá nhân; Lưu vết 100% thao tác can thiệp của nhân viên quản trị. |
-
----
 
 ---
 
@@ -169,21 +162,19 @@ graph TD
 
 ---
 
-### 2.2.1. Bảng Chi tiết Phân rã Nghiệp vụ con & Đánh giá Tác động
+### 2.2.1. Phân rã Miền Nghiệp vụ con & Chiến lược Chịu lỗi
 
-| STT | Nghiệp vụ con (Sub-business) | Phân loại Miền (Domain Type) | Trách nhiệm cốt lõi (Core Responsibility) | Tác động khi Hoạt động bình thường (Positive Impact) | Tác động khi Xảy ra Sự cố (Failure & Ripple Effect) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | **Quản lý Định danh & Xác thực (Identity & Access)** | Generic Sub-domain | Đăng ký, đăng nhập (JWT), phân quyền (RBAC), quản lý hồ sơ cá nhân và kiểm duyệt phương tiện. | Cung cấp định danh tin cậy và cơ chế bảo mật cho mọi yêu cầu gọi dịch vụ trong toàn hệ thống. | **Nghiêm trọng (High):** Người dùng không thể đăng nhập phiên mới. Tuy nhiên, nếu áp dụng JWT Stateless, các phiên đang hoạt động với token hợp lệ vẫn tiếp tục chuyến bình thường. |
-| **2** | **Định vị & Theo dõi Tài xế (Location & Telemetry)** | Supporting Sub-domain | Thu thập tọa độ GPS theo thời gian thực (1-3s), quản lý Geo-Spatial Index trên Redis Cache, tìm tài xế gần điểm đón. | Cung cấp dữ liệu vị trí tức thời cho thuật toán điều phối và hỗ trợ tính năng Live Tracking hành trình cho khách hàng. | **Trung bình - Cao (Medium-High):** Khách hàng không xem được xe di chuyển trên bản đồ; Điều phối phải dùng tọa độ gần nhất (Fallback Cache) hoặc mở rộng bán kính tìm kiếm. |
-| **3** | **Điều phối & Ghép chuyến (Matching & Dispatching)** | **Core Domain (Cốt lõi)** | Tìm kiếm tài xế tối ưu theo vị trí/tiêu chí, quản lý hàng đợi mời cuốc (15s timeout), tự động chuyển tiếp tài xế khi bị từ chối. | Rút ngắn thời gian chờ xe của khách hàng, tối ưu hóa tỷ lệ nhận chuyến và quãng đường di chuyển rỗng của tài xế. | **Nghiêm trọng (Critical):** Chuyến xe bị treo, khách hàng chờ lâu và hủy app. Cần cơ chế tự động báo "Không tìm thấy xe" hoặc chuyển sang nhân viên điều phối thủ công. |
-| **4** | **Quản lý Vòng đời Chuyến đi (Trip Lifecycle Management)** | **Core Domain (Cốt lõi)** | Quản lý máy trạng thái chuyến (`CREATED` ➔ `ACCEPTED` ➔ `ARRIVED` ➔ `IN_TRIP` ➔ `COMPLETED` ➔ `PAID`), lưu vết lộ trình. | Giữ vai trò nhạc trưởng đồng bộ trạng thái giữa Khách hàng, Tài xế và phát sự kiện sang các dịch vụ khác. | **Nghiêm trọng (Critical):** Trạng thái chuyến đi bị lệch giữa khách và tài xế, không thể chuyển tiếp hành trình. Cần cơ chế lưu trạng thái bền vững (State Machine Persistence). |
-| **5** | **Định giá & Tính cước (Pricing & Billing)** | Supporting / Core | Ước tính giá trước chuyến (Fare Estimate) và tính toán tổng cước phí chính xác sau chuyến đi dựa trên quãng đường/thời gian/phụ phí. | Tạo sự minh bạch chi phí cho khách hàng, bảo đảm tính đúng doanh thu và hoa hồng tài xế. | **Cao (High):** Không ước tính được giá -> Khách không bấm đặt xe được. Nếu lỗi lúc kết thúc chuyến -> Áp dụng công thức cước cơ bản Fallback (Default Base Fare) dựa trên GPS đã ghi nhận. |
-| **6** | **Thanh toán & Đối soát (Payment & Settlement)** | Generic Sub-domain | Tích hợp cổng thanh toán trực tuyến (Momo, VNPay, Thẻ) và thanh toán Tiền mặt (Cash), quản lý giao dịch và đối soát ví. | Xử lý thanh toán nhanh chóng, an toàn không lưu thẻ nhạy cảm, tự động hạch toán doanh thu. | **Trung bình (Medium):** Khi cổng thanh toán bên thứ ba bị sập/chậm, hệ thống **không bị tê liệt** nhờ kiến trúc phân tán; tự động kích hoạt chuyển sang thanh toán **Tiền mặt (Cash)** cho tài xế. |
-| **7** | **Thông báo Đa kênh (Notification Service)** | Supporting Sub-domain | Tiếp nhận sự kiện bất đồng bộ từ Event Bus và đẩy thông báo Push (FCM), SMS (Twilio) hoặc In-app notification. | Cung cấp thông tin kịp thời (tài xế đến, trạng thái thanh toán), nâng cao trải nghiệm người dùng. | **Thấp (Low):** Dịch vụ thông báo lỗi không làm gián đoạn luồng đặt xe hay thanh toán chính (Loose Coupling). Khách vẫn xem được trạng thái trên giao diện chính nhờ WebSocket/Polling. |
-| **8** | **Đánh giá & Phản hồi (Rating & Quality Control)** | Supporting Sub-domain | Tiếp nhận điểm sao (1-5 sao) và nhận xét của khách, tính điểm trung bình uy tín của tài xế. | Sàng lọc và nâng cao chất lượng dịch vụ; cung cấp chỉ số đánh giá làm đầu vào ưu tiên cho thuật toán điều phối xe. | **Rất thấp (Very Low):** Hoàn toàn không chặn luồng nghiệp vụ di chuyển hay thanh toán của hệ thống. |
-| **9** | **Giám sát & Vận hành (Operations & Incident Portal)** | Supporting Sub-domain | Cung cấp Dashboard theo dõi chuyến đi trực tiếp, can thiệp xử lý sự cố (hủy cưỡng bức, gán lại xe), báo cáo doanh thu & kiểm toán. | Cho phép nhân viên vận hành kiểm soát toàn cục, can thiệp các ca sự cố ngoại lệ và hỗ trợ khách hàng kịp thời. | **Trung bình (Medium):** Không ảnh hưởng đến các chuyến xe tự động đang chạy giữa khách và tài xế, nhưng làm chậm khả năng xử lý khiếu nại và giám sát sự cố phát sinh. |
-
----
+| STT | Miền con (Sub-domain) | Phân loại | Microservice đảm nhận | Trách nhiệm cốt lõi | Chiến lược Chịu lỗi / Resilience |
+| :---: | :--- | :---: | :--- | :--- | :--- |
+| **1** | **Định danh & Xác thực** | Generic | `User & Auth Service` | Đăng ký, đăng nhập JWT, phân quyền RBAC, hồ sơ người dùng | JWT Stateless; phiên hợp lệ không bị gián đoạn nếu Auth Service reload |
+| **2** | **Định vị & Telemetry** | Supporting | `Location & Tracking Service` | Thu thập GPS (1-3s), Geo-Index trên Redis, tìm xe gần | Fallback dùng tọa độ đệm gần nhất từ Redis Cache khi mất GPS tức thời |
+| **3** | **Điều phối & Ghép chuyến** | **Core** | `Matching & Dispatch Service` | Lọc xe theo bán kính, tính điểm ưu tiên, vòng lặp timeout 15s | Tự động chuyển tiếp tài xế tiếp theo; báo hết xe hoặc chuyển điều phối viên |
+| **4** | **Quản lý Chuyến đi** | **Core** | `Trip Management Service` | Quản lý máy trạng thái vòng đời chuyến (`CREATED` ➔ `PAID`) | Lưu vết bền vững vào Trip DB; đồng bộ hai chiều Khách - Tài xế |
+| **5** | **Định giá & Tính cước** | Core | `Pricing & Billing Service` | Ước tính cước ban đầu và chốt cước thực tế từ lộ trình GPS | Áp dụng công thức biểu phí mặc định (Base Fare Fallback) khi tính cước lỗi |
+| **6** | **Thanh toán & Đối soát** | Generic | `Payment Service` | Xử lý thanh toán Tiền mặt và Cổng điện tử Sandbox | Bù trừ Hermes Saga: tự động chuyển sang Tiền mặt khi cổng điện tử lỗi |
+| **7** | **Thông báo Đa kênh** | Supporting | `Notification Service` | Đẩy Push Notification (FCM), SMS và In-app alert | Bất đồng bộ qua Message Bus; lỗi thông báo không làm dừng luồng đặt xe |
+| **8** | **Đánh giá & Phản hồi** | Supporting | `Rating & Review Service` | Tiếp nhận chấm điểm 1-5 sao, tính điểm uy tín tài xế | Tác vụ nền (Background); hoàn toàn không ảnh hưởng luồng nghiệp vụ chính |
+| **9** | **Giám sát & Vận hành** | Supporting | `Admin & Operations Service` | Dashboard trực tiếp, can thiệp sự cố, báo cáo và Audit Log | Độc lập với luồng đặt xe; lưu vết 100% thao tác can thiệp quản trị |
 
 ---
 
@@ -421,24 +412,8 @@ flowchart TD
 
 ---
 
-## 3.5. Ma trận Ánh xạ Nghiệp vụ (Traceability Matrix: BR ➔ Business Process ➔ SOA Services)
-
-| Mã BR | Tên Nghiệp vụ Doanh nghiệp | Quy trình Nghiệp vụ tương ứng | Dịch vụ SOA / Microservice thực thi |
-| :---: | :--- | :--- | :--- |
-| **BR_01** | Tự động hóa Điều phối & Ghép xe | Quy trình ghép xe đa tài xế & vòng lặp timeout 15s | `Matching & Dispatch Service`, `Location Service` |
-| **BR_02** | Minh bạch lộ trình & Theo dõi trực tiếp | Quy trình cập nhật trạng thái & Live Tracking | `Trip Service`, `Location Service`, `Map API` |
-| **BR_03** | Quản lý tài chính & Thanh toán an toàn | Quy trình tính cước & tích hợp cổng thanh toán Sandbox | `Pricing Service`, `Payment Service`, `Saga Orchestrator` |
-| **BR_04** | Giám sát & Điều hành vận hành tập trung | Quy trình cảnh báo sự cố & điều hành bản đồ trực tiếp | `Admin Portal`, `Live Stream Service`, `Trip Service` |
-| **BR_05** | Hỗ trợ đa nhóm người dùng & RBAC | Quy trình xác thực JWT & phân quyền vai trò | `User & Auth Service`, `API Gateway` |
-| **BR_06** | Quản lý chất lượng qua Đánh giá | Quy trình đánh giá 1-5 sao sau chuyến đi | `Rating Service`, `Driver Profile Service` |
-| **BR_07** | Hệ thống thông báo đa kênh | Quy trình đẩy thông báo sự kiện (Push/SMS/WebSocket) | `Hermes Event Bus`, `Notification Service` |
-| **BR_08** | Tính sẵn sàng cao & Cô lập lỗi | Cơ chế bù trừ giao dịch (Saga Fallback sang Tiền mặt) | `Hermes Saga Orchestrator`, `Payment Service` |
-| **BR_09** | Kiến trúc linh hoạt, dễ mở rộng | Mô hình phân tách độc lập các Domain dịch vụ | Toàn bộ hệ thống Microservices & `API Gateway` |
-| **BR_10** | Bảo mật, riêng tư & Nhật ký kiểm toán | Quy trình ghi log kiểm toán (Audit Logging) | `Audit Service`, `Security Middleware` |
-
----
-
----
+## 3.5. Ánh xạ Quy trình Nghiệp vụ sang Kiến trúc Dịch vụ SOA
+Mỗi phân hệ quy trình nghiệp vụ BPMN được hiện thực hóa thông qua sự phối hợp của 8 microservices độc lập và liên kết chặt chẽ với toàn bộ chuỗi yêu cầu. Để đảm bảo tính nhất quán và tránh trùng lặp thông tin, toàn bộ ma trận truy vết chi tiết từ **Mục tiêu (BG) ➔ Yêu cầu (BR) ➔ Quy trình (BPMN) ➔ Dịch vụ (SR) ➔ Ca sử dụng (UC) ➔ Tiêu chí nghiệm thu (AC)** được đặc tả tập trung tại **[Mục 11.6: Bảng Truy vết Hợp nhất Toàn diện](#116-bảng-truy-vết-hợp-nhất-toàn-diện-end-to-end-master-traceability-matrix-bg--br--bpmn--sr--uc--ac)**.
 
 ---
 
@@ -476,178 +451,35 @@ $$\text{PriorityScore} = \left(\frac{1}{\text{DistanceToPickup (km)}}\right) \ti
 
 # CHƯƠNG 5: ĐẶC TẢ YÊU CẦU CHỨC NĂNG DỊCH VỤ (SERVICE REQUIREMENTS: SR_01 – SR_25)
 
-## 5.1. Ma trận Tra cứu Nhanh 25 Chức năng Dịch vụ (Master SR Matrix)
+Toàn bộ hệ thống CAB System được phân rã thành **25 Chức năng Dịch vụ Nghiệp vụ (SR_01 – SR_25)** thuộc 8 nhóm dịch vụ SOA. Bảng dưới đây đặc tả đầy đủ quy cách nghiệp vụ, dữ liệu vào/ra và phân bổ dịch vụ thực thi:
 
-Ma trận Tra cứu Nhanh Danh mục SR
-
-| Mã SR | Tên Chức năng Dịch vụ Nghiệp vụ | Tác nhân | Đầu vào (Input Data) | Đầu ra (Output / Event) | Ánh xạ BR | Microservice phụ trách |
-| :---: | :--- | :--- | :--- | :--- | :---: | :--- |
-| **`SR_01`** | **Đăng ký Tài khoản & Hồ sơ** | Khách hàng, Tài xế | SĐT, Email, Mật khẩu, Hồ sơ bằng lái, CCCD | Tài khoản kích hoạt, Hồ sơ chờ duyệt | `BR_05` | `User & Auth Service` |
-| **`SR_02`** | **Xác thực & Cấp quyền JWT** | Khách, Tài xế, Admin | Thông tin đăng nhập, Credentials | JWT Access Token, Refresh Token, Role RBAC | `BR_05`, `BR_10` | `User & Auth Service`, `API Gateway` |
-| **`SR_03`** | **Quản lý Hồ sơ & Phương tiện** | Tài xế, Admin | Biển số xe, Loại xe (4/7 chỗ, xe máy), Giấy tờ | Hồ sơ xe phê duyệt, Trạng thái phương tiện | `BR_05` | `User & Auth Service` |
-| **`SR_04`** | **Chuyển đổi Trạng thái Hoạt động** | Tài xế | Lệnh bật/tắt Online / Busy / Offline | Cập nhật trạng thái Driver State trên Redis | `BR_01` | `Driver State Service` |
-| **`SR_05`** | **Thu thập & Phát sóng GPS** | Driver App | Tọa độ (Lat, Long, Speed, Bearing) mỗi 1–3s | Cập nhật vị trí trên Redis Geospatial Index | `BR_01`, `BR_02` | `Location & Telemetry Service` |
-| **`SR_06`** | **Tìm Tài xế theo Bán kính** | Matching Service | Tọa độ điểm đón, Bán kính R, Loại xe | Danh sách [DriverID_1, DriverID_2, ...] | `BR_01` | `Location & Telemetry Service` |
-| **`SR_07`** | **Ước tính Giá cước & ETA** | Khách hàng | Điểm đón, Điểm đến, Loại xe | Cước phí tạm tính, Thời gian đón xe dự kiến | `BR_02`, `BR_03` | `Pricing Service`, `Map API` |
-| **`SR_08`** | **Khởi tạo Yêu cầu Đặt chuyến** | Khách hàng | Điểm đón/đến, Loại xe, Mã khách hàng | Bản ghi Trip (`CREATED`), Event `trip.created` | `BR_01` | `Trip Management Service` |
-| **`SR_09`** | **Ghép xe Tối ưu & Mời cuốc** | Matching Service | Danh sách tài xế gần, Điểm uy tín | Gửi thông báo mời nhận cuốc + Bật Timer 15s | `BR_01`, `BR_06` | `Matching & Dispatch Service` |
-| **`SR_10`** | **Xử lý Mời cuốc & Chuyển tiếp** | Tài xế, Timer | Phản hồi Accept / Reject / Quá 15s | Gán tài xế (`ACCEPTED`) HOẶC Chuyển tiếp D_next | `BR_01` | `Matching Service`, `Trip Service` |
-| **`SR_11`** | **Hủy chuyến & Phạt hủy** | Khách hàng, Tài xế | Lệnh hủy chuyến, Lý do hủy | Bản ghi Trip (`CANCELLED`), Phí phạt (nếu có) | `BR_01`, `BR_04` | `Trip Management Service` |
-| **`SR_12`** | **Cập nhật Tiến trình Chuyến** | Tài xế | Lệnh chuyển mốc trạng thái từ App tài xế | Chuyển `ARRIVED` ➔ `IN_TRIP` ➔ `COMPLETED` | `BR_02` | `Trip Management Service` |
-| **`SR_13`** | **Live Tracking & Lộ trình** | Khách hàng | Mã chuyến đi (Trip ID) | Luồng WebSocket tọa độ xe & Lộ trình trực tiếp | `BR_02` | `Location Service`, `Trip Service` |
-| **`SR_14`** | **Tra cứu Lịch sử Chuyến đi** | Khách, Tài xế, Admin | Bộ lọc thời gian, Mã người dùng | Danh sách chi tiết các chuyến đi, Biên lai | `BR_02`, `BR_04` | `Trip Management Service` |
-| **`SR_15`** | **Quyết toán Cước phí Thực tế** | Hệ thống Pricing | Lộ trình GPS thực tế, Thời gian thực tế, Phụ phí | Tổng cước phí cuối cùng cần thanh toán | `BR_03` | `Pricing & Billing Service` |
-| **`SR_16`** | **Xử lý Thanh toán Tiền mặt** | Khách hàng, Tài xế | Số tiền cước, Lệnh xác nhận thu tiền từ tài xế | Bản ghi Chuyến đi (`PAID`), Hóa đơn Tiền mặt | `BR_03` | `Payment Service` |
-| **`SR_17`** | **Thanh toán Cổng Điện tử** | Khách, Payment GW | Yêu cầu trừ tiền (VNPay/MoMo/Thẻ ngân hàng) | Webhook giao dịch thành công, Biên lai số | `BR_03`, `BR_10` | `Payment Integration Service` |
-| **`SR_18`** | **Điều phối Bù trừ khi Lỗi Cổng** | Hermes Saga Orchestrator | Sự kiện `payment.failed` hoặc Gateway Timeout | Chuyển sang Tiền mặt, Cảnh báo thu tiền | `BR_03`, `BR_08` | `Hermes Saga`, `Payment Service` |
-| **`SR_19`** | **Tiếp nhận Đánh giá & Góp ý** | Khách hàng | Điểm sao (1–5 sao), Nội dung nhận xét | Bản ghi Feedback, Đánh giá chất lượng | `BR_06` | `Rating & Feedback Service` |
-| **`SR_20`** | **Tổng hợp Điểm Uy tín Tài xế** | Hệ thống Rating | Lịch sử sao và tỷ lệ nhận/hủy chuyến | Điểm tín nhiệm trung bình, Hạng tài xế | `BR_01`, `BR_06` | `Rating Service`, `Matching Service` |
-| **`SR_21`** | **Phát Thông báo cho Khách hàng** | Hermes Event Bus | Sự kiện Chuyến đi, Tài xế đến, Hóa đơn | Push Notification (FCM), WebSocket, SMS | `BR_02`, `BR_07` | `Notification Service` |
-| **`SR_22`** | **Phát Thông báo cho Tài xế** | Hermes Event Bus | Sự kiện Cuốc xe mới, Khách hủy chuyến | Chuông báo cuốc xe, Alert In-App tài xế | `BR_01`, `BR_07` | `Notification Service` |
-| **`SR_23`** | **Giám sát Bản đồ Vận hành** | Operator | Bộ lọc khu vực, Trạng thái chuyến đi | Bản đồ trực tiếp toàn bộ xe & chuyến đang chạy | `BR_04` | `Admin & Operations Portal` |
-| **`SR_24`** | **Xử lý Sự cố Chuyến đi** | Operator | Cảnh báo xe đứng yên > 5 phút / Mất GPS | Lệnh Hủy cưỡng bức / Điều xe cứu hộ thủ công | `BR_04`, `BR_08` | `Incident & Operations Service` |
-| **`SR_25`** | **Kiểm toán & Báo cáo Thống kê** | Admin, Quản trị | Thao tác can thiệp, Dữ liệu giao dịch | Nhật ký Audit Log, Dashboard Báo cáo Doanh thu | `BR_04`, `BR_10` | `Audit & Analytics Service` |
-
----
-
----
-
-## 5.2. Đặc tả Chi tiết Quy cách Nghiệp vụ 25 SR theo 8 Nhóm Dịch vụ
-
-Dựa trên Quy trình Nghiệp vụ (BPM) và Yêu cầu Doanh nghiệp (`BR_01` - `BR_10`), toàn bộ hệ thống được phân rã thành **25 Chức năng Dịch vụ Nghiệp vụ (Service Requirements - SR)** chuẩn hóa:
-
-#### 5.2.1. Nhóm Dịch vụ Định danh & Quản lý Người dùng (Identity & Access Services)
-* **`SR_01` (Đăng ký tài khoản & Nộp hồ sơ):**
-  * *Tác nhân:* Khách hàng, Tài xế.
-  * *Mô tả:* Khách hàng tự đăng ký qua số điện thoại/email/OTP. Tài xế nộp hồ sơ lý lịch, ảnh CCCD, bằng lái xe để chờ xét duyệt.
-  * *Ánh xạ:* `BR_05` | *Dịch vụ phụ trách:* `User & Auth Service`.
-* **`SR_02` (Xác thực tập trung & Cấp quyền JWT):**
-  * *Tác nhân:* Khách hàng, Tài xế, Quản trị viên (Admin), Nhân viên (Operator).
-  * *Mô tả:* Xác thực tài khoản, mã hóa mật khẩu (BCrypt), cấp cặp Token (Access Token JWT + Refresh Token) chứa vai trò (Role-Based Access Control) để truy cập API.
-  * *Ánh xạ:* `BR_05`, `BR_10` | *Dịch vụ phụ trách:* `User & Auth Service`, `API Gateway`.
-* **`SR_03` (Quản lý Hồ sơ & Thông tin Phương tiện):**
-  * *Tác nhân:* Tài xế, Quản trị viên.
-  * *Mô tả:* Lưu trữ và cập nhật thông tin cá nhân, bằng lái, biển số xe, dòng xe, màu sắc và phân loại dịch vụ (Xe máy, Xe 4 chỗ, Xe 7 chỗ).
-  * *Ánh xạ:* `BR_05` | *Dịch vụ phụ trách:* `User & Auth Service`.
-
----
-
-#### 5.2.2. Nhóm Dịch vụ Vị trí & Giám sát Trạng thái Đội xe (Location & Telemetry Services)
-* **`SR_04` (Chuyển đổi Trạng thái Hoạt động Tài xế):**
-  * *Tác nhân:* Tài xế.
-  * *Mô tả:* Tài xế bật/tắt chuyển đổi giữa các trạng thái: *Sẵn sàng nhận chuyến (Online)*, *Đang bận chuyến (Busy)*, *Nghỉ ngơi (Offline)*.
-  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Driver State Service`.
-* **`SR_05` (Thu thập & Phát sóng Tọa độ GPS Thời gian thực):**
-  * *Tác nhân:* Thiết bị Tài xế (Driver App).
-  * *Mô tả:* Định kỳ mỗi 1–3 giây gửi tọa độ GPS lên hệ thống khi ở trạng thái Online; lưu vết vào Redis Geospatial Index để truy vấn với độ trễ cực thấp.
-  * *Ánh xạ:* `BR_01`, `BR_02` | *Dịch vụ phụ trách:* `Location & Telemetry Service`.
-* **`SR_06` (Tìm kiếm Tài xế Khả dụng theo Bán kính Điểm đón):**
-  * *Tác nhân:* Hệ thống Điều phối (Matching Service).
-  * *Mô tả:* Truy vấn danh sách tài xế đang Online, không bận, đúng loại xe yêu cầu trong bán kính `R` km quanh tọa độ điểm đón của khách hàng.
-  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Location & Telemetry Service`.
-
----
-
-#### 5.2.3. Nhóm Dịch vụ Đặt xe & Điều phối Ghép chuyến (Booking & Dispatching Services)
-* **`SR_07` (Ước tính Giá cước & Thời gian Đón xe ETA):**
-  * *Tác nhân:* Khách hàng.
-  * *Mô tả:* Tiếp nhận điểm đón và điểm đến; tính khoảng cách, thời gian dự kiến (thông qua Map API) và áp dụng công thức giá để hiển thị cước phí tạm tính cho khách xem trước.
-  * *Ánh xạ:* `BR_02`, `BR_03` | *Dịch vụ phụ trách:* `Pricing Service`, `Map Service`.
-* **`SR_08` (Khởi tạo Yêu cầu Đặt chuyến):**
-  * *Tác nhân:* Khách hàng.
-  * *Mô tả:* Khách hàng bấm xác nhận đặt xe; hệ thống tạo bản ghi chuyến đi với trạng thái `CREATED` và phát sự kiện `trip.created` lên Hermes Event Bus.
-  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Trip Management Service`.
-* **`SR_09` (Thuật toán Ghép xe Tối ưu & Gửi Lời mời Cuốc):**
-  * *Tác nhân:* Hệ thống (Matching Service).
-  * *Mô tả:* Sắp xếp danh sách tài xế tiềm năng theo thứ tự ưu tiên (khoảng cách gần nhất + điểm đánh giá cao); gửi thông báo mời nhận chuyến tới tài xế ưu tiên đầu tiên và kích hoạt bộ đếm ngược 15 giây.
-  * *Ánh xạ:* `BR_01`, `BR_06` | *Dịch vụ phụ trách:* `Matching & Dispatch Service`.
-* **`SR_10` (Xử lý Phản hồi Mời cuốc & Tự động Chuyển tiếp):**
-  * *Tác nhân:* Tài xế, Hệ thống Timer.
-  * *Mô tả:*
-    - Nếu tài xế bấm **Chấp nhận (Accept)**: Gán tài xế vào chuyến đi, chuyển trạng thái `ACCEPTED`.
-    - Nếu tài xế bấm **Từ chối (Reject)** hoặc **Hết 15 giây (Timeout)**: Hệ thống tự động chuyển tiếp lời mời sang tài xế tiếp theo trong danh sách mà không bắt khách tạo lại yêu cầu.
-    - Nếu hết danh sách tài xế: Thông báo "Không tìm thấy tài xế" cho khách hàng.
-  * *Ánh xạ:* `BR_01` | *Dịch vụ phụ trách:* `Matching & Dispatch Service`, `Trip Management Service`.
-* **`SR_11` (Xử lý Hủy chuyến & Áp dụng Chính sách Hủy):**
-  * *Tác nhân:* Khách hàng, Tài xế.
-  * *Mô tả:* Cho phép hủy chuyến kèm lý do; hệ thống giải phóng trạng thái bận của tài xế và tính phí phạt (nếu hủy sau khi tài xế đã đến điểm đón).
-  * *Ánh xạ:* `BR_01`, `BR_04` | *Dịch vụ phụ trách:* `Trip Management Service`.
-
----
-
-#### 5.2.4. Nhóm Dịch vụ Quản lý Hành trình & Theo dõi Trực tiếp (Trip Execution & Tracking Services)
-* **`SR_12` (Cập nhật Tiến trình Chuyến đi):**
-  * *Tác nhân:* Tài xế.
-  * *Mô tả:* Tài xế cập nhật tuần tự các mốc trạng thái: `ARRIVED_AT_PICKUP` (Đã đến điểm đón) ➔ `IN_TRIP` (Đã đón khách & Bắt đầu đi) ➔ `COMPLETED` (Đã đến nơi & Hoàn thành).
-  * *Ánh xạ:* `BR_02` | *Dịch vụ phụ trách:* `Trip Management Service`.
-* **`SR_13` (Truyền phát Lộ trình & Live Tracking Trực tuyến):**
-  * *Tác nhân:* Khách hàng.
-  * *Mô tả:* Đồng bộ liên tục tọa độ di chuyển của tài xế lên giao diện bản đồ của khách hàng thông qua WebSocket / Polling; cập nhật lại thời gian đến dự kiến (ETA) theo tình trạng giao thông.
-  * *Ánh xạ:* `BR_02` | *Dịch vụ phụ trách:* `Location Service`, `Trip Management Service`.
-* **`SR_14` (Tra cứu Lịch sử Chuyến đi):**
-  * *Tác nhân:* Khách hàng, Tài xế, Nhân viên vận hành.
-  * *Mô tả:* Cung cấp danh sách chi tiết các chuyến đi trong quá khứ: lộ trình, thời gian, cước phí, hình thức thanh toán, thông tin đối tác và hóa đơn điện tử.
-  * *Ánh xạ:* `BR_02`, `BR_04` | *Dịch vụ phụ trách:* `Trip Management Service`.
-
----
-
-#### 5.2.5. Nhóm Dịch vụ Định giá & Quyết toán Thanh toán (Pricing & Settlement Services)
-* **`SR_15` (Tính toán & Quyết toán Cước phí Thực tế):**
-  * *Tác nhân:* Hệ thống.
-  * *Mô tả:* Sau khi tài xế bấm Hoàn thành chuyến; tự động chốt cước dựa trên quãng đường GPS thực tế, thời gian di chuyển thực tế, loại phương tiện và phụ phí phát sinh.
-  * *Ánh xạ:* `BR_03` | *Dịch vụ phụ trách:* `Pricing & Billing Service`.
-* **`SR_16` (Xử lý Thanh toán Tiền mặt):**
-  * *Tác nhân:* Khách hàng, Tài xế.
-  * *Mô tả:* Hiển thị số tiền cần trả; khách đưa tiền mặt cho tài xế; tài xế bấm xác nhận "Đã thu đủ tiền" trên ứng dụng để chuyển trạng thái sang `PAID`.
-  * *Ánh xạ:* `BR_03` | *Dịch vụ phụ trách:* `Payment Service`.
-* **`SR_17` (Tích hợp Thanh toán Điện tử qua Cổng bên thứ ba):**
-  * *Tác nhân:* Khách hàng, Cổng thanh toán (VNPay / MoMo / Thẻ ngân hàng).
-  * *Mô tả:* Gửi lệnh trừ tiền qua Cổng thanh toán bên thứ ba; bảo đảm không lưu thông tin thẻ nhạy cảm trên máy chủ CAB; tiếp nhận Webhook kết quả giao dịch và xuất biên lai.
-  * *Ánh xạ:* `BR_03`, `BR_10` | *Dịch vụ phụ trách:* `Payment Integration Service`.
-* **`SR_18` (Điều phối Giao dịch Bù trừ khi Thanh toán Lỗi):**
-  * *Tác nhân:* Hệ thống (Hermes Saga Orchestrator).
-  * *Mô tả:* Khi cổng thanh toán điện tử bị lỗi/timeout; hệ thống kích hoạt giao dịch bù trừ (Compensating Transaction): tự động chuyển phương thức thanh toán sang Tiền mặt và gửi cảnh báo thu tiền cho tài xế.
-  * *Ánh xạ:* `BR_03`, `BR_08` | *Dịch vụ phụ trách:* `Hermes Saga Orchestrator`, `Payment Service`.
-
----
-
-#### 5.2.6. Nhóm Dịch vụ Đánh giá & Quản lý Chất lượng (Rating & Quality Services)
-* **`SR_19` (Tiếp nhận Đánh giá & Phản hồi Khách hàng):**
-  * *Tác nhân:* Khách hàng.
-  * *Mô tả:* Cho phép khách hàng chấm từ 1 đến 5 sao và viết nhận xét về thái độ phục vụ/phương tiện của tài xế sau khi chuyến đi đã thanh toán thành công.
-  * *Ánh xạ:* `BR_06` | *Dịch vụ phụ trách:* `Rating & Feedback Service`.
-* **`SR_20` (Tổng hợp Điểm Uy tín & Hiệu suất Tài xế):**
-  * *Tác nhân:* Hệ thống.
-  * *Mô tả:* Tự động tính điểm trung bình sao và tỷ lệ nhận chuyến của từng tài xế; cung cấp dữ liệu đầu vào làm tiêu chí ưu tiên phân phối cuốc xe.
-  * *Ánh xạ:* `BR_01`, `BR_06` | *Dịch vụ phụ trách:* `Rating & Feedback Service`, `Matching Service`.
-
----
-
-#### 5.2.7. Nhóm Dịch vụ Thông báo Sự kiện Đa kênh (Notification Services)
-* **`SR_21` (Phát Thông báo Đẩy Thời gian thực cho Khách hàng):**
-  * *Tác nhân:* Hệ thống.
-  * *Mô tả:* Tiêu thụ sự kiện từ Hermes Bus và gửi thông báo đẩy (Push Notification / SMS) tới khách hàng: Đã tìm thấy tài xế, Tài xế đã đến điểm đón, Bắt đầu di chuyển, Hóa đơn thanh toán.
-  * *Ánh xạ:* `BR_02`, `BR_07` | *Dịch vụ phụ trách:* `Notification Service`.
-* **`SR_22` (Phát Thông báo Điều phối & Cảnh báo cho Tài xế):**
-  * *Tác nhân:* Hệ thống.
-  * *Mô tả:* Gửi âm thanh/thông báo cuốc xe mới, thông báo khách hàng hủy chuyến, cảnh báo thay đổi lộ trình tới thiết bị tài xế.
-  * *Ánh xạ:* `BR_01`, `BR_07` | *Dịch vụ phụ trách:* `Notification Service`.
-
----
-
-#### 5.2.8. Nhóm Dịch vụ Vận hành, Giám sát & Kiểm toán (Operations & Audit Services)
-* **`SR_23` (Giám sát Luồng Chuyến đi Trực tiếp trên Bản đồ):**
-  * *Tác nhân:* Nhân viên vận hành (Operator).
-  * *Mô tả:* Hiển thị toàn bộ các chuyến đi đang hoạt động, vị trí các xe Online trên giao diện bản đồ điều hành trực tiếp (Live Operations Map).
-  * *Ánh xạ:* `BR_04` | *Dịch vụ phụ trách:* `Admin & Operations Portal`.
-* **`SR_24` (Cảnh báo & Can thiệp Xử lý Sự cố Chuyến đi):**
-  * *Tác nhân:* Nhân viên vận hành.
-  * *Mô tả:* Tự động phát hiện và cảnh báo chuyến xe bị đứng yên bất thường / mất GPS; cho phép nhân viên vận hành can thiệp: Hủy chuyến cưỡng bức, điều phối thủ công xe cứu hộ hoặc gọi hỗ trợ.
-  * *Ánh xạ:* `BR_04`, `BR_08` | *Dịch vụ phụ trách:* `Incident & Operations Service`.
-* **`SR_25` (Ghi Nhật ký Kiểm toán & Báo cáo Thống kê Doanh thu):**
-  * *Tác nhân:* Quản trị viên (Admin), Hệ thống.
-  * *Mô tả:* Lưu vết toàn bộ các thao tác can thiệp quản trị (Audit Trail); tự động tổng hợp Dashboard báo cáo: Tổng số cuốc xe, doanh thu theo ngày/tháng, tỷ lệ hủy chuyến và hiệu suất tài xế.
-  * *Ánh xạ:* `BR_04`, `BR_10` | *Dịch vụ phụ trách:* `Audit & Analytics Service`.
+| Mã SR | Tên Chức năng & Mô tả Nghiệp vụ | Tác nhân | Dữ liệu Vào / Ra | Ánh xạ BR | Microservice Phụ trách |
+| :---: | :--- | :--- | :--- | :---: | :--- |
+| **`SR_01`** | **Đăng ký Tài khoản & Nộp hồ sơ**<br>Khách đăng ký qua SĐT/OTP; tài xế nộp hồ sơ CCCD, bằng lái chờ duyệt. | Khách hàng, Tài xế | **Vào:** SĐT, Email, CCCD, Bằng lái<br>**Ra:** Hồ sơ `PENDING_APPROVAL` | `BR_05` | `User & Auth Service` |
+| **`SR_02`** | **Xác thực & Cấp quyền JWT**<br>Xác thực thông tin đăng nhập, mã hóa BCrypt, cấp cặp Access/Refresh Token (RBAC). | Khách, Tài xế, Admin | **Vào:** Thông tin đăng nhập<br>**Ra:** JWT Token, Role RBAC | `BR_05`, `BR_10` | `User & Auth Service`, `API Gateway` |
+| **`SR_03`** | **Quản lý Hồ sơ & Phương tiện**<br>Lưu thông tin phương tiện (biển số, loại xe BIKE/CAR_4/CAR_7); duyệt hồ sơ xe. | Tài xế, Admin | **Vào:** Biển số, Loại xe, Giấy tờ<br>**Ra:** Hồ sơ xe được phê duyệt | `BR_04`, `BR_05` | `User & Auth Service` |
+| **`SR_04`** | **Chuyển đổi Trạng thái Làm việc**<br>Tài xế bật/tắt chuyển đổi Online / Busy / Offline; đồng bộ vào Geo-Redis. | Tài xế | **Vào:** Lệnh Online / Offline<br>**Ra:** Trạng thái Driver State trên Redis | `BR_01` | `Driver State Service` |
+| **`SR_05`** | **Thu thập & Phát sóng GPS**<br>Định kỳ 1–3s gửi tọa độ GPS lên hệ thống; lập chỉ mục Geo-Index phục vụ tìm kiếm. | Driver App | **Vào:** Tọa độ (Lat, Long, Speed)<br>**Ra:** Tọa độ lưu đệm trên Redis Cache | `BR_01`, `BR_02` | `Location & Telemetry Service` |
+| **`SR_06`** | **Tìm Tài xế theo Bán kính**<br>Quét danh sách tài xế Online, rảnh, đúng loại xe trong bán kính 2km–10km. | Matching Svc | **Vào:** Tọa độ điểm đón, Bán kính R<br>**Ra:** Danh sách DriverID khả dụng | `BR_01` | `Location & Telemetry Service` |
+| **`SR_07`** | **Ước tính Giá cước & ETA**<br>Tính khoảng cách, thời gian đón dự kiến và áp dụng công thức giá tạm tính cho khách. | Khách hàng | **Vào:** Điểm đón, Điểm đến, Loại xe<br>**Ra:** Cước tạm tính, ETA đón xe | `BR_02`, `BR_03` | `Pricing Service`, `Map API` |
+| **`SR_08`** | **Khởi tạo Yêu cầu Đặt chuyến**<br>Khách bấm xác nhận đặt xe; tạo bản ghi chuyến đi và phát sự kiện `trip.created`. | Khách hàng | **Vào:** Điểm đón/đến, Loại xe, CustID<br>**Ra:** Bản ghi `CREATED`, Event Bus | `BR_01` | `Trip Management Service` |
+| **`SR_09`** | **Ghép xe Tối ưu & Mời cuốc**<br>Xếp hạng tài xế theo PriorityScore; gửi lời mời nhận cuốc và đếm ngược 15s. | Matching Svc | **Vào:** Danh sách tài xế gần, Điểm uy tín<br>**Ra:** Mời cuốc tới Driver App, Timer 15s | `BR_01`, `BR_06` | `Matching & Dispatch Service` |
+| **`SR_10`** | **Xử lý Mời cuốc & Chuyển tiếp**<br>Xử lý Chấp nhận ➔ `ACCEPTED`; Từ chối hoặc Timeout 15s ➔ tự động chuyển tiếp D_next. | Tài xế, Timer | **Vào:** Phản hồi Accept/Reject/Timeout<br>**Ra:** Gán tài xế HOẶC Chuyển tiếp | `BR_01` | `Matching & Dispatch Service` |
+| **`SR_11`** | **Hủy chuyến & Phạt hủy**<br>Cho phép hủy cuốc; tự động tính phí phạt nếu hủy sau khi tài xế đã di chuyển > 2 phút. | Khách hàng, Tài xế | **Vào:** Lệnh hủy, Lý do hủy<br>**Ra:** Bản ghi `CANCELLED`, Phí phạt | `BR_01`, `BR_04` | `Trip Management Service` |
+| **`SR_12`** | **Cập nhật Tiến trình Chuyến**<br>Cập nhật tuần tự các mốc trạng thái: `ARRIVED` ➔ `IN_TRIP` ➔ `COMPLETED`. | Tài xế | **Vào:** Lệnh chuyển mốc trạng thái<br>**Ra:** Cập nhật State Machine | `BR_02` | `Trip Management Service` |
+| **`SR_13`** | **Live Tracking & Lộ trình**<br>Truyền phát tọa độ xe thời gian thực qua WebSocket đến giao diện bản đồ khách hàng. | Khách hàng | **Vào:** Mã Trip ID<br>**Ra:** Stream WebSocket vị trí xe realtime | `BR_02` | `Location & Trip Service` |
+| **`SR_14`** | **Tra cứu Lịch sử Chuyến đi**<br>Truy vấn lịch sử chuyến đi, chi tiết lộ trình, thời gian, cước phí và hóa đơn điện tử. | Khách, Tài xế, Admin | **Vào:** User ID, Bộ lọc thời gian<br>**Ra:** Danh sách chuyến đi, Biên lai | `BR_02`, `BR_04` | `Trip Management Service` |
+| **`SR_15`** | **Quyết toán Cước phí Thực tế**<br>Tính cước phí cuối cùng dựa trên quãng đường GPS thực tế, thời gian và phụ phí. | Pricing Svc | **Vào:** Lộ trình GPS thực tế, Thời gian<br>**Ra:** Tổng cước chốt, Event `trip.completed`| `BR_03` | `Pricing & Billing Service` |
+| **`SR_16`** | **Xử lý Thanh toán Tiền mặt**<br>Khách trả tiền mặt; tài xế bấm xác nhận "Đã thu tiền" để chuyển trạng thái `PAID`. | Khách, Tài xế | **Vào:** Số tiền cước, Lệnh xác nhận thu<br>**Ra:** Bản ghi `PAID`, Hóa đơn tiền mặt | `BR_03` | `Payment Service` |
+| **`SR_17`** | **Thanh toán Cổng Điện tử**<br>Giao tiếp API với cổng VNPay/MoMo/Thẻ; nhận Webhook IPN và cập nhật trạng thái `PAID`.| Khách, Payment GW | **Vào:** Yêu cầu thanh toán qua thẻ/ví<br>**Ra:** Webhook giao dịch, Biên lai số | `BR_03`, `BR_10` | `Payment Integration Service` |
+| **`SR_18`** | **Điều phối Bù trừ khi Lỗi Cổng**<br>Cổng thanh toán timeout/lỗi ➔ Saga kích hoạt bù trừ: chuyển sang Tiền mặt và báo tài xế. | Hermes Saga | **Vào:** Sự kiện `payment.failed`<br>**Ra:** Chuyển sang Tiền mặt, Cảnh báo thu | `BR_03`, `BR_08` | `Hermes Saga Orchestrator` |
+| **`SR_19`** | **Tiếp nhận Đánh giá & Góp ý**<br>Khách hàng chấm điểm 1–5 sao và viết nhận xét dịch vụ sau khi chuyến đi hoàn tất. | Khách hàng | **Vào:** Điểm sao (1-5), Nhận xét<br>**Ra:** Bản ghi Feedback trong DB | `BR_06` | `Rating & Review Service` |
+| **`SR_20`** | **Tổng hợp Điểm Uy tín Tài xế**<br>Tính toán lại điểm sao trung bình và tỷ lệ nhận chuyến để phục vụ thuật toán ghép xe. | Rating Svc | **Vào:** Lịch sử sao, Lịch sử nhận cuốc<br>**Ra:** Điểm tín nhiệm mới của tài xế | `BR_01`, `BR_06` | `Rating & Review Service` |
+| **`SR_21`** | **Phát Thông báo Khách hàng**<br>Bắn thông báo Push/SMS tức thời: Có xe nhận, Tài xế đến nơi, Hóa đơn thanh toán. | Notification Svc | **Vào:** Sự kiện chuyến đi từ Event Bus<br>**Ra:** Push Notification (FCM), SMS | `BR_02`, `BR_07` | `Notification Service` |
+| **`SR_22`** | **Phát Thông báo Tài xế**<br>Phát chuông báo cuốc xe mới nổi toàn màn hình, thông báo khách hủy chuyến cho tài xế. | Notification Svc | **Vào:** Sự kiện điều phối từ Event Bus<br>**Ra:** Chuông báo cuốc, Alert App tài xế | `BR_01`, `BR_07` | `Notification Service` |
+| **`SR_23`** | **Giám sát Bản đồ Vận hành**<br>Hiển thị toàn bộ các xe Online/Busy và chuyến đang chạy trên giao diện bản đồ điều hành.| Operator | **Vào:** Bộ lọc khu vực, Trạng thái chuyến<br>**Ra:** Bản đồ trực tiếp toàn bộ đội xe | `BR_04` | `Admin & Operations Portal` |
+| **`SR_24`** | **Xử lý Sự cố Chuyến đi**<br>Tự động cảnh báo xe đứng yên > 5 phút/mất GPS; cho phép hủy cưỡng bức hoặc điều xe cứu hộ.| Operator | **Vào:** Cảnh báo xe dừng, Yêu cầu cứu hộ<br>**Ra:** Lệnh hủy cưỡng bức / Gán xe mới | `BR_04`, `BR_08` | `Incident & Operations Service` |
+| **`SR_25`** | **Kiểm toán & Báo cáo Thống kê**<br>Ghi nhật ký Audit Log mọi thao tác can thiệp; tổng hợp Dashboard doanh thu, hiệu suất.| Admin, Quản trị | **Vào:** Thao tác can thiệp, Dữ liệu cuốc<br>**Ra:** Nhật ký Audit Log, Dashboard Báo cáo | `BR_04`, `BR_10` | `Audit & Analytics Service` |
 
 ---
 
@@ -1366,7 +1198,7 @@ Feature: Xử lý Hủy chuyến và Phạt hủy
 
 ---
 
-## 11.3. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)
+## 11.4. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)
 
 Một chức năng dịch vụ hoặc User Story chỉ được xem là **HOÀN THÀNH (DONE)** khi đáp ứng đầy đủ **5 tiêu chí kỹ thuật** sau:
 1. **Code Quality & Architecture:** Mã nguồn viết theo cấu trúc phân tầng rõ ràng (Clean Architecture), không có cảnh báo nghiêm trọng từ Linter, tuân thủ SOLID principles.
@@ -1377,7 +1209,7 @@ Một chức năng dịch vụ hoặc User Story chỉ được xem là **HOÀN 
 
 ---
 
-## 11.4. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)
+## 11.5. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)
 
 ```mermaid
 graph LR
@@ -1411,8 +1243,6 @@ graph LR
 > Ma trận truy vết xuyên suốt liên kết toàn bộ 6 tầng kiến trúc yêu cầu hệ thống:  
 > **`BG (Business Goal) ➔ BR (Business Requirement) ➔ BPMN (Business Process) ➔ SR (Service Requirement) ➔ UC (Use Case) ➔ AC (Acceptance Criteria)`**
 
-### 11.6.1. Bảng Truy vết Chi tiết theo 25 Chức năng Dịch vụ (Master SR Traceability Table)
-
 | **BG (Mục tiêu Doanh nghiệp)** | **BR (Yêu cầu Nghiệp vụ)** | **BPMN (Quy trình Nghiệp vụ)** | **SR (Chức năng Dịch vụ)** | **UC (Ca Sử dụng)** | **AC (Tiêu chí Nghiệm thu)** |
 |:---:|:---:|:---|:---|:---:|:---|
 | `BG_05` | `BR_05` | `BPMN-07`: Đăng ký, Xác thực & Cấp quyền | `SR_01`: Đăng ký Tài khoản & Hồ sơ | `UC-12` | `AC-SR_01`, `AC-BR_05` |
@@ -1441,22 +1271,7 @@ graph LR
 | `BG_04`, `BG_05` | `BR_04`, `BR_08` | `BPMN-06`: Điều xe Cứu hộ / Hủy Cuốc Khẩn cấp | `SR_24`: Xử lý Sự cố Chuyến đi | `UC-11` | `AC-SR_24`, `AC-BR_04`, `AC-BR_08` |
 | `BG_04`, `BG_05` | `BR_04`, `BR_10` | `BPMN-08`: Ghi Audit Log & Dashboard Báo cáo | `SR_25`: Kiểm toán & Báo cáo Thống kê | `UC-13` | `AC-SR_25`, `AC-BR_10` |
 
-### 11.6.2. Bảng Truy vết Tổng hợp theo 10 Yêu cầu Nghiệp vụ (Master BR Traceability Table)
-
-| **BG (Mục tiêu)** | **BR (Yêu cầu Nghiệp vụ)** | **BPMN (Quy trình liên quan)** | **SR (Chức năng Dịch vụ)** | **UC (Ca Sử dụng)** | **AC (Tiêu chí Nghiệm thu)** |
-|:---:|:---|:---|:---|:---|:---|
-| `BG_01` | **BR_01: Tự động hóa Điều phối & Ghép xe** | `BPMN-01`, `BPMN-02` | `SR_04`, `SR_06`, `SR_08`, `SR_09`, `SR_10`, `SR_11`, `SR_22` | `UC-01`, `UC-03`, `UC-06`, `UC-07` | `AC-BR_01`, `AC-SR_04,06,08,09,10,11,22` |
-| `BG_02` | **BR_02: Minh bạch Lộ trình & Live Tracking** | `BPMN-01`, `BPMN-03` | `SR_05`, `SR_07`, `SR_12`, `SR_13`, `SR_14`, `SR_21` | `UC-01`, `UC-02`, `UC-08` | `AC-BR_02`, `AC-SR_05,07,12,13,14,21` |
-| `BG_03` | **BR_03: Quản lý Tài chính & Thanh toán Số** | `BPMN-01`, `BPMN-04` | `SR_07`, `SR_15`, `SR_16`, `SR_17`, `SR_18` | `UC-01`, `UC-04`, `UC-09` | `AC-BR_03`, `AC-SR_07,15,16,17,18` |
-| `BG_04` | **BR_04: Giám sát Vận hành & Xử lý Sự cố** | `BPMN-06`, `BPMN-08` | `SR_03`, `SR_11`, `SR_14`, `SR_23`, `SR_24`, `SR_25` | `UC-10`, `UC-11`, `UC-12`, `UC-13` | `AC-BR_04`, `AC-SR_03,11,14,23,24,25` |
-| `BG_05` | **BR_05: Quản lý Người dùng & Phân quyền RBAC** | `BPMN-07`, `BPMN-08` | `SR_01`, `SR_02`, `SR_03` | `UC-01`, `UC-06`, `UC-12` | `AC-BR_05`, `AC-SR_01,02,03` |
-| `BG_02` | **BR_06: Quản lý Chất lượng qua Đánh giá** | `BPMN-02`, `BPMN-05` | `SR_09`, `SR_19`, `SR_20` | `UC-05`, `UC-07`, `UC-12` | `AC-BR_06`, `AC-SR_09,19,20` |
-| `BG_01`, `BG_02` | **BR_07: Hệ thống Thông báo Đa kênh** | `BPMN-02`, `BPMN-03`, `BPMN-04` | `SR_21`, `SR_22` | `UC-01`, `UC-02`, `UC-07` | `AC-BR_07`, `AC-SR_21,22` |
-| `BG_05` | **BR_08: Sẵn sàng Cao & Cô lập Lỗi (Saga)** | `BPMN-04`, `BPMN-06` | `SR_18`, `SR_24` | `UC-04`, `UC-11` | `AC-BR_08`, `AC-SR_18,24` |
-| `BG_05` | **BR_09: Kiến trúc SOA Linh hoạt, Dễ Mở rộng** | Toàn bộ `BPMN-01`–`08` | `SR_01`–`SR_25` (Toàn bộ 25 dịch vụ) | `UC-01`–`UC-13` (Toàn bộ 13 Ca sử dụng) | `AC-BR_09`, Toàn bộ `AC-SR` |
-| `BG_04`, `BG_05` | **BR_10: Bảo mật, Riêng tư & Nhật ký Kiểm toán** | `BPMN-07`, `BPMN-08` | `SR_02`, `SR_17`, `SR_25` | `UC-04`, `UC-13` | `AC-BR_10`, `AC-SR_02,17,25` |
-
-### 11.6.3. Sơ đồ Chuỗi Phân rã & Truy vết Nghiệp vụ (Traceability Flow)
+### 11.6.2. Sơ đồ Chuỗi Phân rã & Truy vết Nghiệp vụ (Traceability Flow)
 
 ```mermaid
 graph LR
@@ -1476,7 +1291,7 @@ graph LR
     BR -.->|"nghiệm thu cấp cao"| AC
 ```
 
-### 11.6.4. Bảng Tổng kết Mức độ Bao phủ Truy vết (Full Traceability Coverage)
+### 11.6.3. Bảng Tổng kết Mức độ Bao phủ Truy vết (Full Traceability Coverage)
 
 | **Hạng mục (Entity)** | **Ký hiệu** | **Số lượng** | **Độ bao phủ Truy vết** | **Trạng thái** |
 |:---|:---:|:---:|:---:|:---:|
@@ -1488,6 +1303,8 @@ graph LR
 | Tiêu chí Chấp nhận Hoàn tất | **AC** | 35 (10 BR + 25 SR) | 35 / 35 (100%) | ✅ Hoàn tất |
 
 > 🎯 **Kết luận:** Hệ thống đạt **100% độ bao phủ liên kết liền mạch** từ Mục tiêu chiến lược (BG) qua Yêu cầu nghiệp vụ (BR), Quy trình nghiệp vụ (BPMN), Chức năng dịch vụ (SR), Ca sử dụng (UC) cho đến Tiêu chí nghiệm thu hoàn tất (AC).
+
+
 
 ---
 
