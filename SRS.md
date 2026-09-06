@@ -477,78 +477,385 @@ quadrantChart
 
 ---
 
-## 8. SƠ ĐỒ THIẾT KẾ MERMAID (MERMAID DIAGRAMS)
+## 8. THIẾT LẬP CÁC QUY TẮC & LUẬT NGHIỆP VỤ (BUSINESS RULES & FUNCTIONAL LOGIC)
 
-### 8.1. Sơ đồ Use Case Tổng thể (Use Case Diagram)
+Các quy tắc nghiệp vụ (**Business Rules - BRULE**) định nghĩa ràng buộc, công thức tính toán và logic xử lý áp dụng cho các chức năng dịch vụ:
+
+### 8.1. Bảng Tổng hợp Quy tắc Nghiệp vụ
+
+| Mã Luật | Tên Quy tắc Nghiệp vụ | Nội dung Ràng buộc & Công thức Logic | Áp dụng cho SR |
+| :---: | :--- | :--- | :---: |
+| **`BRULE_01`** | **Giới hạn Bán kính & Tiêu chí Lọc Xe** | • Bán kính khởi đầu $R = 2\text{ km}$, tự động mở rộng $+2\text{ km}$ sau mỗi lượt tìm kiếm, tối đa $R_{\max} = 10\text{ km}$.<br>• Chỉ tài xế có trạng thái `ONLINE`, `isAvailable = true`, đúng loại phương tiện và không bị khóa mới được đưa vào danh sách lọc. | `SR_06`, `SR_09` |
+| **`BRULE_02`** | **Xếp hạng Ưu tiên & Timeout Điều phối** | • Điểm ưu tiên: $\text{Score} = \left(\frac{1}{\text{Khoảng cách}}\right) \times 0.6 + \left(\frac{\text{Rating}}{5.0}\right) \times 0.3 + (\text{Tỷ lệ nhận chuyến}) \times 0.1$.<br>• Thời gian chờ tài xế phản hồi tối đa là **15 giây**. Nếu quá 15s hoặc tài xế từ chối, tự động chuyển sang tài xế tiếp theo (tối đa thử 5 tài xế). | `SR_09`, `SR_10` |
+| **`BRULE_03`** | **Công thức Tính Cước Phí Tiêu chuẩn** | • **Xe máy (`BIKE`):** Giá mở cửa (2km đầu) = $14.000\text{ VNĐ}$; mỗi km tiếp theo = $5.000\text{ VNĐ/km}$.<br>• **Xe 4 chỗ (`CAR_4`):** Giá mở cửa (2km đầu) = $25.000\text{ VNĐ}$; mỗi km tiếp theo = $11.500\text{ VNĐ/km}$.<br>• **Xe 7 chỗ (`CAR_7`):** Giá mở cửa (2km đầu) = $32.000\text{ VNĐ}$; mỗi km tiếp theo = $15.000\text{ VNĐ/km}$. | `SR_07`, `SR_15` |
+| **`BRULE_04`** | **Hệ số Phụ phí Cao điểm & Ban đêm** | • Giờ cao điểm sáng ($7\text{h}00 - 9\text{h}00$) và chiều ($17\text{h}00 - 19\text{h}00$): Nhân hệ số $\times 1.20$.<br>• Khung giờ đêm ($22\text{h}00 - 05\text{h}00$ sáng hôm sau): Nhân hệ số $\times 1.15$.<br>• Phụ phí thời gian chờ đón khách vượt quá 5 phút: $1.000\text{ VNĐ/phút}$. | `SR_07`, `SR_15` |
+| **`BRULE_05`** | **Chính sách Hủy chuyến & Phí phạt** | • Khách hủy chuyến trong vòng $\le 2\text{ phút}$ sau khi tài xế nhận: **Miễn phí**.<br>• Khách hủy sau 2 phút hoặc khi tài xế đã đến điểm đón: **Phạt $15.000\text{ VNĐ}$** (ghi nợ vào cuốc xe kế tiếp).<br>• Tài xế tự ý hủy chuyến $>2\text{ lần/ngày}$ không lý do: Tạm khóa tài khoản 24h và trừ 5% điểm uy tín. | `SR_11` |
+| **`BRULE_06`** | **Tiêu chuẩn Duyệt Hồ sơ & Khóa Tài khoản** | • Bằng lái xe phải còn hạn trên 6 tháng, giấy đăng kiểm xe còn hiệu lực.<br>• Tài xế có điểm đánh giá trung bình $< 3.8$ sao trong 30 chuyến gần nhất sẽ nhận cảnh báo; $< 3.5$ sao sẽ bị tạm đình chỉ để đào tạo lại. | `SR_01`, `SR_20` |
+| **`BRULE_07`** | **Quy tắc Saga Bù trừ khi Thanh toán Lỗi** | • Cổng thanh toán phản hồi Timeout $> 30\text{s}$ hoặc lỗi giao dịch (`HTTP 5xx`): Hệ thống tự động kích hoạt giao dịch bù trừ (Compensating Transaction) chuyển chuyến đi sang hình thức **Thu Tiền mặt (Cash)** và gửi thông báo cảnh báo tài xế. | `SR_17`, `SR_18` |
+| **`BRULE_08`** | **Bảo mật Dữ liệu Thẻ & Quyền Riêng tư** | • Hệ thống **tuyệt đối không lưu trữ** số thẻ đầy đủ, mã CVV/CVC trên cơ sở dữ liệu nội bộ.<br>• Ẩn 4 chữ số giữa của số điện thoại (Data Masking) khi hiển thị giữa Khách hàng và Tài xế. | `SR_02`, `SR_17` |
+| **`BRULE_09`** | **Ràng buộc Đánh giá Sau Chuyến** | • Khách hàng chỉ được gửi đánh giá trong vòng **24 giờ** sau khi hoàn tất chuyến đi (`PAID`).<br>• Đánh giá từ 1 đến 2 sao bắt buộc phải chọn lý do phàn nàn để chuyển luồng xử lý CSKH. | `SR_19` |
+| **`BRULE_10`** | **Ràng buộc Kiểm toán Thao tác Quản trị** | • Mọi thao tác hủy chuyến cưỡng bức, khóa tài khoản hoặc điều phối thủ công của nhân viên vận hành bắt buộc phải nhập lý do (tối thiểu 10 ký tự) và được ghi vào bảng `AUDIT_LOGS` bất biến. | `SR_24`, `SR_25` |
+
+---
+
+## 9. YÊU CẦU & NGHIỆP VỤ PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS - NFR)
+
+### 9.1. Hiệu năng & Độ trễ (Performance & Latency)
+* **NFR-PERF-01:** Thời gian phản hồi API Gateway đối với 95% các yêu cầu truy vấn thông thường phải $< 300\text{ms}$.
+* **NFR-PERF-02:** Thuật toán tìm kiếm, xếp hạng và gửi lời mời đến tài xế hoàn tất trong vòng $< 1.5\text{s}$ kể từ lúc khách bấm xác nhận.
+* **NFR-PERF-03:** Tần suất gửi tọa độ GPS từ ứng dụng tài xế là $2\text{s/lần}$; độ trễ truyền phát Live Tracking qua WebSocket đến khách hàng $< 1\text{s}$.
+
+### 9.2. Khả năng Mở rộng & Tải trọng (Scalability & Concurrency)
+* **NFR-SCAL-01:** Hệ thống hỗ trợ tối thiểu $20.000$ người dùng đồng thời (Concurrent Users - CCU) và $2.000$ chuyến đi diễn ra cùng một thời điểm.
+* **NFR-SCAL-02:** Kiến trúc Microservices cho phép mở rộng độc lập từng phân hệ (Horizontal Pod Autoscaling - HPA) khi tải tăng đột biến vào giờ cao điểm.
+
+### 9.3. Tính Sẵn sàng & Chịu lỗi (Availability & Fault Tolerance)
+* **NFR-AVAIL-01:** Cam kết thời gian hoạt động hệ thống đạt mức $\ge 99.9\%$ (SLA).
+* **NFR-AVAIL-02 (Fault Isolation):** Lỗi xảy ra ở phân hệ thanh toán điện tử hoặc dịch vụ thông báo Push tuyệt đối **không làm gián đoạn** luồng nghiệp vụ đặt xe và di chuyển cốt lõi.
+* **NFR-AVAIL-03:** Hệ thống hàng đợi tin nhắn (Hermes Event Bus / Kafka) đảm bảo cơ chế phân phát tin cậy At-Least-Once Delivery.
+
+### 9.4. Bảo mật & An toàn Thông tin (Security & Privacy)
+* **NFR-SEC-01:** Xác thực người dùng bằng cơ chế Token JWT (HMAC-SHA256); mật khẩu người dùng được băm an toàn bằng thuật toán BCrypt với Salt Rounds $\ge 10$.
+* **NFR-SEC-02:** Toàn bộ dữ liệu truyền tải trên mạng giữa Client, API Gateway và các Microservices bắt buộc mã hóa qua giao thức HTTPS / TLS 1.3.
+* **NFR-SEC-03:** Tuân thủ tiêu chuẩn an toàn thanh toán (PCI-DSS): Chỉ giao tiếp với cổng thanh toán qua Token hóa (Tokenization), không lưu trữ thông tin thẻ nhạy cảm.
+
+### 9.5. Khả năng Bảo trì & Mở rộng Tương lai (Maintainability & Extensibility)
+* **NFR-MAINT-01:** Cung cấp tài liệu đặc tả API chuẩn OpenAPI 3.0 / Swagger UI cho tất cả các dịch vụ.
+* **NFR-MAINT-02:** Cho phép tích hợp thêm các phương thức thanh toán mới, nhà cung cấp bản đồ mới hoặc phương tiện mới (giao hàng, xe điện) thông qua mô hình Adapter Pattern mà không cần sửa đổi mã nguồn lõi.
+
+---
+
+## 10. THIẾT KẾ USE CASE CHI TIẾT (USE CASE SPECIFICATIONS & DIAGRAMS)
+
+### 10.1. Sơ đồ Use Case Phân rã theo Tác nhân (Actor-based Use Case Diagrams)
 
 ```mermaid
-graph TD
+graph LR
     %% Actors
     Customer((Khách hàng))
     Driver((Tài xế))
-    Operator((Nhân viên vận hành))
-    Admin((Quản trị viên))
-    PaymentGW[Cổng thanh toán]
-    NotiService[Dịch vụ thông báo]
+    Admin((Quản trị / Vận hành))
 
-    %% Use cases Customer
-    subgraph Customer_UC [Phân hệ Khách hàng]
-        UC_RegCust[Đăng ký / Đăng nhập]
-        UC_BookTrip[Đặt chuyến & Xem giá dự kiến]
-        UC_TrackTrip[Theo dõi hành trình & Tài xế]
-        UC_CancelTrip[Hủy chuyến]
-        UC_Pay[Thanh toán Tiền mặt / Online]
-        UC_Rate[Đánh giá tài xế]
+    %% Customer Use Cases
+    subgraph UC_Customer_Group [Phân hệ Khách hàng]
+        UC_C1[UC-01: Đặt chuyến & Xem giá dự kiến]
+        UC_C2[UC-02: Theo dõi Lộ trình Live Tracking]
+        UC_C3[UC-03: Hủy chuyến xe]
+        UC_C4[UC-04: Thanh toán Tiền mặt / Điện tử]
+        UC_C5[UC-05: Đánh giá & Nhận xét Tài xế]
     end
 
-    %% Use cases Driver
-    subgraph Driver_UC [Phân hệ Tài xế]
-        UC_UpdateStatus[Bật / Tắt trạng thái Online]
-        UC_UpdateLoc[Cập nhật vị trí GPS]
-        UC_AcceptTrip[Nhận / Từ chối chuyến]
-        UC_UpdateTripStatus[Cập nhật trạng thái chuyến]
-        UC_ConfirmCash[Xác nhận thu tiền mặt]
+    %% Driver Use Cases
+    subgraph UC_Driver_Group [Phân hệ Tài xế]
+        UC_D1[UC-06: Bật/Tắt Trạng thái Online]
+        UC_D2[UC-07: Tiếp nhận / Từ chối Chuyến đi]
+        UC_D3[UC-08: Cập nhật Trạng thái Chuyến đi]
+        UC_D4[UC-09: Xác nhận Thu tiền mặt]
     end
 
-    %% Use cases Operations & Admin
-    subgraph Admin_UC [Phân hệ Vận hành & Quản trị]
-        UC_LiveMonitor[Giám sát chuyến đi trực tiếp]
-        UC_ResolveIncident[Xử lý sự cố chuyến đi]
-        UC_ManageUsers[Quản lý Người dùng & Phương tiện]
-        UC_ViewReport[Xem Báo cáo Doanh thu & Vận hành]
+    %% Admin & Ops Use Cases
+    subgraph UC_Admin_Group [Phân hệ Vận hành & Quản trị]
+        UC_A1[UC-10: Giám sát Chuyến đi Thời gian thực]
+        UC_A2[UC-11: Can thiệp Xử lý Sự cố Chuyến đi]
+        UC_A3[UC-12: Quản lý Duyệt Hồ sơ Tài xế & Xe]
+        UC_A4[UC-13: Xem Báo cáo Thống kê Doanh thu]
     end
 
-    %% Customer Connections
-    Customer --> UC_RegCust
-    Customer --> UC_BookTrip
-    Customer --> UC_TrackTrip
-    Customer --> UC_CancelTrip
-    Customer --> UC_Pay
-    Customer --> UC_Rate
+    Customer --> UC_C1
+    Customer --> UC_C2
+    Customer --> UC_C3
+    Customer --> UC_C4
+    Customer --> UC_C5
 
-    %% Driver Connections
-    Driver --> UC_UpdateStatus
-    Driver --> UC_UpdateLoc
-    Driver --> UC_AcceptTrip
-    Driver --> UC_UpdateTripStatus
-    Driver --> UC_ConfirmCash
+    Driver --> UC_D1
+    Driver --> UC_D2
+    Driver --> UC_D3
+    Driver --> UC_D4
 
-    %% Admin & Operator Connections
-    Operator --> UC_LiveMonitor
-    Operator --> UC_ResolveIncident
-    Admin --> UC_ManageUsers
-    Admin --> UC_ViewReport
-    Admin --> UC_ResolveIncident
-
-    %% External Connections
-    UC_Pay -.-> PaymentGW
-    UC_BookTrip -.-> NotiService
-    UC_UpdateTripStatus -.-> NotiService
+    Admin --> UC_A1
+    Admin --> UC_A2
+    Admin --> UC_A3
+    Admin --> UC_A4
 ```
 
 ---
 
-### 8.2. Sơ đồ Tuần tự Luồng Đặt xe & Điều phối Tài xế (Sequence Diagram)
+### 10.2. Đặc tả Chi tiết các Use Case Trọng tâm
+
+#### 📋 Đặc tả Use Case 1: UC-01 - Đặt xe & Điều phối Ghép chuyến Tự động
+* **Mã Use Case:** `UC-01`
+* **Tác nhân chính:** Khách hàng (Customer).
+* **Tác nhân phụ:** Tài xế (Driver), Hệ thống Điều phối (Matching Service), Hệ thống Bản đồ (Map API).
+* **Tiền điều kiện (Pre-conditions):** Khách hàng đã đăng nhập tài khoản hợp lệ trên ứng dụng.
+* **Hậu điều kiện (Post-conditions):** Chuyến đi được tạo với trạng thái `ACCEPTED` và gán cho một tài xế cụ thể.
+* **Luồng sự kiện chính (Main Flow):**
+  1. Khách hàng nhập địa chỉ Điểm đón và Điểm đến, chọn loại xe (`CAR_4`, `CAR_7`, `BIKE`).
+  2. Hệ thống gọi Map API tính toán khoảng cách và hiển thị cước phí tạm tính cùng thời gian đón xe dự kiến (ETA) theo `BRULE_03`, `BRULE_04`.
+  3. Khách hàng bấm nút **"Xác nhận đặt xe"**.
+  4. Hệ thống tạo chuyến đi trạng thái `CREATED` và tìm danh sách tài xế Online gần nhất trong bán kính $2\text{km}$ theo `BRULE_01`.
+  5. Hệ thống xếp hạng ưu tiên và gửi thông báo cuốc xe tới tài xế đầu tiên, đếm ngược 15 giây theo `BRULE_02`.
+  6. Tài xế bấm **"Chấp nhận"** trong 15 giây.
+  7. Hệ thống cập nhật chuyến đi sang `ACCEPTED`, gán ID tài xế và gửi thông báo kèm thông tin xe cho khách hàng.
+* **Luồng rẽ nhánh / Ngoại lệ (Alternative / Exception Flows):**
+  - *4a. Không tìm thấy tài xế trong 2km:* Hệ thống tự động mở rộng bán kính lên 4km, 6km (tối đa 10km). Nếu vẫn không có xe, thông báo "Hiện không có tài xế quanh bạn, vui lòng thử lại sau" và kết thúc Use Case.
+  - *6a. Tài xế từ chối hoặc quá 15 giây:* Hệ thống tự động chuyển tiếp lời mời cuốc xe sang tài xế ưu tiên tiếp theo trong danh sách mà không bắt khách tạo lại yêu cầu.
+
+---
+
+#### 📋 Đặc tả Use Case 2: UC-04 - Hoàn thành Chuyến đi & Quyết toán Thanh toán Bù trừ (Saga)
+* **Mã Use Case:** `UC-04`
+* **Tác nhân chính:** Tài xế (Driver), Khách hàng (Customer).
+* **Tác nhân phụ:** Cổng Thanh toán (Payment Gateway), Hermes Saga Orchestrator.
+* **Tiền điều kiện:** Chuyến đi đang ở trạng thái `IN_TRIP`.
+* **Hậu điều kiện:** Chuyến đi chuyển trạng thái `PAID`, hóa đơn được ghi nhận và màn hình đánh giá mở khóa.
+* **Luồng sự kiện chính (Main Flow):**
+  1. Tài xế chở khách đến điểm đến và bấm nút **"Hoàn thành chuyến đi"**.
+  2. Hệ thống chốt quãng đường và thời gian thực tế, tính toán tổng tiền cước cuối cùng theo `BRULE_03`, `BRULE_04`.
+  3. *Trường hợp khách chọn Tiền mặt:* Hệ thống hiển thị số tiền cần thu trên màn hình tài xế; khách đưa tiền; tài xế bấm "Đã thu tiền" ➔ Hệ thống cập nhật trạng thái `PAID`.
+  4. *Trường hợp khách chọn Thanh toán Điện tử:* Hệ thống gửi lệnh trừ tiền sang Cổng thanh toán bên thứ ba qua API/Webhook.
+  5. Cổng thanh toán trừ tiền thành công, phản hồi mã giao dịch ➔ Hệ thống cập nhật `PAID` và gửi biên lai điện tử cho khách.
+* **Luồng ngoại lệ (Saga Compensating Flow):**
+  - *4a. Cổng thanh toán bị lỗi hoặc Timeout > 30s:* Hệ thống kích hoạt giao dịch bù trừ (Compensating Transaction) theo `BRULE_07`, tự động đổi phương thức sang Tiền mặt, gửi cảnh báo cho tài xế thu tiền mặt trực tiếp từ khách.
+
+---
+
+## 11. THIẾT KẾ MÔ HÌNH THỰC THỂ KẾT HỢP (ENTITY-RELATIONSHIP DIAGRAM - ERD)
+
+### 11.1. Sơ đồ Thực thể Kết hợp Tổng quan (ERD Diagram)
+
+```mermaid
+erDiagram
+    USERS ||--o| DRIVERS : "extends"
+    USERS ||--o{ TRIPS : "requests as Customer"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ AUDIT_LOGS : "triggers"
+
+    DRIVERS ||--o{ VEHICLES : "owns / operates"
+    DRIVERS ||--o{ TRIPS : "executes as Driver"
+    DRIVERS ||--o{ DRIVER_LOCATIONS : "broadcasts"
+
+    TRIPS ||--|| PAYMENTS : "settles via"
+    TRIPS ||--o| RATINGS : "evaluated by"
+
+    USERS {
+        uuid user_id PK
+        string phone_number UK
+        string email UK
+        string full_name
+        string password_hash
+        string role "CUSTOMER | DRIVER | OPERATOR | ADMIN"
+        string status "ACTIVE | LOCKED | PENDING"
+        timestamp created_at
+    }
+
+    DRIVERS {
+        uuid driver_id PK, FK
+        string license_number UK
+        string license_class "A1 | B2 | C"
+        float rating_average "Default 5.0"
+        int total_trips
+        string activity_status "ONLINE | BUSY | OFFLINE"
+        boolean is_approved
+    }
+
+    VEHICLES {
+        uuid vehicle_id PK
+        uuid driver_id FK
+        string license_plate UK
+        string vehicle_type "BIKE | CAR_4 | CAR_7"
+        string brand_model
+        string color
+        boolean is_active
+    }
+
+    DRIVER_LOCATIONS {
+        uuid location_id PK
+        uuid driver_id FK
+        float latitude
+        float longitude
+        float speed
+        float heading
+        timestamp recorded_at
+    }
+
+    TRIPS {
+        uuid trip_id PK
+        uuid customer_id FK
+        uuid driver_id FK
+        uuid vehicle_id FK
+        string pickup_address
+        float pickup_lat
+        float pickup_lng
+        string dropoff_address
+        float dropoff_lat
+        float dropoff_lng
+        string vehicle_type "BIKE | CAR_4 | CAR_7"
+        decimal estimated_fare
+        decimal actual_fare
+        float distance_km
+        int duration_minutes
+        string status "CREATED | ACCEPTED | ARRIVED | IN_TRIP | COMPLETED | PAID | CANCELLED"
+        string cancel_reason
+        timestamp created_at
+        timestamp completed_at
+    }
+
+    PAYMENTS {
+        uuid payment_id PK
+        uuid trip_id FK, UK
+        decimal amount
+        string payment_method "CASH | DIGITAL_WALLET | CREDIT_CARD"
+        string payment_status "PENDING | SUCCESS | FAILED | COMPENSATED_CASH"
+        string transaction_ref UK
+        timestamp paid_at
+    }
+
+    RATINGS {
+        uuid rating_id PK
+        uuid trip_id FK, UK
+        int stars "1 to 5"
+        string comment
+        string feedback_tags
+        timestamp rated_at
+    }
+
+    NOTIFICATIONS {
+        uuid notification_id PK
+        uuid user_id FK
+        string title
+        string message
+        string channel "PUSH | SMS | IN_APP"
+        boolean is_read
+        timestamp sent_at
+    }
+
+    AUDIT_LOGS {
+        uuid log_id PK
+        uuid user_id FK
+        string action
+        string target_entity
+        string target_id
+        string ip_address
+        string details
+        timestamp performed_at
+    }
+```
+
+---
+
+### 11.2. Từ điển Dữ liệu Chi tiết các Bảng Thực thể (Data Dictionary)
+
+| Bảng (Entity) | Cột (Field) | Kiểu dữ liệu | Ràng buộc | Mô tả ý nghĩa nghiệp vụ |
+| :--- | :--- | :--- | :--- | :--- |
+| **`USERS`** | `user_id` | UUID | Primary Key | Khóa chính định danh tài khoản người dùng |
+| | `phone_number` | VARCHAR(15) | Unique, Not Null | Số điện thoại dùng để đăng nhập và liên hệ |
+| | `email` | VARCHAR(100) | Unique, Nullable | Địa chỉ email nhận hóa đơn điện tử |
+| | `full_name` | VARCHAR(100) | Not Null | Họ và tên đầy đủ |
+| | `role` | VARCHAR(20) | Enum, Not Null | Vai trò: `CUSTOMER`, `DRIVER`, `OPERATOR`, `ADMIN` |
+| | `status` | VARCHAR(20) | Not Null | Trạng thái tài khoản (`ACTIVE`, `LOCKED`, `PENDING`) |
+| **`DRIVERS`** | `driver_id` | UUID | PK, FK ➔ `USERS` | Mã định danh tài xế (kế thừa từ `USERS`) |
+| | `license_number`| VARCHAR(30) | Unique, Not Null | Số bằng lái xe cơ giới |
+| | `rating_average`| FLOAT | Default 5.0 | Điểm sao tín nhiệm trung bình (cập nhật tự động) |
+| | `activity_status`| VARCHAR(20)| Not Null | Trạng thái làm việc: `ONLINE`, `BUSY`, `OFFLINE` |
+| **`VEHICLES`** | `vehicle_id` | UUID | Primary Key | Khóa chính định danh phương tiện |
+| | `driver_id` | UUID | Foreign Key | Tài xế sở hữu / điều khiển phương tiện |
+| | `license_plate` | VARCHAR(20) | Unique, Not Null | Biển kiểm soát xe (Ví dụ: 59A-123.45) |
+| | `vehicle_type` | VARCHAR(20) | Enum, Not Null | Phân loại xe: `BIKE`, `CAR_4`, `CAR_7` |
+| **`TRIPS`** | `trip_id` | UUID | Primary Key | Khóa chính mã định danh chuyến đi |
+| | `customer_id` | UUID | FK ➔ `USERS` | Khách hàng tạo yêu cầu đặt xe |
+| | `driver_id` | UUID | FK, Nullable | Tài xế nhận cuốc (Null khi đang tìm kiếm) |
+| | `estimated_fare`| DECIMAL(12,2)| Not Null | Giá cước ước tính ban đầu trước khi khách đặt |
+| | `actual_fare` | DECIMAL(12,2)| Nullable | Tổng cước phí thực tế chốt sau khi hoàn thành |
+| | `status` | VARCHAR(25) | Enum, Not Null | Máy trạng thái chuyến đi từ `CREATED` đến `PAID` |
+| **`PAYMENTS`** | `payment_id` | UUID | Primary Key | Khóa chính bản ghi giao dịch thanh toán |
+| | `trip_id` | UUID | Unique, FK ➔ `TRIPS`| Chuyến đi tương ứng với giao dịch |
+| | `payment_method`| VARCHAR(25) | Not Null | Hình thức: `CASH`, `DIGITAL_WALLET`, `CREDIT_CARD` |
+| | `payment_status`| VARCHAR(25) | Not Null | `PENDING`, `SUCCESS`, `FAILED`, `COMPENSATED_CASH` |
+| **`RATINGS`** | `rating_id` | UUID | Primary Key | Khóa chính bản ghi đánh giá |
+| | `trip_id` | UUID | Unique, FK ➔ `TRIPS`| Chuyến đi được đánh giá |
+| | `stars` | INT | Check (1-5) | Số sao đánh giá từ 1 đến 5 sao |
+| **`AUDIT_LOGS`** | `log_id` | UUID | Primary Key | Khóa chính nhật ký kiểm toán bất biến |
+| | `user_id` | UUID | FK ➔ `USERS` | Quản trị viên/Operator thực hiện thao tác can thiệp |
+| | `action` | VARCHAR(50) | Not Null | Tên hành động: `FORCE_CANCEL`, `LOCK_USER`, etc. |
+
+---
+
+## 12. SƠ ĐỒ THIẾT KẾ KIẾN TRÚC & TUẦN TỰ (ARCHITECTURE & SEQUENCE DIAGRAMS)
+
+### 12.1. Sơ đồ Kiến trúc Hướng Dịch Vụ Tổng thể (SOA / Microservices Architecture)
+
+```mermaid
+graph TB
+    subgraph Clients [Tầng Ứng dụng Khách]
+        CustApp[Customer App / Web]
+        DriverApp[Driver App]
+        AdminPortal[Admin & Ops Web Dashboard]
+    end
+
+    subgraph APIGateway [API Gateway Layer]
+        Gateway[API Gateway / Reverse Proxy & Auth Check]
+    end
+
+    subgraph CoreServices [Tầng Dịch vụ Lõi - Microservices]
+        AuthSvc[User & Auth Service]
+        LocationSvc[Location & Tracking Service]
+        MatchingSvc[Matching & Dispatch Service]
+        TripSvc[Trip Management Service]
+        PricingSvc[Pricing & Billing Service]
+        PaymentSvc[Payment Integration Service]
+        NotiSvc[Notification Service]
+        AdminSvc[Admin & Reporting Service]
+    end
+
+    subgraph MessageBroker [Tầng Điều phối Sự kiện - Event Broker]
+        Kafka[Message Broker: Kafka / RabbitMQ]
+    end
+
+    subgraph Databases [Tầng Dữ liệu]
+        UserDB[(User DB)]
+        TripDB[(Trip DB)]
+        RedisCache[(Redis Cache - Tọa độ & Session)]
+        PaymentDB[(Payment DB)]
+    end
+
+    subgraph ExternalServices [Dịch vụ bên thứ ba]
+        MapsAPI[Google Maps / Mapbox API]
+        PayGateway[VNPay / MoMo / Stripe]
+        PushSMS[FCM / SMS Gateway]
+    end
+
+    CustApp --> Gateway
+    DriverApp --> Gateway
+    AdminPortal --> Gateway
+
+    Gateway --> AuthSvc
+    Gateway --> LocationSvc
+    Gateway --> MatchingSvc
+    Gateway --> TripSvc
+    Gateway --> PricingSvc
+    Gateway --> PaymentSvc
+    Gateway --> NotiSvc
+    Gateway --> AdminSvc
+
+    TripSvc <--> Kafka
+    MatchingSvc <--> Kafka
+    PaymentSvc <--> Kafka
+    NotiSvc <--> Kafka
+    LocationSvc <--> Kafka
+
+    AuthSvc --> UserDB
+    TripSvc --> TripDB
+    LocationSvc --> RedisCache
+    PaymentSvc --> PaymentDB
+
+    LocationSvc --> MapsAPI
+    PaymentSvc --> PayGateway
+    NotiSvc --> PushSMS
+```
+
+---
+
+### 12.2. Sơ đồ Tuần tự Luồng Đặt xe & Điều phối Tài xế (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
@@ -591,7 +898,7 @@ sequenceDiagram
 
 ---
 
-### 8.3. Sơ đồ Trạng thái Vòng đời Chuyến đi (Trip State Machine Diagram)
+### 12.3. Sơ đồ Trạng thái Vòng đời Chuyến đi (Trip State Machine Diagram)
 
 ```mermaid
 stateDiagram-v2
@@ -625,88 +932,9 @@ stateDiagram-v2
 
 ---
 
-### 8.4. Sơ đồ Kiến trúc Tổng quan Hệ thống Hướng Dịch Vụ (Service-Oriented Architecture - SOA)
+## 13. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
 
-```mermaid
-graph TB
-    subgraph Clients [Tầng Ứng dụng Khách]
-        CustApp[Customer App / Web]
-        DriverApp[Driver App]
-        AdminPortal[Admin & Ops Web Dashboard]
-    end
-
-    subgraph APIGateway [API Gateway Layer]
-        Gateway[API Gateway / Reverse Proxy & Auth Check]
-    end
-
-    subgraph CoreServices [Tầng Dịch vụ Lõi - Microservices]
-        AuthSvc[User & Auth Service]
-        LocationSvc[Location & Tracking Service]
-        MatchingSvc[Matching & Dispatch Service]
-        TripSvc[Trip Management Service]
-        PricingSvc[Pricing & Billing Service]
-        PaymentSvc[Payment Integration Service]
-        NotiSvc[Notification Service]
-        AdminSvc[Admin & Reporting Service]
-    end
-
-    subgraph MessageBroker [Tầng Điều phối Sự kiện - Event Broker]
-        Kafka[Message Broker: Kafka / RabbitMQ]
-    end
-
-    subgraph Databases [Tầng Dữ liệu]
-        UserDB[(User DB)]
-        TripDB[(Trip DB)]
-        RedisCache[(Redis Cache - Tọa độ & Session)]
-        PaymentDB[(Payment DB)]
-    end
-
-    subgraph ExternalServices [Dịch vụ bên thứ ba]
-        MapsAPI[Google Maps / Mapbox API]
-        PayGateway[VNPay / MoMo / Stripe]
-        PushSMS[FCM / SMS Gateway]
-    end
-
-    %% Client to Gateway
-    CustApp --> Gateway
-    DriverApp --> Gateway
-    AdminPortal --> Gateway
-
-    %% Gateway to Services
-    Gateway --> AuthSvc
-    Gateway --> LocationSvc
-    Gateway --> MatchingSvc
-    Gateway --> TripSvc
-    Gateway --> PricingSvc
-    Gateway --> PaymentSvc
-    Gateway --> NotiSvc
-    Gateway --> AdminSvc
-
-    %% Service to Event Broker
-    TripSvc <--> Kafka
-    MatchingSvc <--> Kafka
-    PaymentSvc <--> Kafka
-    NotiSvc <--> Kafka
-    LocationSvc <--> Kafka
-
-    %% Databases
-    AuthSvc --> UserDB
-    TripSvc --> TripDB
-    LocationSvc --> RedisCache
-    PaymentSvc --> PaymentDB
-
-    %% External integrations
-    LocationSvc --> MapsAPI
-    PaymentSvc --> PayGateway
-    NotiSvc --> PushSMS
-```
-
----
-
-## 9. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
-
-### 9.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
-Trong kiến trúc hướng dịch vụ hiện đại của CAB System, **Hermes Event-Driven Architecture** đóng vai trò là xương sống trung gian (Event Middleware / Service Bus) đảm bảo các dịch vụ hoạt động phi đồng bộ (asynchronous), chịu tải cao và tách biệt phụ thuộc (loose coupling):
+### 13.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
 
 ```mermaid
 graph TB
@@ -734,14 +962,12 @@ graph TB
         C_Admin[Realtime Dashboard Stream]
     end
 
-    %% Flow from producers to Hermes Bus
     P_Trip -->|Publish TripCreated| E_TripCreated
     P_Match -->|Publish DriverMatched| E_DriverFound
     P_Trip -->|Publish StatusUpdate| E_TripStatus
     P_Pay -->|Publish PaymentSuccess| E_Payment
     P_Loc -->|Publish DriverMoved| E_TripStatus
 
-    %% Hermes Bus to Consumers
     E_TripCreated -->|Subscribe| C_Match
     E_DriverFound -->|Subscribe| C_Trip
     E_DriverFound -->|Subscribe| C_NotiQueue
@@ -755,8 +981,7 @@ graph TB
 
 ---
 
-### 9.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
-Xử lý giao dịch phân tán giữa Trip Service, Matching Service, Payment Service và Notification Service để tránh lỗi dữ liệu khi có dịch vụ bên thứ ba bị gián đoạn:
+### 13.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
 
 ```mermaid
 sequenceDiagram
@@ -769,11 +994,9 @@ sequenceDiagram
     participant NotiSvc as Notification Service
 
     Customer->>HermesSaga: Yêu cầu hoàn thành chuyến & thanh toán
-    Note over HermesSaga: Bước 1: Tính toán cước phí & cập nhật Trip
     HermesSaga->>TripSvc: Chuyển trạng thái TRIP_COMPLETED
     TripSvc-->>HermesSaga: Xác nhận thành công
 
-    Note over HermesSaga: Bước 2: Khởi tạo giao dịch thanh toán
     HermesSaga->>PaySvc: Gửi lệnh trừ tiền / thu tiền
     alt Thanh toán thành công
         PaySvc-->>HermesSaga: Payment Succeeded
@@ -782,7 +1005,6 @@ sequenceDiagram
         NotiSvc-->>Customer: Thông báo thanh toán thành công
     else Thanh toán thất bại
         PaySvc-->>HermesSaga: Payment Failed
-        Note over HermesSaga: Thực hiện bù trừ (Compensating Transaction)
         HermesSaga->>TripSvc: Chuyển sang PAYMENT_PENDING_CASH (Trả tiền mặt)
         HermesSaga->>NotiSvc: Báo khách & tài xế thanh toán lỗi, chuyển thu tiền mặt
         NotiSvc-->>Customer: Báo lỗi thanh toán, vui lòng trả tiền mặt cho tài xế
@@ -791,8 +1013,7 @@ sequenceDiagram
 
 ---
 
-### 9.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
-Áp dụng tiêu chuẩn quản lý dự án **HERMES Project Lifecycle** (4 giai đoạn - Milestones) để phát triển và triển khai hệ thống trong khung thời gian 7 tuần:
+### 13.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
 
 ```mermaid
 gantt
@@ -801,7 +1022,7 @@ gantt
     section Giai đoạn 1: Khởi tạo (Initiation)
     Thu thập & Phân tích yêu cầu khách hàng      :done, init1, 2026-09-01, 4d
     Xác định phạm vi & Lập kế hoạch dự án        :done, init2, after init1, 3d
-    Cột mốc B1 - Phê duyệt Khởi tạo (Initiation Decision) :milestone, m1, 2026-09-07, 0d
+    Cột mốc B1 - Phê duyệt Khởi tạo             :milestone, m1, 2026-09-07, 0d
 
     section Giai đoạn 2: Khái niệm & Thiết kế (Concept)
     Thiết kế Kiến trúc Dịch vụ (SOA/Microservices):active, con1, 2026-09-08, 5d
@@ -827,38 +1048,9 @@ gantt
 
 ---
 
-## 10. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
+## 14. BẢNG TỔNG HỢP CHI TIẾT CHỨC NĂNG DỊCH VỤ NGHIỆP VỤ (SERVICE REQUIREMENTS - SR)
 
-1. **Khả năng mở rộng & Tính sẵn sàng (Scalability & Availability):**
-   - Kiến trúc hướng dịch vụ (SOA/Microservices) cho phép các dịch vụ (Payment, Notification, Matching) mở rộng độc lập khi lưu lượng tăng đột biến vào giờ cao điểm.
-   - Tránh điểm lỗi đơn (Single Point of Failure): Lỗi ở phân hệ thanh toán hay thông báo không làm gián đoạn luồng đặt xe chính.
-2. **Bảo mật & An toàn thông tin (Security & Privacy):**
-   - Xác thực người dùng qua JWT/OAuth2. Phân quyền chặt chẽ theo vai trò (RBAC).
-   - Mã hóa dữ liệu nhạy cảm trên đường truyền (HTTPS/TLS) và lưu trữ.
-   - Tuân thủ tiêu chuẩn bảo mật thanh toán: Tuyệt đối không lưu trữ thông tin thẻ thanh toán nhạy cảm (CVV, Số thẻ đầy đủ) trên hệ thống nội bộ.
-3. **Hiệu năng & Độ trễ (Performance & Latency):**
-   - Định vị và phản hồi điều phối tài xế xử lý trong thời gian thực (độ trễ dưới 2 giây).
-4. **Khả năng mở rộng trong tương lai (Extensibility):**
-   - Dễ dàng tích hợp thêm loại hình dịch vụ mới (giao hàng, xe điện), thêm cổng thanh toán hoặc nhà cung cấp thông báo mới.
-
----
-
-## 11. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
-
-1. **Công thức tính cước chi tiết:** Giá mở cửa, cước phí mỗi km tiếp theo, phụ phí thời gian chờ, hệ số nhân theo thời tiết và giờ cao điểm.
-2. **Thuật toán điều phối:** Tiêu chí ưu tiên tài xế ngoài khoảng cách (Điểm đánh giá sao, tỷ lệ nhận chuyến, thời gian tài xế chờ cuốc).
-3. **Thời gian chờ tài xế phản hồi:** Thời gian Timeout tối đa để tài xế bấm nhận chuyến trước khi chuyển cho tài xế khác (ví dụ: 15 giây).
-4. **Chính sách hủy chuyến & Phí phạt:** Điều kiện hủy miễn phí và mức phí phạt nếu hủy sau khi tài xế đã di chuyển tới điểm đón.
-5. **Cơ chế xử lý mất kết nối (Offline Handling):** Phương án xử lý lưu tạm và đồng bộ lại tọa độ khi tài xế/khách hàng bị rớt mạng giữa đường.
-6. **Thời gian lưu trữ dữ liệu (Data Retention):** Quy định thời gian lưu trữ lịch sử GPS và nhật ký kiểm toán trước khi lưu trữ định kỳ (Archiving).
-
----
-
-## 12. BẢNG TỔNG HỢP CHI TIẾT CHỨC NĂNG DỊCH VỤ NGHIỆP VỤ (SERVICE REQUIREMENTS - SR)
-
-Dưới đây là bảng tổng hợp toàn bộ **25 Chức năng Dịch vụ Nghiệp vụ (Service Requirements - từ `SR_01` đến `SR_25`)** được phân rã từ Quy trình Nghiệp vụ (BPM) và đáp ứng 10 Yêu cầu Doanh nghiệp (`BR_01` - `BR_10`):
-
-### 12.1. Ma trận Tra cứu Nhanh Danh mục SR
+### 14.1. Ma trận Tra cứu Nhanh Danh mục SR
 
 | Mã SR | Tên Chức năng Dịch vụ Nghiệp vụ | Tác nhân | Đầu vào (Input Data) | Đầu ra (Output / Event) | Ánh xạ BR | Microservice phụ trách |
 | :---: | :--- | :--- | :--- | :--- | :---: | :--- |
@@ -890,48 +1082,14 @@ Dưới đây là bảng tổng hợp toàn bộ **25 Chức năng Dịch vụ N
 
 ---
 
-### 12.2. Chi tiết Quy cách Nghiệp vụ của 25 SR
+## 15. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
 
-#### 1. Nhóm Định danh & Quản lý Người dùng
-* **`SR_01` (Đăng ký Tài khoản & Hồ sơ):** Xác minh số điện thoại qua OTP SMS. Tài xế bắt buộc đính kèm ảnh bằng lái xe B2/C/A1 và giấy đăng kiểm xe.
-* **`SR_02` (Xác thực & Cấp quyền JWT):** Cung cấp Token JWT chứa `userId`, `role` (`CUSTOMER`, `DRIVER`, `OPERATOR`, `ADMIN`). Thời hạn Access Token 15 phút, Refresh Token 7 ngày.
-* **`SR_03` (Quản lý Hồ sơ & Phương tiện):** Phân loại phương tiện thành các nhóm: `BIKE` (Xe máy), `CAR_4` (Xe 4 chỗ tiêu chuẩn), `CAR_7` (Xe 7 chỗ rộng rãi).
-
-#### 2. Nhóm Vị trí & Giám sát Đội xe
-* **`SR_04` (Chuyển đổi Trạng thái Hoạt động):** Tài xế chỉ được chuyển sang `ONLINE` khi xe đã được Admin duyệt và tài khoản không bị khóa.
-* **`SR_05` (Thu thập & Phát sóng GPS):** Dữ liệu GPS bao gồm `latitude`, `longitude`, `speed`, `heading`, `timestamp`. Tọa độ được ghi đè vào khóa Geo-Redis với TTL (Time-to-Live) 10 giây để tránh lưu vết rác khi tắt app.
-* **`SR_06` (Tìm Tài xế theo Bán kính):** Sử dụng lệnh `GEOSEARCH` trong Redis để tìm kiếm tài xế trong bán kính từ 2km đến tối đa 10km.
-
-#### 3. Nhóm Đặt xe & Điều phối Ghép chuyến
-* **`SR_07` (Ước tính Giá cước & ETA):** Công thức tính: $\text{Giá dự kiến} = \text{Giá mở cửa} + (\text{Khoảng cách km} \times \text{Đơn giá}) \times \text{Hệ số cao điểm}$.
-* **`SR_08` (Khởi tạo Yêu cầu Đặt chuyến):** Sinh mã chuyến đi `TripID` duy nhất (UUID) và đặt trạng thái khởi tạo `CREATED`.
-* **`SR_09` (Ghép xe Tối ưu & Mời cuốc):** Tính điểm ưu tiên theo công thức: $\text{Score} = \frac{1}{\text{Khoảng cách}} \times 0.7 + \text{Điểm sao trung bình} \times 0.3$.
-* **`SR_10` (Xử lý Mời cuốc & Chuyển tiếp):** Nếu tài xế hiện tại không phản hồi trong vòng 15 giây, hệ thống tự động loại tài xế này khỏi lượt mời hiện tại và gửi cuốc cho tài xế tiếp theo.
-* **`SR_11` (Hủy chuyến & Phạt hủy):** Miễn phí hủy trong vòng 2 phút đầu sau khi ghép xe. Nếu hủy sau khi tài xế đã di chuyển tới điểm đón, áp dụng phí phạt 15.000 VNĐ vào chuyến đi kế tiếp.
-
-#### 4. Nhóm Quản lý Hành trình & Live Tracking
-* **`SR_12` (Cập nhật Tiến trình Chuyến):** Máy trạng thái bắt buộc chuyển theo thứ tự tuần tự: `ACCEPTED` ➔ `ARRIVED_AT_PICKUP` ➔ `IN_TRIP` ➔ `COMPLETED`.
-* **`SR_13` (Live Tracking & Lộ trình):** Phát dữ liệu tọa độ tài xế qua WebSocket Topic `/topic/trip/{tripId}` đến thiết bị khách hàng.
-* **`SR_14` (Tra cứu Lịch sử Chuyến đi):** Cho phép xuất hóa đơn điện tử (PDF/Email) cho từng chuyến đã thanh toán thành công.
-
-#### 5. Nhóm Định giá & Quyết toán Thanh toán
-* **`SR_15` (Quyết toán Cước phí Thực tế):** Dựa trên quãng đường đo đạc thực tế của chuyến đi, thời gian kẹt xe và các chi phí cầu đường (nếu có).
-* **`SR_16` (Xử lý Thanh toán Tiền mặt):** Tài xế chịu trách nhiệm thu tiền mặt và bấm xác nhận trên giao diện lái xe.
-* **`SR_17` (Thanh toán Cổng Điện tử):** Hỗ trợ cổng thanh toán qua Webhook IPN, xác thực chữ ký bảo mật HMAC-SHA256.
-* **`SR_18` (Điều phối Bù trừ khi Lỗi Cổng):** Kích hoạt cơ chế Hermes Saga Compensating để đảm bảo dữ liệu nhất quán phân tán.
-
-#### 6. Nhóm Đánh giá & Quản lý Chất lượng
-* **`SR_19` (Tiếp nhận Đánh giá & Góp ý):** Lưu điểm sao (1 đến 5 sao) và các nhãn đánh giá nhanh (Lái xe an toàn, Xe sạch sẽ, Thái độ tốt).
-* **`SR_20` (Tổng hợp Điểm Uy tín Tài xế):** Cập nhật lại chỉ số rating trung bình của tài xế vào bảng tổng hợp sau mỗi đánh giá mới.
-
-#### 7. Nhóm Thông báo Sự kiện Đa kênh
-* **`SR_21` (Phát Thông báo cho Khách hàng):** Tích hợp Firebase Cloud Messaging (FCM) gửi thông báo nổi trên điện thoại khách.
-* **`SR_22` (Phát Thông báo cho Tài xế):** Tích hợp thông báo toàn màn hình và âm thanh chuông báo cuốc xe khẩn cấp.
-
-#### 8. Nhóm Vận hành, Giám sát & Kiểm toán
-* **`SR_23` (Giám sát Bản đồ Vận hành):** Giao diện Web Socket hiển thị trực quan các biểu tượng xe di chuyển trên nền OpenStreetMap/Mapbox.
-* **`SR_24` (Xử lý Sự cố Chuyến đi):** Cho phép nhân viên điều hành gán đè tài xế khác trong trường hợp xe ban đầu gặp sự cố hỏng hóc giữa đường.
-* **`SR_25` (Kiểm toán & Báo cáo Thống kê):** Ghi nhận nhật ký với định dạng: `[Timestamp] [UserID] [Action] [TargetID] [IP_Address] [Details]` và vẽ biểu đồ Dashboard doanh thu.
+1. **Công thức tính cước chi tiết:** Giá mở cửa, cước phí mỗi km tiếp theo, phụ phí thời gian chờ, hệ số nhân theo thời tiết và giờ cao điểm.
+2. **Thuật toán điều phối:** Tiêu chí ưu tiên tài xế ngoài khoảng cách (Điểm đánh giá sao, tỷ lệ nhận chuyến, thời gian tài xế chờ cuốc).
+3. **Thời gian chờ tài xế phản hồi:** Thời gian Timeout tối đa để tài xế bấm nhận chuyến trước khi chuyển cho tài xế khác (ví dụ: 15 giây).
+4. **Chính sách hủy chuyến & Phí phạt:** Điều kiện hủy miễn phí và mức phí phạt nếu hủy sau khi tài xế đã di chuyển tới điểm đón.
+5. **Cơ chế xử lý mất kết nối (Offline Handling):** Phương án xử lý lưu tạm và đồng bộ lại tọa độ khi tài xế/khách hàng bị rớt mạng giữa đường.
+6. **Thời gian lưu trữ dữ liệu (Data Retention):** Quy định thời gian lưu trữ lịch sử GPS và nhật ký kiểm toán trước khi lưu trữ định kỳ (Archiving).
 
 
 
