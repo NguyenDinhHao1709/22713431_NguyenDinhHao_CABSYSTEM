@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Kiến Trúc & Thiết Kế Hệ Thống CAB System</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        h1 {
+            color: #1a365d;
+            text-align: center;
+            border-bottom: 3px solid #3182ce;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2b6cb0;
+            margin-top: 40px;
+            border-left: 5px solid #3182ce;
+            padding-left: 10px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .mermaid {
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CAB SYSTEM - TỔNG HỢP SƠ ĐỒ THIẾT KẾ & KIẾN TRÚC</h1>
+
+    <div class="card">
+        <h2>1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA)</h2>
+        <p><i>Mô hình xương sống truyền tin phi đồng bộ giữa các Microservices bằng Event Bus</i></p>
+        <div class="mermaid">
+graph TB
+    subgraph Producers [Event Producers]
+        P_Trip[Trip Service]
+        P_Match[Matching Service]
+        P_Pay[Payment Service]
+        P_Loc[Location Service]
+    end
+
+    subgraph HermesBus [Hermes Event-Driven Message Bus / Middleware]
+        E_TripCreated["Topic: trip.created"]
+        E_DriverFound["Topic: driver.matched"]
+        E_TripStatus["Topic: trip.status.updated"]
+        E_Payment["Topic: payment.completed"]
+        E_NotiQueue["Topic: notification.dispatch"]
+    end
+
+    subgraph Consumers [Event Consumers / Handlers]
+        C_Match[Matching Service Handler]
+        C_Trip[Trip Service Handler]
+        C_Billing[Billing & Pricing Handler]
+        C_Noti[Notification Push Worker]
+        C_Audit[Audit & Analytics Worker]
+        C_Admin[Realtime Dashboard Stream]
+    end
+
+    P_Trip -->|Publish TripCreated| E_TripCreated
+    P_Match -->|Publish DriverMatched| E_DriverFound
+    P_Trip -->|Publish StatusUpdate| E_TripStatus
+    P_Pay -->|Publish PaymentSuccess| E_Payment
+    P_Loc -->|Publish DriverMoved| E_TripStatus
+
+    E_TripCreated -->|Subscribe| C_Match
+    E_DriverFound -->|Subscribe| C_Trip
+    E_DriverFound -->|Subscribe| C_NotiQueue
+    E_TripStatus -->|Subscribe| C_NotiQueue
+    E_TripStatus -->|Subscribe| C_Admin
+    E_Payment -->|Subscribe| C_Trip
+    E_Payment -->|Subscribe| C_Audit
+    E_Payment -->|Subscribe| C_NotiQueue
+    E_NotiQueue -->|Process & Send| C_Noti
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Sơ đồ Điều phối Giao dịch Phân tán (Hermes Saga Orchestration)</h2>
+        <p><i>Cơ chế giải quyết xung đột và bù trừ giao dịch thanh toán khi gặp lỗi</i></p>
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    participant HermesSaga as Hermes Saga Orchestrator
+    participant TripSvc as Trip Service
+    participant MatchSvc as Matching Service
+    participant PaySvc as Payment Service
+    participant NotiSvc as Notification Service
+
+    Customer->>HermesSaga: Yêu cầu hoàn thành chuyến & thanh toán
+    HermesSaga->>TripSvc: Chuyển trạng thái TRIP_COMPLETED
+    TripSvc-->>HermesSaga: Xác nhận thành công
+
+    HermesSaga->>PaySvc: Gửi lệnh trừ tiền / thu tiền
+    alt Thanh toán thành công
+        PaySvc-->>HermesSaga: Payment Succeeded
+        HermesSaga->>TripSvc: Cập nhật trạng thái PAID
+        HermesSaga->>NotiSvc: Gửi hóa đơn điện tử cho khách hàng
+        NotiSvc-->>Customer: Thông báo thanh toán thành công
+    else Thanh toán thất bại
+        PaySvc-->>HermesSaga: Payment Failed
+        HermesSaga->>TripSvc: Chuyển sang PAYMENT_PENDING_CASH (Trả tiền mặt)
+        HermesSaga->>NotiSvc: Báo khách & tài xế thanh toán lỗi, chuyển thu tiền mặt
+        NotiSvc-->>Customer: Báo lỗi thanh toán, vui lòng trả tiền mặt cho tài xế
+    end
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Sơ đồ Use Case Tổng Thể Hệ Thống</h2>
+        <div class="mermaid">
+graph TD
+    Customer((Khách hàng))
+    Driver((Tài xế))
+    Operator((Nhân viên vận hành))
+    Admin((Quản trị viên))
+    PaymentGW[Cổng thanh toán]
+    NotiService[Dịch vụ thông báo]
+
+    subgraph Customer_UC [Phân hệ Khách hàng]
+        UC_RegCust[Đăng ký / Đăng nhập]
+        UC_BookTrip[Đặt chuyến & Xem giá dự kiến]
+        UC_TrackTrip[Theo dõi hành trình & Tài xế]
+        UC_CancelTrip[Hủy chuyến]
+        UC_Pay[Thanh toán Tiền mặt / Online]
+        UC_Rate[Đánh giá tài xế]
+    end
+
+    subgraph Driver_UC [Phân hệ Tài xế]
+        UC_UpdateStatus[Bật / Tắt trạng thái Online]
+        UC_UpdateLoc[Cập nhật vị trí GPS]
+        UC_AcceptTrip[Nhận / Từ chối chuyến]
+        UC_UpdateTripStatus[Cập nhật trạng thái chuyến]
+        UC_ConfirmCash[Xác nhận thu tiền mặt]
+    end
+
+    subgraph Admin_UC [Phân hệ Vận hành & Quản trị]
+        UC_LiveMonitor[Giám sát chuyến đi trực tiếp]
+        UC_ResolveIncident[Xử lý sự cố chuyến đi]
+        UC_ManageUsers[Quản lý Người dùng & Phương tiện]
+        UC_ViewReport[Xem Báo cáo Doanh thu & Vận hành]
+    end
+
+    Customer --> UC_RegCust
+    Customer --> UC_BookTrip
+    Customer --> UC_TrackTrip
+    Customer --> UC_CancelTrip
+    Customer --> UC_Pay
+    Customer --> UC_Rate
+
+    Driver --> UC_UpdateStatus
+    Driver --> UC_UpdateLoc
+    Driver --> UC_AcceptTrip
+    Driver --> UC_UpdateTripStatus
+    Driver --> UC_ConfirmCash
+
+    Operator --> UC_LiveMonitor
+    Operator --> UC_ResolveIncident
+    Admin --> UC_ManageUsers
+    Admin --> UC_ViewReport
+    Admin --> UC_ResolveIncident
+
+    UC_Pay -.-> PaymentGW
+    UC_BookTrip -.-> NotiService
+    UC_UpdateTripStatus -.-> NotiService
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4. Sơ đồ Vòng Đời Trạng Thái Chuyến Đi (State Machine Diagram)</h2>
+        <div class="mermaid">
+stateDiagram-v2
+    [*] --> CREATED: Khách hàng tạo yêu cầu đặt xe
+    CREATED --> SEARCHING_DRIVER: Hệ thống tìm tài xế phù hợp
+    
+    SEARCHING_DRIVER --> NO_DRIVER_FOUND: Không có tài xế nhận / Hết tài xế
+    NO_DRIVER_FOUND --> [*]
+
+    SEARCHING_DRIVER --> CANCELLED: Khách hàng hủy chuyến
+    CANCELLED --> [*]
+
+    SEARCHING_DRIVER --> ACCEPTED: Tài xế chấp nhận chuyến
+    ACCEPTED --> ARRIVED_AT_PICKUP: Tài xế đến điểm đón
+    ACCEPTED --> CANCELLED: Khách hoặc Tài xế hủy chuyến
+
+    ARRIVED_AT_PICKUP --> IN_TRIP: Đã đón khách & bắt đầu di chuyển
+    ARRIVED_AT_PICKUP --> CANCELLED: Hủy chuyến tại điểm đón
+
+    IN_TRIP --> COMPLETED: Đến điểm đến & hoàn thành chuyến
+    
+    COMPLETED --> PAYMENT_PENDING: Tính toán cước phí
+    PAYMENT_PENDING --> PAID: Thanh toán thành công (Tiền mặt / Online)
+    PAYMENT_PENDING --> PAYMENT_FAILED: Thanh toán Online lỗi (Chuyển Tiền mặt / Retry)
+    PAYMENT_FAILED --> PAID: Thanh toán lại thành công
+    
+    PAID --> RATED: Khách hàng đánh giá & nhận xét
+    PAID --> [*]
+    RATED --> [*]
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>5. Kế hoạch Quản lý Dự án theo Phương pháp HERMES (7 Tuần)</h2>
+        <div class="mermaid">
+gantt
+    title KẾ HOẠCH TRIỂN KHAI ĐỒ ÁN CAB SYSTEM THEO PHƯƠNG PHÁP HERMES (7 TUẦN)
+    dateFormat  YYYY-MM-DD
+    section Giai đoạn 1: Khởi tạo (Initiation)
+    Thu thập & Phân tích yêu cầu khách hàng      :done, init1, 2026-09-01, 4d
+    Xác định phạm vi & Lập kế hoạch dự án        :done, init2, after init1, 3d
+    Cột mốc B1 - Phê duyệt Khởi tạo             :milestone, m1, 2026-09-07, 0d
+
+    section Giai đoạn 2: Khái niệm & Thiết kế (Concept)
+    Thiết kế Kiến trúc Dịch vụ (SOA/Microservices):active, con1, 2026-09-08, 5d
+    Đặc tả API Gateway, Message Bus & Database   :con2, after con1, 5d
+    Thiết kế UI/UX App Khách & App Tài xế        :con3, 2026-09-10, 5d
+    Cột mốc B2 - Phê duyệt Thiết kế Kiến trúc     :milestone, m2, 2026-09-18, 0d
+
+    section Giai đoạn 3: Thực thi (Implementation)
+    Phát triển Auth, User & Driver Service       :imp1, 2026-09-19, 6d
+    Phát triển Location & Matching Service       :imp2, 2026-09-22, 7d
+    Phát triển Trip & Pricing Service            :imp3, 2026-09-25, 7d
+    Tích hợp Payment Gateway & Notification Bus  :imp4, 2026-09-29, 6d
+    Xây dựng Admin Portal & Live Tracking        :imp5, 2026-10-02, 6d
+    Kiểm thử Tích hợp & Chịu tải (Load Testing) :imp6, 2026-10-06, 5d
+    Cột mốc B3 - Sẵn sàng Triển khai             :milestone, m3, 2026-10-12, 0d
+
+    section Giai đoạn 4: Triển khai & Nghiệm thu (Deployment)
+    Triển khai hệ thống lên môi trường Staging/Cloud:dep1, 2026-10-13, 3d
+    Kiểm thử UAT & Đóng gói sản phẩm             :dep2, after dep1, 3d
+    Báo cáo tổng kết đồ án & Bàn giao            :dep3, after dep2, 2d
+    Cột mốc B4 - Nghiệm thu hoàn tất Đồ án       :milestone, m4, 2026-10-20, 0d
+        </div>
+    </div>
+
+</body>
+</html>
+
