@@ -43,9 +43,177 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-## 4. YÊU CẦU CHỨC NĂNG CHI TIẾT (FUNCTIONAL REQUIREMENTS)
+## 4. MÔ HÌNH HÓA NGHIỆP VỤ DOANH NGHIỆP (BUSINESS PROCESS MODELING)
 
-### 4.1. Phân hệ Quản lý Tài khoản & Xác thực (Identity & User Management)
+Dựa trên 10 Yêu cầu Nghiệp vụ (`BR_01` đến `BR_10`), dưới đây là các mô hình hóa quy trình nghiệp vụ chi tiết của hệ thống CAB System theo chuẩn **BPMN / Activity Workflow**:
+
+---
+
+### 4.1. Sơ đồ Quy trình Nghiệp vụ Tổng thể (End-to-End Business Process Flow)
+Mô hình hóa toàn bộ vòng đời từ lúc khách hàng yêu cầu đến khi hoàn tất chuyến đi, thanh toán, đánh giá và giám sát vận hành:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Khách hàng
+    participant CAB as Hệ thống CAB Platform
+    actor D as Tài xế
+    participant PayGW as Cổng Thanh toán
+    actor Ops as Nhân viên Vận hành
+
+    Note over C,CAB: [BR_01, BR_02] 1. Khởi tạo & Tìm xe
+    C->>CAB: Nhập điểm đón, điểm đến, chọn loại xe
+    CAB-->>C: Hiển thị giá cước ước tính & thời gian dự kiến
+    C->>CAB: Xác nhận đặt xe
+    CAB->>CAB: Tự động lọc tài xế gần nhất & gửi lời mời cuốc
+
+    Note over CAB,D: [BR_01] 2. Phân công & Chấp nhận
+    CAB->>D: Phát thông báo cuốc xe mới (Hạn chờ 15s)
+    alt Tài xế chấp nhận
+        D->>CAB: Bấm Nhận chuyến (Accept)
+        CAB-->>C: Thông báo tài xế đã nhận + Thông tin xe & Vị trí trực tiếp
+    else Tài xế từ chối / Quá 15s
+        D-->>CAB: Từ chối / Hết thời gian chờ (Timeout)
+        CAB->>CAB: Tự động chuyển tiếp sang tài xế tiếp theo
+    end
+
+    Note over C,D: [BR_02] 3. Di chuyển & Live Tracking
+    D->>CAB: Cập nhật "Đã đến điểm đón" ➔ "Đã đón khách"
+    CAB-->>C: Đồng bộ trạng thái chuyến & bản đồ di chuyển
+    D->>CAB: Cập nhật "Hoàn thành chuyến đi"
+
+    Note over CAB,PayGW: [BR_03, BR_08] 4. Tính cước & Thanh toán
+    CAB->>CAB: Tính toán tổng cước thực tế
+    alt Thanh toán Tiền mặt (Cash)
+        CAB-->>D: Thông báo số tiền cần thu từ khách
+        C->>D: Trả tiền mặt trực tiếp
+        D->>CAB: Xác nhận đã thu đủ tiền
+    else Thanh toán Điện tử (Digital Payment)
+        CAB->>PayGW: Gửi yêu cầu trừ tiền qua Cổng thanh toán
+        alt Thanh toán thành công
+            PayGW-->>CAB: Giao dịch thành công
+            CAB-->>C: Gửi biên lai điện tử
+        else Thanh toán thất bại (Lỗi cổng)
+            PayGW-->>CAB: Giao dịch thất bại
+            CAB->>CAB: Kích hoạt bù trừ: Chuyển sang thanh toán Tiền mặt
+            CAB-->>D: Báo cổng lỗi, vui lòng thu tiền mặt trực tiếp từ khách
+        end
+    end
+
+    Note over C,CAB: [BR_06] 5. Đánh giá & Khép lại hành trình
+    C->>CAB: Gửi đánh giá (1-5 sao) & phản hồi
+    CAB->>CAB: Cập nhật điểm uy tín tài xế & lưu trữ lịch sử
+
+    Note over Ops,CAB: [BR_04, BR_10] 6. Giám sát & Kiểm toán
+    CAB->>Ops: Luồng dữ liệu giám sát trực tiếp & Nhật ký kiểm toán (Audit Logs)
+```
+
+---
+
+### 4.2. Mô hình hóa Quy trình Điều phối & Chuyển tiếp Chuyến đi Tự động (`BR_01`)
+Quy trình nghiệp vụ xử lý logic tự động ghép xe, đếm ngược và chuyển tiếp:
+
+```mermaid
+flowchart TD
+    Start([Khách hàng bấm Đặt xe]) --> CalcEstimate[Ước tính giá & Tìm tọa độ điểm đón]
+    CalcEstimate --> QueryRadius[Tìm danh sách tài xế Online trong bán kính R]
+    
+    QueryRadius --> CheckList{Có tài xế khả dụng?}
+    CheckList -- Không --> ExpandRadius[Mở rộng bán kính tìm kiếm R = R + 2km]
+    ExpandRadius --> CheckMaxRadius{Đạt bán kính tối đa?}
+    CheckMaxRadius -- Có --> NotifyNoDriver[Báo Khách hàng: Không tìm thấy xe] --> EndFail([Kết thúc yêu cầu])
+    CheckMaxRadius -- Không --> QueryRadius
+
+    CheckList -- Có --> SortDriver[Sắp xếp ưu tiên: Khoảng cách gần + Đánh giá cao]
+    SortDriver --> PickFirst[Chọn tài xế ưu tiên đầu tiên]
+
+    PickFirst --> SendInvite[Gửi lời mời cuốc xe & Bật Timer 15s]
+    SendInvite --> WaitResponse{Tài xế phản hồi?}
+
+    WaitResponse -- Chấp nhận trong 15s --> AssignSuccess[Gán tài xế vào chuyến đi]
+    AssignSuccess --> NotifyCustAccepted[Báo Khách: Tài xế đã nhận] --> EndSuccess([Bắt đầu hành trình])
+
+    WaitResponse -- Từ chối / Quá 15s --> CheckNextDriver{Còn tài xế khác trong danh sách?}
+    CheckNextDriver -- Còn --> PickNext[Chọn tài xế tiếp theo] --> SendInvite
+    CheckNextDriver -- Hết --> NotifyNoDriver
+```
+
+---
+
+### 4.3. Mô hình hóa Quy trình Thanh toán & Cơ chế Bù trừ Giao dịch (`BR_03`, `BR_08`)
+Đảm bảo tính sẵn sàng cao, xử lý độc lập giữa cổng thanh toán bên thứ ba và hệ thống lõi:
+
+```mermaid
+flowchart TD
+    TripEnd([Tài xế bấm Hoàn thành chuyến]) --> CalcFinalFare[Hệ thống chốt cước thực tế từ lộ trình GPS]
+    CalcFinalFare --> CheckPayMethod{Phương thức thanh toán?}
+
+    CheckPayMethod -- Tiền mặt (Cash) --> DriverCollect[Tài xế thu tiền mặt trực tiếp từ khách]
+    DriverCollect --> DriverConfirm[Tài xế xác nhận Đã thu tiền trên App]
+    DriverConfirm --> MarkPaid[Chuyển trạng thái: PAID]
+
+    CheckPayMethod -- Điện tử (MoMo / VNPay / Thẻ) --> CallGateway[Gửi lệnh thanh toán tới Cổng bên thứ ba]
+    CallGateway --> GatewayResult{Kết quả giao dịch?}
+
+    GatewayResult -- Thành công --> SendReceipt[Gửi biên lai điện tử cho Khách] --> MarkPaid
+    GatewayResult -- Thất bại / Timeout Cổng --> CompensateFlow[Kích hoạt Luồng Bù trừ - Compensating Action]
+
+    CompensateFlow --> SwitchCash[Tự động chuyển phương thức chuyến đi sang TIỀN MẶT]
+    SwitchCash --> AlertParties[Gửi thông báo đến Tài xế & Khách hàng: Thu tiền mặt]
+    AlertParties --> DriverCollect
+
+    MarkPaid --> UnlockRating[Mở khóa màn hình Đánh giá 1-5 sao] --> EndProcess([Khép lại chuyến đi])
+```
+
+---
+
+### 4.4. Mô hình hóa Quy trình Giám sát Vận hành & Xử lý Sự cố (`BR_04`, `BR_10`)
+Đảm bảo khả năng can thiệp của bộ phận vận hành khi xảy ra ngoại lệ:
+
+```mermaid
+flowchart TD
+    TripRunning[Chuyến đi đang diễn ra] --> HealthCheck{Kiểm tra bất thường?}
+    
+    HealthCheck -- Chuyến chạy bình thường --> StreamLive[Phát luồng vị trí lên Live Operations Map]
+    
+    HealthCheck -- Mất GPS > 5 phút / Đi lệch lộ trình quá lớn --> TriggerIncidentAlert[Tự động phát cảnh báo Sự cố lên Dashboard Vận hành]
+    HealthCheck -- Khách hàng bấm Báo cáo Sự cố khẩn cấp --> TriggerIncidentAlert
+
+    TriggerIncidentAlert --> OperatorReview[Nhân viên Vận hành kiểm tra chi tiết chuyến]
+    OperatorReview --> Decision{Phương án xử lý của Operator?}
+
+    Decision -- Liên hệ hỗ trợ --> CallSupport[Gọi điện thoại hỗ trợ Khách hàng / Tài xế]
+    Decision -- Hủy chuyến khẩn cấp --> ForceCancel[Hủy cưỡng bức chuyến đi kèm lý do]
+    Decision -- Gán lại tài xế khác --> ReAssignDriver[Điều phối thủ công tài xế cứu hộ]
+
+    ForceCancel --> WriteAuditLog[Ghi nhật ký kiểm toán: Người can thiệp, Thời gian, Lý do]
+    ReAssignDriver --> WriteAuditLog
+    CallSupport --> WriteAuditLog
+    WriteAuditLog --> EndOps([Cập nhật trạng thái sự cố: Đã giải quyết])
+```
+
+---
+
+### 4.5. Ma trận Ánh xạ Nghiệp vụ (Traceability Matrix: BR ➔ Business Process ➔ SOA Services)
+
+| Mã BR | Tên Nghiệp vụ Doanh nghiệp | Quy trình Nghiệp vụ tương ứng | Dịch vụ SOA / Microservice thực thi |
+| :---: | :--- | :--- | :--- |
+| **BR_01** | Tự động hóa Điều phối & Ghép xe | Quy trình ghép xe đa tài xế & vòng lặp timeout 15s | `Matching & Dispatch Service`, `Location Service` |
+| **BR_02** | Minh bạch lộ trình & Theo dõi trực tiếp | Quy trình cập nhật trạng thái & Live Tracking | `Trip Service`, `Location Service`, `Map API` |
+| **BR_03** | Quản lý tài chính & Thanh toán an toàn | Quy trình tính cước & tích hợp cổng thanh toán Sandbox | `Pricing Service`, `Payment Service`, `Saga Orchestrator` |
+| **BR_04** | Giám sát & Điều hành vận hành tập trung | Quy trình cảnh báo sự cố & điều hành bản đồ trực tiếp | `Admin Portal`, `Live Stream Service`, `Trip Service` |
+| **BR_05** | Hỗ trợ đa nhóm người dùng & RBAC | Quy trình xác thực JWT & phân quyền vai trò | `User & Auth Service`, `API Gateway` |
+| **BR_06** | Quản lý chất lượng qua Đánh giá | Quy trình đánh giá 1-5 sao sau chuyến đi | `Rating Service`, `Driver Profile Service` |
+| **BR_07** | Hệ thống thông báo đa kênh | Quy trình đẩy thông báo sự kiện (Push/SMS/WebSocket) | `Hermes Event Bus`, `Notification Service` |
+| **BR_08** | Tính sẵn sàng cao & Cô lập lỗi | Cơ chế bù trừ giao dịch (Saga Fallback sang Tiền mặt) | `Hermes Saga Orchestrator`, `Payment Service` |
+| **BR_09** | Kiến trúc linh hoạt, dễ mở rộng | Mô hình phân tách độc lập các Domain dịch vụ | Toàn bộ hệ thống Microservices & `API Gateway` |
+| **BR_10** | Bảo mật, riêng tư & Nhật ký kiểm toán | Quy trình ghi log kiểm toán (Audit Logging) | `Audit Service`, `Security Middleware` |
+
+---
+
+### 5. YÊU CẦU CHỨC NĂNG CHI TIẾT (FUNCTIONAL REQUIREMENTS)
+
+### 5.1. Phân hệ Quản lý Tài khoản & Xác thực (Identity & User Management)
 * **FR-AUTH-01 (Đăng ký tài khoản):** 
   * Khách hàng tự đăng ký tài khoản qua ứng dụng (Số điện thoại / Email / Mật khẩu).
   * Tài xế đăng ký hồ sơ hoặc được nhân viên vận hành tạo tài khoản trên hệ thống.
@@ -55,14 +223,14 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-### 4.2. Phân hệ Quản lý Trạng thái & Vị trí Tài xế (Driver & Location Management)
+### 5.2. Phân hệ Quản lý Trạng thái & Vị trí Tài xế (Driver & Location Management)
 * **FR-DRV-01 (Cập nhật trạng thái làm việc):** Tài xế chuyển đổi trạng thái: *Sẵn sàng nhận chuyến (Online)*, *Đang bận (Busy)*, *Nghỉ làm (Offline)*.
 * **FR-DRV-02 (Cập nhật vị trí GPS thời gian thực):** Định kỳ gửi và lưu trữ tọa độ của tài xế khi ở trạng thái Online.
 * **FR-DRV-03 (Tìm kiếm tài xế lân cận):** Cung cấp khả năng tìm kiếm danh sách tài xế rảnh trong bán kính gần điểm đón của khách hàng.
 
 ---
 
-### 4.3. Phân hệ Đặt xe & Điều phối Chuyến đi (Booking & Dispatching)
+### 5.3. Phân hệ Đặt xe & Điều phối Chuyến đi (Booking & Dispatching)
 * **FR-BOOK-01 (Tạo yêu cầu đặt xe):** Khách hàng nhập điểm đón, điểm đến, lựa chọn loại dịch vụ/xe và gửi yêu cầu.
 * **FR-BOOK-02 (Ước tính cước & thời gian di chuyển):** Tính toán và hiển thị giá cước dự kiến (Fare Estimate) và thời gian tài xế đến (ETA) trước khi xác nhận đặt xe.
 * **FR-BOOK-03 (Tự động tìm kiếm & Đề xuất tài xế):** Thuật toán tự động tìm tài xế tối ưu nhất dựa trên vị trí gần nhất, trạng thái sẵn sàng và tiêu chí vận hành.
@@ -73,7 +241,7 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-### 4.4. Phân hệ Quản lý Tiến trình Chuyến đi (Trip Execution & Tracking)
+### 5.4. Phân hệ Quản lý Tiến trình Chuyến đi (Trip Execution & Tracking)
 * **FR-TRIP-01 (Cập nhật trạng thái chuyến đi):** Tài xế cập nhật tuần tự các mốc trạng thái:
   * `Đã nhận chuyến (Accepted)`
   * `Đã đến điểm đón (Arrived at Pickup)`
@@ -84,7 +252,7 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-### 4.5. Phân hệ Tính cước & Thanh toán (Pricing & Payment)
+### 5.5. Phân hệ Tính cước & Thanh toán (Pricing & Payment)
 * **FR-PAY-01 (Tính toán cước phí chính thức):** Tự động tính cước sau khi hoàn thành chuyến đi dựa trên loại dịch vụ, quãng đường thực tế, thời gian di chuyển và phụ phí phát sinh.
 * **FR-PAY-02 (Thanh toán tiền mặt - Cash):** Cho phép khách hàng trả tiền mặt trực tiếp cho tài xế; tài xế bấm xác nhận đã thu tiền.
 * **FR-PAY-03 (Thanh toán điện tử - Digital Payment):** Tích hợp cổng thanh toán bên thứ ba (Ví điện tử, Thẻ ngân hàng), tuân thủ nguyên tắc không lưu trữ thông tin nhạy cảm của thẻ trên CAB System.
@@ -92,20 +260,20 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-### 4.6. Phân hệ Đánh giá & Phản hồi (Rating & Review)
+### 5.6. Phân hệ Đánh giá & Phản hồi (Rating & Review)
 * **FR-REV-01 (Đánh giá sau chuyến đi):** Khách hàng đánh giá mức độ hài lòng (1 - 5 sao) và để lại phản hồi/nhận xét về tài xế sau khi hoàn thành chuyến.
 * **FR-REV-02 (Tổng hợp điểm chất lượng):** Hệ thống tính toán điểm trung bình sao của tài xế để đánh giá mức độ uy tín.
 
 ---
 
-### 4.7. Phân hệ Thông báo (Notification Service)
+### 5.7. Phân hệ Thông báo (Notification Service)
 * **FR-NOTI-01 (Thông báo cho Khách hàng):** Gửi thông báo đẩy (Push notification / SMS) khi: Yêu cầu được tiếp nhận, Có tài xế nhận, Tài xế đến điểm đón, Bắt đầu chuyến, Hoàn thành và Kết quả thanh toán.
 * **FR-NOTI-02 (Thông báo cho Tài xế):** Gửi thông báo khi: Có chuyến mới được phân phối, Khách hủy chuyến, Thay đổi lộ trình.
 * **FR-NOTI-03 (Mở rộng đa kênh thông báo):** Thiết kế độc lập cho phép cắm thêm các nhà cung cấp thông báo khác (FCM, Twilio SMS, Email) mà không ảnh hưởng luồng nghiệp vụ.
 
 ---
 
-### 4.8. Phân hệ Quản trị & Vận hành (Admin & Operations Portal)
+### 5.8. Phân hệ Quản trị & Vận hành (Admin & Operations Portal)
 * **FR-ADM-01 (Quản lý người dùng & phương tiện):** Xem danh sách, kích hoạt/khóa tài khoản khách hàng, tài xế và phê duyệt phương tiện.
 * **FR-ADM-02 (Giám sát trực tiếp chuyến đi):** Theo dõi bản đồ trực quan các chuyến đi đang hoạt động và vị trí tài xế theo thời gian thực.
 * **FR-ADM-03 (Xử lý sự cố chuyến đi):** Can thiệp xử lý các chuyến bị lỗi, hủy chuyến khẩn cấp, gán lại tài xế thủ công.
@@ -115,7 +283,7 @@ Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Poin
 
 ---
 
-## 5. PHÂN RÃ CÁC NGHIỆP VỤ CON (SUB-BUSINESSES) & MA TRẬN PHÂN TÍCH ẢNH HƯỞNG (IMPACT ANALYSIS)
+## 6. PHÂN RÃ CÁC NGHIỆP VỤ CON (SUB-BUSINESSES) & MA TRẬN PHÂN TÍCH ẢNH HƯỞNG (IMPACT ANALYSIS)
 
 Theo mô hình thiết kế hướng miền (Domain-Driven Design - DDD) và Kiến trúc Hướng dịch vụ (SOA), hệ thống CAB System được phân rã thành **9 nghiệp vụ con (Sub-businesses / Sub-domains)**. Dưới đây là chi tiết chức năng, vai trò và phân tích tác động của từng nghiệp vụ con:
 
@@ -169,7 +337,7 @@ graph TD
 
 ---
 
-## 5. KHOANH VÙNG PHẠM VI DỰ ÁN & GIỚI HẠN MODULE PHÁT TRIỂN (PROJECT SCOPE & BOUNDARIES)
+## 7. KHOANH VÙNG PHẠM VI DỰ ÁN & GIỚI HẠN MODULE PHÁT TRIỂN (PROJECT SCOPE & BOUNDARIES)
 
 Do thời gian thực hiện đồ án giới hạn trong **7 tuần** theo chuẩn môn học Kiến trúc Hướng Dịch Vụ (SOA), hệ thống được phân định rõ ràng các giới hạn phát triển theo mô hình **MoSCoW**:
 
@@ -198,7 +366,7 @@ quadrantChart
     "Tổng đài gọi điện VoIP": [0.85, 0.10]
 ```
 
-### 5.1. Các Module BẮT BUỘC Phát triển (In-Scope: Must-Have)
+### 7.1. Các Module BẮT BUỘC Phát triển (In-Scope: Must-Have)
 *Đây là các module tạo nên "xương sống" và quy trình cốt lõi mà đề bài yêu cầu:*
 1. **API Gateway & Event Bus (Hermes Message Bus - Hạ tầng SOA):**
    - Routing API tập trung, kiểm tra JWT Token.
@@ -215,7 +383,7 @@ quadrantChart
 6. **Module Định giá & Tính cước (Pricing & Billing Service):**
    - Ước tính cước ban đầu và tính cước chính thức sau chuyến đi theo công thức cố định: `Giá mở cửa + (Số km × Đơn giá) + Phụ phí giờ cao điểm`.
 
-### 5.2. Các Module Đơn giản hóa (In-Scope: Should-Have / Simplified)
+### 7.2. Các Module Đơn giản hóa (In-Scope: Should-Have / Simplified)
 *Tối ưu hóa thời gian thực hiện nhưng vẫn đáp ứng đầy đủ kịch bản demo kiến trúc:*
 1. **Module Thanh toán (Payment Integration Service):**
    - Hỗ trợ thanh toán **Tiền mặt (Cash)** có xác nhận của tài xế.
@@ -227,7 +395,7 @@ quadrantChart
 4. **Module Quản trị Vận hành (Admin & Ops Portal):**
    - Giao diện Web đơn giản để xem danh sách chuyến đang hoạt động, tài xế online và doanh thu cơ bản.
 
-### 5.3. Các Tính năng LOẠI BỎ khỏi phạm vi (Out-of-Scope: Won't-Have)
+### 7.3. Các Tính năng LOẠI BỎ khỏi phạm vi (Out-of-Scope: Won't-Have)
 *Không triển khai trong khung 7 tuần để tránh quá tải và không đúng trọng tâm kiến trúc dịch vụ:*
 
 | Tính năng ngoài phạm vi | Lý do loại bỏ / Giải pháp thay thế cho đồ án |
@@ -240,9 +408,9 @@ quadrantChart
 
 ---
 
-## 6. SƠ ĐỒ THIẾT KẾ MERMAID (MERMAID DIAGRAMS)
+## 8. SƠ ĐỒ THIẾT KẾ MERMAID (MERMAID DIAGRAMS)
 
-### 6.1. Sơ đồ Use Case Tổng thể (Use Case Diagram)
+### 8.1. Sơ đồ Use Case Tổng thể (Use Case Diagram)
 
 ```mermaid
 graph TD
@@ -311,7 +479,7 @@ graph TD
 
 ---
 
-### 4.2. Sơ đồ Tuần tự Luồng Đặt xe & Điều phối Tài xế (Sequence Diagram)
+### 8.2. Sơ đồ Tuần tự Luồng Đặt xe & Điều phối Tài xế (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
@@ -354,7 +522,7 @@ sequenceDiagram
 
 ---
 
-### 4.3. Sơ đồ Trạng thái Vòng đời Chuyến đi (Trip State Machine Diagram)
+### 8.3. Sơ đồ Trạng thái Vòng đời Chuyến đi (Trip State Machine Diagram)
 
 ```mermaid
 stateDiagram-v2
@@ -388,7 +556,7 @@ stateDiagram-v2
 
 ---
 
-### 4.4. Sơ đồ Kiến trúc Tổng quan Hệ thống Hướng Dịch Vụ (Service-Oriented Architecture - SOA)
+### 8.4. Sơ đồ Kiến trúc Tổng quan Hệ thống Hướng Dịch Vụ (Service-Oriented Architecture - SOA)
 
 ```mermaid
 graph TB
@@ -464,9 +632,11 @@ graph TB
     NotiSvc --> PushSMS
 ```
 
-## 7. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
+---
 
-### 7.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
+## 9. MÔ HÌNH KIẾN TRÚC & QUY TRÌNH HERMES CHO ĐỒ ÁN (HERMES MODEL)
+
+### 9.1. Mô hình Kiến trúc Hướng sự kiện Hermes (Hermes Event-Driven SOA Architecture)
 Trong kiến trúc hướng dịch vụ hiện đại của CAB System, **Hermes Event-Driven Architecture** đóng vai trò là xương sống trung gian (Event Middleware / Service Bus) đảm bảo các dịch vụ hoạt động phi đồng bộ (asynchronous), chịu tải cao và tách biệt phụ thuộc (loose coupling):
 
 ```mermaid
@@ -516,7 +686,7 @@ graph TB
 
 ---
 
-### 7.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
+### 9.2. Sơ đồ Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)
 Xử lý giao dịch phân tán giữa Trip Service, Matching Service, Payment Service và Notification Service để tránh lỗi dữ liệu khi có dịch vụ bên thứ ba bị gián đoạn:
 
 ```mermaid
@@ -552,7 +722,7 @@ sequenceDiagram
 
 ---
 
-### 7.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
+### 9.3. Mô hình Quản lý Vòng đời Đồ án theo Phương pháp luận HERMES (7 Tuần)
 Áp dụng tiêu chuẩn quản lý dự án **HERMES Project Lifecycle** (4 giai đoạn - Milestones) để phát triển và triển khai hệ thống trong khung thời gian 7 tuần:
 
 ```mermaid
@@ -588,7 +758,7 @@ gantt
 
 ---
 
-## 8. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
+## 10. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
 
 1. **Khả năng mở rộng & Tính sẵn sàng (Scalability & Availability):**
    - Kiến trúc hướng dịch vụ (SOA/Microservices) cho phép các dịch vụ (Payment, Notification, Matching) mở rộng độc lập khi lưu lượng tăng đột biến vào giờ cao điểm.
@@ -604,7 +774,7 @@ gantt
 
 ---
 
-## 9. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
+## 11. CÁC VẤN ĐỀ NGHIỆP VỤ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)
 
 1. **Công thức tính cước chi tiết:** Giá mở cửa, cước phí mỗi km tiếp theo, phụ phí thời gian chờ, hệ số nhân theo thời tiết và giờ cao điểm.
 2. **Thuật toán điều phối:** Tiêu chí ưu tiên tài xế ngoài khoảng cách (Điểm đánh giá sao, tỷ lệ nhận chuyến, thời gian tài xế chờ cuốc).
