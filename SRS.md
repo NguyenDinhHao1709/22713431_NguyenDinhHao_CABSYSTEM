@@ -12,6 +12,7 @@
 
 - [CHƯƠNG 1: GIỚI THIỆU & TỔNG QUAN DỰ ÁN (PROJECT OVERVIEW)](#chương-1-giới-thiệu--tổng-quan-dự-án-project-overview)
   - [1.1. Bối cảnh & Mục tiêu Hệ thống CAB System](#11-bối-cảnh--mục-tiêu-hệ-thống-cab-system)
+  - [1.1.2. Danh mục 5 Mục tiêu Nghiệp vụ Doanh nghiệp (Business Goals: BG_01 – BG_05)](#112-danh-mục-5-mục-tiêu-nghiệp-vụ-doanh-nghiệp-business-goals-bg_01--bg_05)
   - [1.2. Phân tích Các Tác nhân Hệ thống (System Actors & Stakeholders)](#12-phân-tích-các-tác-nhân-hệ-thống-system-actors--stakeholders)
   - [1.3. Khung Phương pháp luận Hermes & Kiến trúc SOA (7 Tuần)](#13-khung-phương-pháp-luận-hermes--kiến-trúc-soa-7-tuần)
 - [CHƯƠNG 2: YÊU CẦU NGHIỆP VỤ DOANH NGHIỆP (BUSINESS REQUIREMENTS - BR)](#chương-2-yêu-cầu-nghiệp-vụ-doanh-nghiệp-business-requirements---br)
@@ -55,9 +56,11 @@
   - [10.2. Sơ đồ Tiến độ Thực hiện Đồ án (Gantt Chart)](#102-sơ-đồ-tiến-độ-thực-hiện-đồ-án-gantt-chart)
 - [CHƯƠNG 11: TIÊU CHÍ CHẤP NHẬN HOÀN TẤT YÊU CẦU (ACCEPTANCE CRITERIA - AC & DEFINITION OF DONE)](#chương-11-tiêu-chí-chấp-nhận-hoàn-tất-yêu-cầu-acceptance-criteria---ac--definition-of-done)
   - [11.1. Ma trận Tiêu chí Chấp nhận cho 10 Yêu cầu Nghiệp vụ (AC-BR_01 – AC-BR_10)](#111-ma-trận-tiêu-chí-chấp-nhận-cho-10-yêu-cầu-nghiệp-vụ-ac-br_01--ac-br_10)
-  - [11.2. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi](#112-kịch-bản-kiểm-thử-chấp-nhận-bdd--gherkin-cho-các-luồng-cốt-lõi)
-  - [11.3. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)](#113-tiêu-chuẩn-hoàn-tất-kỹ-thuật-definition-of-done---dod)
-  - [11.4. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)](#114-tiêu-chí-nghiệm-thu-theo-4-cột-mốc-quyết-định-hermes-b1--b4)
+  - [11.2. Ma trận Tiêu chí Chấp nhận Chi tiết cho 25 Chức năng Dịch vụ (AC-SR_01 – AC-SR_25)](#112-ma-trận-tiêu-chí-chấp-nhận-chi-tiết-cho-25-chức-năng-dịch-vụ-ac-sr_01--ac-sr_25)
+  - [11.3. Kịch bản Kiểm thử Chấp nhận BDD / Gherkin cho các Luồng Cốt lõi](#113-kịch-bản-kiểm-thử-chấp-nhận-bdd--gherkin-cho-các-luồng-cốt-lõi)
+  - [11.4. Tiêu chuẩn Hoàn tất Kỹ thuật (Definition of Done - DoD)](#114-tiêu-chuẩn-hoàn-tất-kỹ-thuật-definition-of-done---dod)
+  - [11.5. Tiêu chí Nghiệm thu theo 4 Cột mốc Quyết định HERMES (B1 – B4)](#115-tiêu-chí-nghiệm-thu-theo-4-cột-mốc-quyết-định-hermes-b1--b4)
+  - [11.6. Bảng Truy vết Hợp nhất Toàn diện (End-to-End Master Traceability Matrix: BG ➔ BR ➔ BPMN ➔ SR ➔ UC ➔ AC)](#116-bảng-truy-vết-hợp-nhất-toàn-diện-end-to-end-master-traceability-matrix-bg--br--bpmn--sr--uc--ac)
 - [CHƯƠNG 12: CÁC VẤN ĐỀ CẦN LÀM RÕ VỚI KHÁCH HÀNG (OPEN QUESTIONS)](#chương-12-các-vấn-đề-cần-làm-rõ-với-khách-hàng-open-questions)
 
 ---
@@ -66,9 +69,20 @@
 
 ## 1.1. Bối cảnh & Mục tiêu Hệ thống CAB System
 - **Tên dự án:** CAB System – Nền tảng đặt xe trực tuyến hướng dịch vụ (Service-Oriented Architecture).
-- **Mục tiêu:** Xây dựng hệ thống đặt xe quy mô lớn, linh hoạt, giải quyết các hạn chế của hệ thống cũ (phân công thủ công, khó theo dõi chuyến, thanh toán phân tán, khó mở rộng).
-- **Thời gian triển khai:** 7 tuần.
+- **Mục tiêu tổng quát:** Xây dựng hệ thống đặt xe quy mô lớn, linh hoạt, giải quyết các hạn chế của hệ thống cũ (phân công thủ công, khó theo dõi chuyến, thanh toán phân tán, khó mở rộng).
+- **Thời gian triển khai:** 7 tuần theo khung phương pháp HERMES.
 - **Đối tượng sử dụng chính:** Khách hàng (Customer), Tài xế (Driver), Nhân viên vận hành & Quản trị viên (Operator / Admin).
+
+### 1.1.2. Danh mục 5 Mục tiêu Nghiệp vụ Doanh nghiệp (Business Goals: BG_01 – BG_05)
+Dưới đây là 5 Mục tiêu Kinh doanh Chiến lược (**Business Goals - BG**) đóng vai trò là kim chỉ nam và gốc rễ cho toàn bộ phân tầng phân rã nghiệp vụ:
+
+| Mã BG | Tên Mục tiêu Kinh doanh (Business Goal) | Nội dung Định hướng Chiến lược | Chỉ số Đo lường Hiệu quả (Target KPIs) |
+| :---: | :--- | :--- | :--- |
+| **`BG_01`** | **Tự động hóa Vận hành & Tối ưu Điều phối** | Tự động hóa hoàn toàn chu trình tìm kiếm, xếp hạng và ghép nối tài xế - khách hàng bằng thuật toán vị trí thời gian thực; loại bỏ 100% can thiệp thủ công ở luồng thông thường. | • Thời gian ghép xe trung bình $< 30\text{s}$.<br>• Tỷ lệ ghép chuyến thành công $> 90\%$. |
+| **`BG_02`** | **Minh bạch Hóa Thông tin & Trải nghiệm Khách hàng** | Cung cấp trải nghiệm theo dõi hành trình trực quan (Live Tracking), dự báo chính xác thời gian đón (ETA), minh bạch cước phí và tiếp nhận phản hồi đa chiều để cải thiện dịch vụ. | • Điểm hài lòng khách hàng (CSAT) $> 4.5/5$.<br>• Giảm $80\%$ cuộc gọi hỏi vị trí xe tới tổng đài. |
+| **`BG_03`** | **Hiện đại hóa Quản lý Tài chính & Thanh toán An toàn** | Tự động hóa tính toán cước phí theo thời gian thực; tích hợp thanh toán số không tiền mặt đa kênh; đảm bảo tính toàn vẹn giao dịch tài chính với cơ chế bù trừ giao dịch phân tán (Saga). | • Tỷ lệ thanh toán không dùng tiền mặt $> 50\%$.<br>• Triệt tiêu $100\%$ rủi ro thất thoát doanh thu cước. |
+| **`BG_04`** | **Nâng cao Năng lực Giám sát & Quản trị Vận hành Tập trung** | Trang bị Cổng điều hành số (Operations Portal) cho phép theo dõi toàn bộ chuyến xe trực tiếp trên bản đồ số, phát hiện cảnh báo sớm các bất thường và hỗ trợ can thiệp xử lý sự cố tức thì. | • Thời gian phản hồi & giải quyết sự cố $< 5\text{ phút}$.<br>• Cung cấp Dashboard số liệu trực tiếp cho Ban giám đốc. |
+| **`BG_05`** | **Đảm bảo Tính Sẵn sàng Cao, An toàn Bảo mật & Khả năng Mở rộng** | Phát triển nền tảng trên kiến trúc Hướng Dịch Vụ (SOA/Microservices) và Hướng Sự Kiện (EDA), bảo đảm tính sẵn sàng $99.9\%$, cô lập lỗi các phân hệ và tuân thủ tuyệt đối quy định bảo mật dữ liệu. | • SLA cam kết hoạt động $\ge 99.9\%$.<br>• Lưu vết $100\%$ thao tác quản trị nhạy cảm vào Audit Log. |
 
 ---
 
@@ -101,18 +115,18 @@ Hệ thống được phát triển và quản lý theo phương pháp luận ti
 ## 2.1. Danh mục 10 Yêu cầu Nghiệp vụ Cốt lõi (BR_01 – BR_10)
 Bản yêu cầu nghiệp vụ thể hiện **Mục tiêu, Nỗi đau (Pain Points) và Mong muốn cốt lõi của Ban lãnh đạo Doanh nghiệp** đối với nền tảng CAB System mới:
 
-| Mã BR | Tên Yêu cầu Nghiệp vụ | Nỗi đau hiện tại (Current Pain Points) | Doanh nghiệp MUỐN GÌ? (Business Expectations & Goals) | Tiêu chí Đo lường Thành công (Success Metrics) |
-| :--- | :--- | :--- | :--- | :--- |
-| **BR_01** | **Tự động hóa hoàn toàn quy trình Điều phối & Ghép xe** | Phân công tài xế thủ công qua tổng đài, chậm trễ, dễ sai sót, phụ thuộc con người. | Hệ thống **tự động phân tích vị trí GPS** và trạng thái rảnh để điều phối xe đến tài xế gần nhất; tự động chuyển tiếp sang tài xế khác nếu tài xế đầu từ chối/timeout mà không bắt khách tạo lại yêu cầu. | Thời gian ghép xe < 30s; Tỷ lệ ghép chuyến thành công > 90%; Loại bỏ 100% can thiệp thủ công ở luồng chuẩn. |
-| **BR_02** | **Minh bạch hóa lộ trình & Trải nghiệm chuyến đi thời gian thực** | Khách hàng khó theo dõi trạng thái chuyến đi, không biết tài xế đang ở đâu và khi nào tới đón. | Khách hàng phải được cập nhật chính xác: trạng thái tìm xe, thông tin tài xế, thời gian dự kiến đến (ETA), vị trí xe trực quan trên bản đồ theo thời gian thực (Live Tracking). | Điểm hài lòng khách hàng (CSAT) > 4.5/5; Giảm 80% cuộc gọi hỏi tổng đài "Xe đang ở đâu". |
-| **BR_03** | **Quản lý tập trung tài chính & Tích hợp thanh toán số an toàn** | Thông tin thanh toán phân tán, phụ thuộc tiền mặt dễ thất thoát, đối soát thủ công khó khăn. | Tự động tính cước minh bạch; hỗ trợ cả Tiền mặt (Cash) và Cổng thanh toán điện tử (Momo, VNPay, Thẻ); **tuyệt đối không lưu dữ liệu thẻ nhạy cảm**; tự động chuyển đổi sang tiền mặt nếu thanh toán điện tử lỗi. | 100% doanh thu được kiểm soát tự động; Tỷ lệ thanh toán không tiền mặt > 50%; Giảm 0% rủi ro thất thoát. |
-| **BR_04** | **Nâng cao năng lực giám sát & Vận hành tập trung** | Bộ phận vận hành thiếu công cụ giám sát trực tiếp các chuyến đang chạy, gặp khó khăn khi hệ thống mở rộng. | Cung cấp Cổng điều hành (Operations Portal) cho phép theo dõi toàn bộ chuyến xe trực tiếp trên bản đồ, can thiệp xử lý sự cố kịp thời, phân quyền chặt chẽ và trích xuất báo cáo doanh thu/năng suất. | Thời gian xử lý sự cố/khiếu nại < 5 phút; Cung cấp báo cáo Dashboard theo thời gian thực cho Ban giám đốc. |
-| **BR_05** | **Hỗ trợ đa nhóm người dùng với cơ chế phân quyền chặt chẽ** | Thiếu cơ chế quản lý hồ sơ và xác thực thống nhất giữa Khách hàng, Tài xế và Quản trị viên. | Phục vụ linh hoạt ít nhất 3 nhóm: Khách hàng, Tài xế, Nhân viên vận hành/Admin. Phân quyền theo vai trò (RBAC) để nhân viên thông thường không thể thực hiện các thao tác nhạy cảm. | Quản lý an toàn hàng chục nghìn tài khoản; Ngăn chặn 100% truy cập trái phép vượt quyền. |
-| **BR_06** | **Nâng cao chất lượng dịch vụ qua Đánh giá & Phản hồi** | Không có kênh thu thập ý kiến khách hàng sau chuyến để đánh giá thái độ phục vụ của tài xế. | Cho phép khách hàng chấm 1–5 sao và viết nhận xét sau chuyến đi; tự động tính điểm uy tín tài xế để sàng lọc tài xế kém và ưu tiên phân cuốc cho tài xế 5 sao. | Tỷ lệ chuyến đi được đánh giá > 70%; Tăng tỷ lệ tài xế đạt chuẩn chất lượng lên > 95%. |
-| **BR_07** | **Hệ thống thông báo đa kênh theo thời gian thực** | Thiếu kênh truyền tải thông tin tức thời dẫn đến khách/tài xế bị lỡ thông tin chuyến đi. | Gửi thông báo tức thì cho khách (có tài xế nhận, xe đến, hóa đơn) và tài xế (cuốc mới, khách hủy); kiến trúc mở cho phép cắm thêm kênh mới (Push FCM, SMS, Email) mà không sửa mã nguồn lõi. | Tỷ lệ gửi thông báo thành công > 99%; Độ trễ thông báo < 2 giây. |
-| **BR_08** | **Đảm bảo Tính sẵn sàng cao & Cô lập lỗi hệ thống (Fault Isolation)** | Hệ thống cũ dễ quá tải vào giờ cao điểm; lỗi một chức năng làm sập toàn bộ ứng dụng. | Hệ thống hoạt động ổn định khi tải tăng cao; **lỗi ở chức năng thanh toán hoặc thông báo KHÔNG ĐƯỢC LÀM DỪNG luồng đặt xe chính**; các dịch vụ có thể mở rộng độc lập. | Cam kết SLA hoạt động 99.9%; Không có điểm lỗi đơn (No Single Point of Failure). |
-| **BR_09** | **Kiến trúc linh hoạt, dễ mở rộng tính năng trong tương lai** | Kiến trúc cũ nguyên khối (Monolithic), khó bảo trì và tốn kém khi muốn bổ sung nghiệp vụ mới. | Xây dựng theo **Kiến trúc Hướng Dịch Vụ (SOA/Microservices)** để dễ dàng bổ sung loại dịch vụ mới (giao hàng, xe điện), thêm cổng thanh toán và triển khai nâng cấp từng phần (Zero-downtime). | Giảm thời gian phát triển và triển khai tính năng mới (Time-to-Market) xuống 70%. |
-| **BR_10** | **Bảo mật toàn diện, bảo vệ quyền riêng tư & Nhật ký kiểm toán** | Dữ liệu vị trí, phương tiện và giao dịch chưa có cơ chế kiểm soát bảo mật và lưu vết truy vết. | Xác thực an toàn đa lớp; bảo vệ thông tin cá nhân, dữ liệu định vị và lịch sử giao dịch; **lưu vết kiểm toán (Audit Logs)** mọi thao tác quản trị nhạy cảm để phục vụ đối soát khi có tranh chấp. | Tuân thủ 100% quy định bảo vệ dữ liệu cá nhân; Lưu vết 100% thao tác can thiệp của nhân viên quản trị. |
+| Mã BR | Tên Yêu cầu Nghiệp vụ | Ánh xạ Mục tiêu (BG) | Nỗi đau hiện tại (Current Pain Points) | Doanh nghiệp MUỐN GÌ? (Business Expectations & Goals) | Tiêu chí Đo lường Thành công (Success Metrics) |
+| :---: | :--- | :---: | :--- | :--- | :--- |
+| **BR_01** | **Tự động hóa hoàn toàn quy trình Điều phối & Ghép xe** | `BG_01` | Phân công tài xế thủ công qua tổng đài, chậm trễ, dễ sai sót, phụ thuộc con người. | Hệ thống **tự động phân tích vị trí GPS** và trạng thái rảnh để điều phối xe đến tài xế gần nhất; tự động chuyển tiếp sang tài xế khác nếu tài xế đầu từ chối/timeout mà không bắt khách tạo lại yêu cầu. | Thời gian ghép xe < 30s; Tỷ lệ ghép chuyến thành công > 90%; Loại bỏ 100% can thiệp thủ công ở luồng chuẩn. |
+| **BR_02** | **Minh bạch hóa lộ trình & Trải nghiệm chuyến đi thời gian thực** | `BG_02` | Khách hàng khó theo dõi trạng thái chuyến đi, không biết tài xế đang ở đâu và khi nào tới đón. | Khách hàng phải được cập nhật chính xác: trạng thái tìm xe, thông tin tài xế, thời gian dự kiến đến (ETA), vị trí xe trực quan trên bản đồ theo thời gian thực (Live Tracking). | Điểm hài lòng khách hàng (CSAT) > 4.5/5; Giảm 80% cuộc gọi hỏi tổng đài "Xe đang ở đâu". |
+| **BR_03** | **Quản lý tập trung tài chính & Tích hợp thanh toán số an toàn** | `BG_03` | Thông tin thanh toán phân tán, phụ thuộc tiền mặt dễ thất thoát, đối soát thủ công khó khăn. | Tự động tính cước minh bạch; hỗ trợ cả Tiền mặt (Cash) và Cổng thanh toán điện tử (Momo, VNPay, Thẻ); **tuyệt đối không lưu dữ liệu thẻ nhạy cảm**; tự động chuyển đổi sang tiền mặt nếu thanh toán điện tử lỗi. | 100% doanh thu được kiểm soát tự động; Tỷ lệ thanh toán không tiền mặt > 50%; Giảm 0% rủi ro thất thoát. |
+| **BR_04** | **Nâng cao năng lực giám sát & Vận hành tập trung** | `BG_04` | Bộ phận vận hành thiếu công cụ giám sát trực tiếp các chuyến đang chạy, gặp khó khăn khi hệ thống mở rộng. | Cung cấp Cổng điều hành (Operations Portal) cho phép theo dõi toàn bộ chuyến xe trực tiếp trên bản đồ, can thiệp xử lý sự cố kịp thời, phân quyền chặt chẽ và trích xuất báo cáo doanh thu/năng suất. | Thời gian xử lý sự cố/khiếu nại < 5 phút; Cung cấp báo cáo Dashboard theo thời gian thực cho Ban giám đốc. |
+| **BR_05** | **Hỗ trợ đa nhóm người dùng với cơ chế phân quyền chặt chẽ** | `BG_05` | Thiếu cơ chế quản lý hồ sơ và xác thực thống nhất giữa Khách hàng, Tài xế và Quản trị viên. | Phục vụ linh hoạt ít nhất 3 nhóm: Khách hàng, Tài xế, Nhân viên vận hành/Admin. Phân quyền theo vai trò (RBAC) để nhân viên thông thường không thể thực hiện các thao tác nhạy cảm. | Quản lý an toàn hàng chục nghìn tài khoản; Ngăn chặn 100% truy cập trái phép vượt quyền. |
+| **BR_06** | **Nâng cao chất lượng dịch vụ qua Đánh giá & Phản hồi** | `BG_02` | Không có kênh thu thập ý kiến khách hàng sau chuyến để đánh giá thái độ phục vụ của tài xế. | Cho phép khách hàng chấm 1–5 sao và viết nhận xét sau chuyến đi; tự động tính điểm uy tín tài xế để sàng lọc tài xế kém và ưu tiên phân cuốc cho tài xế 5 sao. | Tỷ lệ chuyến đi được đánh giá > 70%; Tăng tỷ lệ tài xế đạt chuẩn chất lượng lên > 95%. |
+| **BR_07** | **Hệ thống thông báo đa kênh theo thời gian thực** | `BG_01`, `BG_02` | Thiếu kênh truyền tải thông tin tức thời dẫn đến khách/tài xế bị lỡ thông tin chuyến đi. | Gửi thông báo tức thì cho khách (có tài xế nhận, xe đến, hóa đơn) và tài xế (cuốc mới, khách hủy); kiến trúc mở cho phép cắm thêm kênh mới (Push FCM, SMS, Email) mà không sửa mã nguồn lõi. | Tỷ lệ gửi thông báo thành công > 99%; Độ trễ thông báo < 2 giây. |
+| **BR_08** | **Đảm bảo Tính sẵn sàng cao & Cô lập lỗi hệ thống (Fault Isolation)** | `BG_05` | Hệ thống cũ dễ quá tải vào giờ cao điểm; lỗi một chức năng làm sập toàn bộ ứng dụng. | Hệ thống hoạt động ổn định khi tải tăng cao; **lỗi ở chức năng thanh toán hoặc thông báo KHÔNG ĐƯỢC LÀM DỪNG luồng đặt xe chính**; các dịch vụ có thể mở rộng độc lập. | Cam kết SLA hoạt động 99.9%; Không có điểm lỗi đơn (No Single Point of Failure). |
+| **BR_09** | **Kiến trúc linh hoạt, dễ mở rộng tính năng trong tương lai** | `BG_05` | Kiến trúc cũ nguyên khối (Monolithic), khó bảo trì và tốn kém khi muốn bổ sung nghiệp vụ mới. | Xây dựng theo **Kiến trúc Hướng Dịch Vụ (SOA/Microservices)** để dễ dàng bổ sung loại dịch vụ mới (giao hàng, xe điện), thêm cổng thanh toán và triển khai nâng cấp từng phần (Zero-downtime). | Giảm thời gian phát triển và triển khai tính năng mới (Time-to-Market) xuống 70%. |
+| **BR_10** | **Bảo mật toàn diện, bảo vệ quyền riêng tư & Nhật ký kiểm toán** | `BG_04`, `BG_05` | Dữ liệu vị trí, phương tiện và giao dịch chưa có cơ chế kiểm soát bảo mật và lưu vết truy vết. | Xác thực an toàn đa lớp; bảo vệ thông tin cá nhân, dữ liệu định vị và lịch sử giao dịch; **lưu vết kiểm toán (Audit Logs)** mọi thao tác quản trị nhạy cảm để phục vụ đối soát khi có tranh chấp. | Tuân thủ 100% quy định bảo vệ dữ liệu cá nhân; Lưu vết 100% thao tác can thiệp của nhân viên quản trị. |
 
 ---
 
@@ -247,7 +261,18 @@ quadrantChart
 
 # CHƯƠNG 3: MÔ HÌNH HÓA QUY TRÌNH NGHIỆP VỤ (BUSINESS PROCESS MODELING - BPM)
 
-Dựa trên 10 Yêu cầu Nghiệp vụ (`BR_01` đến `BR_10`), dưới đây là các mô hình hóa quy trình nghiệp vụ chi tiết của hệ thống CAB System theo chuẩn **BPMN / Activity Workflow**:
+Dựa trên các Mục tiêu Kinh doanh (`BG_01` – `BG_05`) và 10 Yêu cầu Nghiệp vụ (`BR_01` – `BR_10`), hệ thống CAB System chuẩn hóa thành **8 Phân hệ Quy trình Nghiệp vụ cốt lõi (BPMN Workflows)**:
+
+| Mã Quy trình | Tên Quy trình Nghiệp vụ (BPMN Workflow) | Mục tiêu Doanh nghiệp (BG) | Yêu cầu Nghiệp vụ (BR) | Tác nhân Tham gia |
+| :---: | :--- | :---: | :---: | :--- |
+| **`BPMN-01`** | **Khởi tạo Đặt xe & Ước tính Cước** | `BG_01`, `BG_02` | `BR_01`, `BR_02` | Khách hàng, Pricing Service |
+| **`BPMN-02`** | **Điều phối, Ghép chuyến & Mời cuốc Tự động** | `BG_01` | `BR_01`, `BR_06` | Hệ thống CAB, Tài xế |
+| **`BPMN-03`** | **Theo dõi Hành trình Trực tiếp (Live Tracking)** | `BG_02` | `BR_02` | Khách hàng, Tài xế, Location Svc |
+| **`BPMN-04`** | **Quyết toán Cước phí & Thanh toán Đa kênh** | `BG_03`, `BG_05` | `BR_03`, `BR_08` | Khách hàng, Tài xế, Cổng TT, Saga |
+| **`BPMN-05`** | **Thu nhận Đánh giá & Phản hồi Chất lượng** | `BG_02` | `BR_06` | Khách hàng, Rating Service |
+| **`BPMN-06`** | **Giám sát Bản đồ & Xử lý Sự cố Vận hành** | `BG_04` | `BR_04`, `BR_08` | Operator, Trip Service |
+| **`BPMN-07`** | **Đăng ký, Xác thực & Phân quyền RBAC** | `BG_05` | `BR_05`, `BR_10` | Khách hàng, Tài xế, Auth Svc |
+| **`BPMN-08`** | **Kiểm duyệt Hồ sơ Phương tiện & Kiểm toán Log** | `BG_04`, `BG_05` | `BR_04`, `BR_10` | Admin, Audit Service |
 
 ---
 
@@ -1378,6 +1403,91 @@ graph LR
   - [ ] Triển khai hệ thống thành công lên môi trường Cloud/Staging.
   - [ ] Vượt qua 100% các kịch bản kiểm thử chấp nhận người dùng (UAT).
   - [ ] Hoàn tất báo cáo tổng kết đồ án, video demo vận hành và bảo vệ trước Hội đồng.
+
+---
+
+## 11.6. Bảng Truy vết Hợp nhất Toàn diện (End-to-End Master Traceability Matrix: BG ➔ BR ➔ BPMN ➔ SR ➔ UC ➔ AC)
+
+> Ma trận truy vết xuyên suốt liên kết toàn bộ 6 tầng kiến trúc yêu cầu hệ thống:  
+> **`BG (Business Goal) ➔ BR (Business Requirement) ➔ BPMN (Business Process) ➔ SR (Service Requirement) ➔ UC (Use Case) ➔ AC (Acceptance Criteria)`**
+
+### 11.6.1. Bảng Truy vết Chi tiết theo 25 Chức năng Dịch vụ (Master SR Traceability Table)
+
+| **BG (Mục tiêu Doanh nghiệp)** | **BR (Yêu cầu Nghiệp vụ)** | **BPMN (Quy trình Nghiệp vụ)** | **SR (Chức năng Dịch vụ)** | **UC (Ca Sử dụng)** | **AC (Tiêu chí Nghiệm thu)** |
+|:---:|:---:|:---|:---|:---:|:---|
+| `BG_05` | `BR_05` | `BPMN-07`: Đăng ký, Xác thực & Cấp quyền | `SR_01`: Đăng ký Tài khoản & Hồ sơ | `UC-12` | `AC-SR_01`, `AC-BR_05` |
+| `BG_05` | `BR_05`, `BR_10` | `BPMN-07`: Xác thực JWT & Phân quyền RBAC | `SR_02`: Xác thực & Cấp quyền JWT | `UC-01`, `UC-06` | `AC-SR_02`, `AC-BR_05`, `AC-BR_10` |
+| `BG_04`, `BG_05` | `BR_04`, `BR_05` | `BPMN-08`: Kiểm duyệt Phương tiện Đối tác | `SR_03`: Quản lý Hồ sơ & Phương tiện | `UC-12` | `AC-SR_03`, `AC-BR_04` |
+| `BG_01` | `BR_01` | `BPMN-02`: Trạng thái Sẵn sàng Điều phối | `SR_04`: Chuyển đổi Trạng thái Hoạt động | `UC-06` | `AC-SR_04`, `AC-BR_01` |
+| `BG_01`, `BG_02` | `BR_01`, `BR_02` | `BPMN-03`: Phát sóng GPS & Live Tracking | `SR_05`: Thu thập & Phát sóng GPS | `UC-02`, `UC-08` | `AC-SR_05`, `AC-BR_02` |
+| `BG_01` | `BR_01` | `BPMN-02`: Quét Bán kính Tài xế 2km–10km | `SR_06`: Tìm Tài xế theo Bán kính | `UC-01` | `AC-SR_06`, `AC-BR_01` |
+| `BG_02`, `BG_03` | `BR_02`, `BR_03` | `BPMN-01`: Ước tính Cước tạm tính & ETA | `SR_07`: Ước tính Giá cước & ETA | `UC-01` | `AC-SR_07`, `AC-BR_03` |
+| `BG_01` | `BR_01` | `BPMN-01`: Khởi tạo Yêu cầu Đặt xe Mới | `SR_08`: Khởi tạo Yêu cầu Đặt chuyến | `UC-01` | `AC-SR_08`, `AC-BR_01` |
+| `BG_01`, `BG_02` | `BR_01`, `BR_06` | `BPMN-02`: Điều phối theo PriorityScore | `SR_09`: Ghép xe Tối ưu & Mời cuốc | `UC-01`, `UC-07` | `AC-SR_09`, `AC-BR_01`, `AC-BR_06` |
+| `BG_01` | `BR_01` | `BPMN-02`: Vòng lặp Đếm ngược 15s & Dispatch | `SR_10`: Xử lý Mời cuốc & Chuyển tiếp | `UC-07` | `AC-SR_10`, `AC-BR_01` |
+| `BG_01`, `BG_04` | `BR_01`, `BR_04` | `BPMN-01`, `BPMN-06`: Hủy chuyến & Phạt hủy | `SR_11`: Hủy chuyến & Phạt hủy | `UC-03` | `AC-SR_11`, `AC-BR_01` |
+| `BG_02` | `BR_02` | `BPMN-03`: Cập nhật Mốc Trạng thái Hành trình | `SR_12`: Cập nhật Tiến trình Chuyến | `UC-08` | `AC-SR_12`, `AC-BR_02` |
+| `BG_02` | `BR_02` | `BPMN-03`: Stream WebSocket Vị trí Xe Realtime | `SR_13`: Live Tracking & Lộ trình | `UC-02` | `AC-SR_13`, `AC-BR_02` |
+| `BG_02`, `BG_04` | `BR_02`, `BR_04` | `BPMN-03`: Tra cứu Lịch sử & Xuất Hóa đơn | `SR_14`: Tra cứu Lịch sử Chuyến đi | `UC-02`, `UC-10` | `AC-SR_14`, `AC-BR_02` |
+| `BG_03` | `BR_03` | `BPMN-04`: Quyết toán Cước phí Thực tế Cuối | `SR_15`: Quyết toán Cước phí Thực tế | `UC-04` | `AC-SR_15`, `AC-BR_03` |
+| `BG_03` | `BR_03` | `BPMN-04`: Thu Tiền mặt Trực tiếp | `SR_16`: Xử lý Thanh toán Tiền mặt | `UC-04`, `UC-09` | `AC-SR_16`, `AC-BR_03` |
+| `BG_03`, `BG_05` | `BR_03`, `BR_10` | `BPMN-04`: Thanh toán Cổng Trực tuyến (VNPay/MoMo) | `SR_17`: Thanh toán Cổng Điện tử | `UC-04` | `AC-SR_17`, `AC-BR_03`, `AC-BR_10` |
+| `BG_03`, `BG_05` | `BR_03`, `BR_08` | `BPMN-04`: Bù trừ Giao dịch Phân tán Hermes Saga | `SR_18`: Điều phối Bù trừ khi Lỗi Cổng | `UC-04` | `AC-SR_18`, `AC-BR_08` |
+| `BG_02` | `BR_06` | `BPMN-05`: Thu nhận Đánh giá & Phản hồi 1-5 Sao | `SR_19`: Tiếp nhận Đánh giá & Góp ý | `UC-05` | `AC-SR_19`, `AC-BR_06` |
+| `BG_01`, `BG_02` | `BR_01`, `BR_06` | `BPMN-05`: Cập nhật Điểm Đánh giá Tín nhiệm | `SR_20`: Tổng hợp Điểm Uy tín Tài xế | `UC-05`, `UC-12` | `AC-SR_20`, `AC-BR_06` |
+| `BG_02` | `BR_02`, `BR_07` | `BPMN-03`, `BPMN-04`: Bắn Push Notification Khách | `SR_21`: Phát Thông báo cho Khách hàng | `UC-01`, `UC-02` | `AC-SR_21`, `AC-BR_07` |
+| `BG_01` | `BR_01`, `BR_07` | `BPMN-02`: Phát Chuông & Alert App Tài xế | `SR_22`: Phát Thông báo cho Tài xế | `UC-07` | `AC-SR_22`, `AC-BR_07` |
+| `BG_04` | `BR_04` | `BPMN-06`: Giám sát Đội xe trên Bản đồ Số | `SR_23`: Giám sát Bản đồ Vận hành | `UC-10` | `AC-SR_23`, `AC-BR_04` |
+| `BG_04`, `BG_05` | `BR_04`, `BR_08` | `BPMN-06`: Điều xe Cứu hộ / Hủy Cuốc Khẩn cấp | `SR_24`: Xử lý Sự cố Chuyến đi | `UC-11` | `AC-SR_24`, `AC-BR_04`, `AC-BR_08` |
+| `BG_04`, `BG_05` | `BR_04`, `BR_10` | `BPMN-08`: Ghi Audit Log & Dashboard Báo cáo | `SR_25`: Kiểm toán & Báo cáo Thống kê | `UC-13` | `AC-SR_25`, `AC-BR_10` |
+
+### 11.6.2. Bảng Truy vết Tổng hợp theo 10 Yêu cầu Nghiệp vụ (Master BR Traceability Table)
+
+| **BG (Mục tiêu)** | **BR (Yêu cầu Nghiệp vụ)** | **BPMN (Quy trình liên quan)** | **SR (Chức năng Dịch vụ)** | **UC (Ca Sử dụng)** | **AC (Tiêu chí Nghiệm thu)** |
+|:---:|:---|:---|:---|:---|:---|
+| `BG_01` | **BR_01: Tự động hóa Điều phối & Ghép xe** | `BPMN-01`, `BPMN-02` | `SR_04`, `SR_06`, `SR_08`, `SR_09`, `SR_10`, `SR_11`, `SR_22` | `UC-01`, `UC-03`, `UC-06`, `UC-07` | `AC-BR_01`, `AC-SR_04,06,08,09,10,11,22` |
+| `BG_02` | **BR_02: Minh bạch Lộ trình & Live Tracking** | `BPMN-01`, `BPMN-03` | `SR_05`, `SR_07`, `SR_12`, `SR_13`, `SR_14`, `SR_21` | `UC-01`, `UC-02`, `UC-08` | `AC-BR_02`, `AC-SR_05,07,12,13,14,21` |
+| `BG_03` | **BR_03: Quản lý Tài chính & Thanh toán Số** | `BPMN-01`, `BPMN-04` | `SR_07`, `SR_15`, `SR_16`, `SR_17`, `SR_18` | `UC-01`, `UC-04`, `UC-09` | `AC-BR_03`, `AC-SR_07,15,16,17,18` |
+| `BG_04` | **BR_04: Giám sát Vận hành & Xử lý Sự cố** | `BPMN-06`, `BPMN-08` | `SR_03`, `SR_11`, `SR_14`, `SR_23`, `SR_24`, `SR_25` | `UC-10`, `UC-11`, `UC-12`, `UC-13` | `AC-BR_04`, `AC-SR_03,11,14,23,24,25` |
+| `BG_05` | **BR_05: Quản lý Người dùng & Phân quyền RBAC** | `BPMN-07`, `BPMN-08` | `SR_01`, `SR_02`, `SR_03` | `UC-01`, `UC-06`, `UC-12` | `AC-BR_05`, `AC-SR_01,02,03` |
+| `BG_02` | **BR_06: Quản lý Chất lượng qua Đánh giá** | `BPMN-02`, `BPMN-05` | `SR_09`, `SR_19`, `SR_20` | `UC-05`, `UC-07`, `UC-12` | `AC-BR_06`, `AC-SR_09,19,20` |
+| `BG_01`, `BG_02` | **BR_07: Hệ thống Thông báo Đa kênh** | `BPMN-02`, `BPMN-03`, `BPMN-04` | `SR_21`, `SR_22` | `UC-01`, `UC-02`, `UC-07` | `AC-BR_07`, `AC-SR_21,22` |
+| `BG_05` | **BR_08: Sẵn sàng Cao & Cô lập Lỗi (Saga)** | `BPMN-04`, `BPMN-06` | `SR_18`, `SR_24` | `UC-04`, `UC-11` | `AC-BR_08`, `AC-SR_18,24` |
+| `BG_05` | **BR_09: Kiến trúc SOA Linh hoạt, Dễ Mở rộng** | Toàn bộ `BPMN-01`–`08` | `SR_01`–`SR_25` (Toàn bộ 25 dịch vụ) | `UC-01`–`UC-13` (Toàn bộ 13 Ca sử dụng) | `AC-BR_09`, Toàn bộ `AC-SR` |
+| `BG_04`, `BG_05` | **BR_10: Bảo mật, Riêng tư & Nhật ký Kiểm toán** | `BPMN-07`, `BPMN-08` | `SR_02`, `SR_17`, `SR_25` | `UC-04`, `UC-13` | `AC-BR_10`, `AC-SR_02,17,25` |
+
+### 11.6.3. Sơ đồ Chuỗi Phân rã & Truy vết Nghiệp vụ (Traceability Flow)
+
+```mermaid
+graph LR
+    BG["1. BG (Business Goals)<br/>BG_01 – BG_05"]
+    BR["2. BR (Business Requirements)<br/>BR_01 – BR_10"]
+    BPMN["3. BPMN (Process Workflows)<br/>BPMN-01 – BPMN-08"]
+    SR["4. SR (Service Requirements)<br/>SR_01 – SR_25"]
+    UC["5. UC (Use Cases)<br/>UC-01 – UC-13"]
+    AC["6. AC (Acceptance Criteria)<br/>AC-BR_01..10 & AC-SR_01..25"]
+
+    BG -->|"định hướng chiến lược"| BR
+    BR -->|"mô hình hóa quy trình"| BPMN
+    BPMN -->|"phân rã chức năng"| SR
+    SR -->|"đặc tả hành vi tương tác"| UC
+    UC -->|"nghiệm thu & kiểm chứng"| AC
+    SR -.->|"kiểm thử trực tiếp"| AC
+    BR -.->|"nghiệm thu cấp cao"| AC
+```
+
+### 11.6.4. Bảng Tổng kết Mức độ Bao phủ Truy vết (Full Traceability Coverage)
+
+| **Hạng mục (Entity)** | **Ký hiệu** | **Số lượng** | **Độ bao phủ Truy vết** | **Trạng thái** |
+|:---|:---:|:---:|:---:|:---:|
+| Mục tiêu Nghiệp vụ Doanh nghiệp | **BG** | 5 | 5 / 5 (100%) | ✅ Hoàn tất |
+| Yêu cầu Nghiệp vụ Cốt lõi | **BR** | 10 | 10 / 10 (100%) | ✅ Hoàn tất |
+| Quy trình Nghiệp vụ Chuẩn hóa | **BPMN** | 8 | 8 / 8 (100%) | ✅ Hoàn tất |
+| Yêu cầu Chức năng Dịch vụ | **SR** | 25 | 25 / 25 (100%) | ✅ Hoàn tất |
+| Ca Sử dụng Hệ thống | **UC** | 13 | 13 / 13 (100%) | ✅ Hoàn tất |
+| Tiêu chí Chấp nhận Hoàn tất | **AC** | 35 (10 BR + 25 SR) | 35 / 35 (100%) | ✅ Hoàn tất |
+
+> 🎯 **Kết luận:** Hệ thống đạt **100% độ bao phủ liên kết liền mạch** từ Mục tiêu chiến lược (BG) qua Yêu cầu nghiệp vụ (BR), Quy trình nghiệp vụ (BPMN), Chức năng dịch vụ (SR), Ca sử dụng (UC) cho đến Tiêu chí nghiệm thu hoàn tất (AC).
 
 ---
 
