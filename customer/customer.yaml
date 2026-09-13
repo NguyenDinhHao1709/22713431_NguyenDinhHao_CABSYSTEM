@@ -1,0 +1,1140 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Customer API Specification
+  description: |
+    Đặc tả API dành riêng cho phân hệ **Khách hàng (Customer)** của hệ thống Đặt xe trực tuyến CAB System.
+    Ánh xạ đầy đủ các yêu cầu từ tài liệu SRS:
+    - **Business Requirements (BR):** BR_01, BR_02, BR_03, BR_05, BR_06, BR_07, BR_10
+    - **Service Requirements (SR):** SR_01, SR_02, SR_07, SR_08, SR_09, SR_10, SR_11, SR_13, SR_14, SR_16, SR_17, SR_18, SR_19, SR_21
+    - **Use Cases (UC):** UC-01 (Đặt xe & Ghép chuyến), UC-02 (Live Tracking), UC-03 (Hủy chuyến), UC-04 (Thanh toán), UC-05 (Đánh giá)
+    - **Business Rules (BRULE):** BRULE_01 (Bán kính tìm xe), BRULE_03 (Biểu phí), BRULE_04 (Hệ số cao điểm), BRULE_05 (Phí hủy chuyến sau 2 phút), BRULE_08 (Bảo mật thông tin & ẩn SĐT), BRULE_09 (Đánh giá trong 24h)
+  version: 1.0.0
+  contact:
+    name: Nguyễn Đình Hảo (MSSV: 22713431)
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+
+servers:
+  - url: https://api.cabsystem.vn/api/v1/customer
+    description: Production Server
+  - url: http://localhost:8080/api/v1/customer
+    description: Local Development & Sandbox Server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Authentication & Profile
+    description: Đăng ký, kích hoạt OTP, đăng nhập JWT và quản lý hồ sơ cá nhân (SR_01, SR_02)
+  - name: Booking & Fare Estimation
+    description: Ước tính giá cước, khởi tạo chuyến xe, thăm dò trạng thái ghép xe và hủy chuyến (SR_07, SR_08, SR_09, SR_10, SR_11, UC-01, UC-03)
+  - name: Live Tracking & Trip Progress
+    description: Theo dõi vị trí tài xế thời gian thực, tiến trình hành trình và lịch sử chuyến (SR_13, SR_14, UC-02)
+  - name: Payment & Settlement
+    description: Thanh toán cước qua Tiền mặt hoặc Cổng thanh toán điện tử VNPay/MoMo (SR_16, SR_17, SR_18, UC-04)
+  - name: Rating & Feedback
+    description: Đánh giá chất lượng phục vụ 1-5 sao và để lại góp ý sau chuyến đi (SR_19, UC-05, BRULE_09)
+  - name: Notifications
+    description: Danh sách thông báo đẩy về trạng thái chuyến đi và hóa đơn (SR_21)
+
+paths:
+  # =========================================================================
+  # AUTHENTICATION & PROFILE
+  # =========================================================================
+  /auth/register:
+    post:
+      tags:
+        - Authentication & Profile
+      summary: Đăng ký tài khoản Khách hàng mới (SR_01)
+      description: Khách hàng nhập số điện thoại, email và họ tên để khởi tạo tài khoản. Hệ thống gửi mã OTP 6 số để kích hoạt.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký bước đầu thành công, OTP đã được gửi tới số điện thoại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: Số điện thoại hoặc email đã được đăng ký trong hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/verify-otp:
+    post:
+      tags:
+        - Authentication & Profile
+      summary: Xác thực mã OTP và kích hoạt tài khoản
+      description: Kiểm tra mã OTP gửi về điện thoại, kích hoạt tài khoản sang trạng thái ACTIVE và trả về token đăng nhập.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - otp_code
+              properties:
+                phone_number:
+                  type: string
+                  example: "0912345678"
+                otp_code:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Xác thực OTP thành công, tài khoản đã được kích hoạt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          description: Mã OTP không chính xác hoặc đã hết hạn (quá 2 phút)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication & Profile
+      summary: Đăng nhập tài khoản Khách hàng (SR_02)
+      description: Xác thực bằng số điện thoại và mật khẩu, cấp cặp JWT Access Token và Refresh Token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - password
+              properties:
+                phone_number:
+                  type: string
+                  example: "0912345678"
+                password:
+                  type: string
+                  format: password
+                  example: "Password@123"
+      responses:
+        '200':
+          description: Đăng nhập thành công, trả về JWT Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Tài khoản đang bị khóa do vi phạm quy định
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /profile:
+    get:
+      tags:
+        - Authentication & Profile
+      summary: Xem thông tin hồ sơ cá nhân của khách hàng
+      description: Lấy thông tin họ tên, số điện thoại (đã che bớt số nhạy cảm theo BRULE_08), email và ngày tạo.
+      responses:
+        '200':
+          description: Thông tin hồ sơ khách hàng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    put:
+      tags:
+        - Authentication & Profile
+      summary: Cập nhật thông tin cá nhân
+      description: Cập nhật họ tên hoặc địa chỉ email của khách hàng.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                  example: "Nguyễn Văn An"
+                email:
+                  type: string
+                  format: email
+                  example: "vanan.updated@example.com"
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerProfile'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # =========================================================================
+  # BOOKING & FARE ESTIMATION
+  # =========================================================================
+  /bookings/estimate-fare:
+    post:
+      tags:
+        - Booking & Fare Estimation
+      summary: Ước tính giá cước và thời gian đón xe (SR_07, BRULE_03, BRULE_04)
+      description: |
+        Tính toán khoảng cách, dự báo ETA đón xe và áp dụng công thức định giá:
+        `EstimatedFare = (BasePrice + max(0, Distance - 2) * PricePerKm) * SurgeMultiplier`
+        Cung cấp báo giá ước tính cho cả 3 loại phương tiện (BIKE, CAR_4, CAR_7).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FareEstimateRequest'
+      responses:
+        '200':
+          description: Báo giá ước tính thành công cho từng phân loại xe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareEstimateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+  /bookings/request:
+    post:
+      tags:
+        - Booking & Fare Estimation
+      summary: Khởi tạo yêu cầu đặt chuyến xe mới (SR_08, UC-01)
+      description: |
+        Khách hàng xác nhận đặt xe. Hệ thống tạo bản ghi `TRIPS` với trạng thái `CREATED`,
+        phát sự kiện `trip.created` lên Message Bus và tự động kích hoạt tiến trình tìm kiếm,
+        lọc tài xế theo bán kính (BRULE_01) và điều phối theo PriorityScore (BRULE_02).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '201':
+          description: Tạo yêu cầu thành công, hệ thống đang tiến hành điều phối tài xế
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripDetail'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: Khách hàng đang có một chuyến đi khác chưa hoàn thành
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/{trip_id}/status:
+    get:
+      tags:
+        - Booking & Fare Estimation
+      summary: Thăm dò trạng thái tìm xe & điều phối (SR_09, SR_10)
+      description: Kiểm tra tiến trình tìm xe. Phản hồi trạng thái ghép cuốc, thông tin tài xế nhận cuốc hoặc thông báo hết xe sau khi quét đến bán kính tối đa 10km.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "e6f21234-abcd-4def-9876-0123456789ab"
+      responses:
+        '200':
+          description: Trạng thái hiện tại của chuyến xe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripStatusResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /bookings/{trip_id}/cancel:
+    post:
+      tags:
+        - Booking & Fare Estimation
+      summary: Hủy yêu cầu chuyến đi (SR_11, UC-03, BRULE_05)
+      description: |
+        Khách hàng hủy chuyến đi. 
+        - Nếu hủy trong vòng <= 2 phút kể từ khi tài xế nhận: **Miễn phí phạt**.
+        - Nếu hủy sau 2 phút hoặc khi tài xế đã tới điểm đón (`ARRIVED`): Áp dụng **Phí phạt 15.000 VNĐ** (ghi nợ vào cuốc tiếp theo).
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  example: "Thay đổi kế hoạch di chuyển"
+      responses:
+        '200':
+          description: Hủy chuyến thành công, kèm thông báo mức phí phạt (nếu có)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelTripResponse'
+        '400':
+          description: Chuyến đi đang ở trạng thái IN_TRIP hoặc đã COMPLETED, không thể hủy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # =========================================================================
+  # LIVE TRACKING & TRIP DETAILS
+  # =========================================================================
+  /trips/{trip_id}/tracking:
+    get:
+      tags:
+        - Live Tracking & Trip Progress
+      summary: Lấy vị trí trực tiếp của xe đón (SR_13, UC-02)
+      description: Trả về tọa độ GPS gần nhất của tài xế lấy từ Redis Cache, góc hướng (heading), tốc độ và ETA đón xe.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tọa độ GPS thời gian thực của tài xế
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveTrackingResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /trips:
+    get:
+      tags:
+        - Live Tracking & Trip Progress
+      summary: Lấy danh sách lịch sử chuyến đi của khách hàng (SR_14)
+      description: Phân trang danh sách các chuyến đi trong quá khứ kèm bộ lọc theo trạng thái và ngày.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [COMPLETED, CANCELLED, PAID]
+      responses:
+        '200':
+          description: Danh sách chuyến đi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 25
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  trips:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TripSummary'
+
+  /trips/{trip_id}:
+    get:
+      tags:
+        - Live Tracking & Trip Progress
+      summary: Xem chi tiết hóa đơn & chuyến đi (SR_14)
+      description: Xem chi tiết chuyến đi, thông tin tài xế, phương tiện, lộ trình GPS và hóa đơn chi tiết.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Chi tiết toàn bộ chuyến đi và hóa đơn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripDetail'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # =========================================================================
+  # PAYMENT & SETTLEMENT
+  # =========================================================================
+  /trips/{trip_id}/payment:
+    post:
+      tags:
+        - Payment & Settlement
+      summary: Khởi tạo thanh toán cước phí (SR_16, SR_17, UC-04)
+      description: |
+        Thực hiện thanh toán chuyến đi:
+        - Nếu chọn `CASH`: Đặt trạng thái chờ tài xế xác nhận thu tiền mặt.
+        - Nếu chọn `DIGITAL_WALLET` hoặc `CREDIT_CARD`: Tạo URL thanh toán chuyển hướng tới cổng Sandbox (VNPay/MoMo).
+        - Nếu cổng lỗi quá 30s hoặc fail: Saga Orchestrator tự động kích hoạt bù trừ sang Tiền mặt (BRULE_07).
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payment_method
+              properties:
+                payment_method:
+                  type: string
+                  enum: [CASH, DIGITAL_WALLET, CREDIT_CARD]
+                  example: "DIGITAL_WALLET"
+                return_url:
+                  type: string
+                  format: uri
+                  description: URL chuyển hướng sau khi hoàn tất giao dịch cổng trực tuyến
+                  example: "https://cabsystem.vn/checkout-return"
+      responses:
+        '200':
+          description: Yêu cầu thanh toán được xử lý hoặc khởi tạo URL thanh toán
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentInitiateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /trips/{trip_id}/payment-status:
+    get:
+      tags:
+        - Payment & Settlement
+      summary: Tra cứu trạng thái thanh toán & thông tin bù trừ (SR_18)
+      description: Kiểm tra xem giao dịch đã SUCCESS, PENDING, hay bị COMPENSATED_CASH do cổng thanh toán gặp sự cố.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Trạng thái thanh toán hiện tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # =========================================================================
+  # RATING & FEEDBACK
+  # =========================================================================
+  /trips/{trip_id}/rating:
+    post:
+      tags:
+        - Rating & Feedback
+      summary: Đánh giá chất lượng dịch vụ sau chuyến đi (SR_19, UC-05, BRULE_09)
+      description: |
+        Khách hàng chấm điểm 1–5 sao và viết nhận xét.
+        - Phải gửi trong vòng 24 giờ sau khi chuyến đi hoàn tất (`PAID`).
+        - Nếu chấm 1-2 sao, bắt buộc phải chọn ít nhất 1 nhãn phàn nàn (`feedback_tags`).
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRequest'
+      responses:
+        '201':
+          description: Gửi đánh giá thành công, điểm uy tín của tài xế đã được cập nhật
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+        '400':
+          description: Đánh giá quá hạn 24 giờ hoặc thiếu tag phàn nàn cho mức 1-2 sao
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # =========================================================================
+  # NOTIFICATIONS
+  # =========================================================================
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Danh sách thông báo đẩy gửi đến Khách hàng (SR_21)
+      description: Lấy danh sách các thông báo chuyến đi (tài xế đã nhận, xe đến điểm đón, biên lai cước).
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Danh sách thông báo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationItem'
+
+  /notifications/{notification_id}/read:
+    put:
+      tags:
+        - Notifications
+      summary: Đánh dấu thông báo đã đọc
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Đã đánh dấu đọc thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+# ===========================================================================
+# COMPONENTS SCHEMAS & RESPONSES
+# ===========================================================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Nhập JWT Token với quyền CUSTOMER (cấp từ /auth/login hoặc /auth/verify-otp).
+
+  responses:
+    BadRequestError:
+      description: Dữ liệu gửi lên không hợp lệ (sai định dạng hoặc thiếu trường bắt buộc)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnauthorizedError:
+      description: Thiếu JWT Token hoặc Token không hợp lệ / hết hạn
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Không tìm thấy tài nguyên yêu cầu
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error_code
+        - message
+        - timestamp
+      properties:
+        error_code:
+          type: string
+          example: "INVALID_ARGUMENT"
+        message:
+          type: string
+          example: "Số điện thoại không đúng định dạng chuẩn Việt Nam."
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-09-13T09:00:00Z"
+
+    CustomerRegisterRequest:
+      type: object
+      required:
+        - phone_number
+        - full_name
+        - password
+      properties:
+        phone_number:
+          type: string
+          example: "0912345678"
+        full_name:
+          type: string
+          example: "Nguyễn Văn An"
+        email:
+          type: string
+          format: email
+          example: "vanan@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "Password@123"
+
+    OtpSentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Mã OTP 6 số đã được gửi qua SMS."
+        otp_timeout_seconds:
+          type: integer
+          example: 120
+
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          example: "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4..."
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          example: 86400
+        user:
+          $ref: '#/components/schemas/CustomerProfile'
+
+    CustomerProfile:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        phone_number:
+          type: string
+          description: Đã được ẩn 4 số giữa theo BRULE_08 để bảo vệ quyền riêng tư
+          example: "091****678"
+        email:
+          type: string
+          example: "vanan@example.com"
+        full_name:
+          type: string
+          example: "Nguyễn Văn An"
+        role:
+          type: string
+          example: "CUSTOMER"
+        status:
+          type: string
+          example: "ACTIVE"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-09-01T10:00:00Z"
+
+    FareEstimateRequest:
+      type: object
+      required:
+        - pickup_lat
+        - pickup_lng
+        - dropoff_lat
+        - dropoff_lng
+      properties:
+        pickup_address:
+          type: string
+          example: "12 Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP.HCM"
+        pickup_lat:
+          type: number
+          format: float
+          example: 10.8223
+        pickup_lng:
+          type: number
+          format: float
+          example: 106.6875
+        dropoff_address:
+          type: string
+          example: "Chợ Bến Thành, Quận 1, TP.HCM"
+        dropoff_lat:
+          type: number
+          format: float
+          example: 10.7725
+        dropoff_lng:
+          type: number
+          format: float
+          example: 106.6980
+
+    FareEstimateResponse:
+      type: object
+      properties:
+        distance_km:
+          type: number
+          format: float
+          example: 7.5
+        duration_minutes:
+          type: integer
+          example: 22
+        surge_multiplier:
+          type: number
+          format: float
+          description: Hệ số cao điểm hoặc ban đêm theo BRULE_04
+          example: 1.2
+        surge_reason:
+          type: string
+          example: "Giờ cao điểm chiều (17h00 - 19h00)"
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              vehicle_type:
+                type: string
+                enum: [BIKE, CAR_4, CAR_7]
+                example: "CAR_4"
+              display_name:
+                type: string
+                example: "Xe 4 chỗ"
+              estimated_fare:
+                type: number
+                format: double
+                description: Số tiền cước tính toán theo công thức chuẩn (VNĐ)
+                example: 105900.0
+              eta_pickup_minutes:
+                type: integer
+                example: 4
+
+    CreateTripRequest:
+      type: object
+      required:
+        - pickup_address
+        - pickup_lat
+        - pickup_lng
+        - dropoff_address
+        - dropoff_lat
+        - dropoff_lng
+        - vehicle_type
+        - payment_method
+      properties:
+        pickup_address:
+          type: string
+          example: "12 Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP.HCM"
+        pickup_lat:
+          type: number
+          format: float
+          example: 10.8223
+        pickup_lng:
+          type: number
+          format: float
+          example: 106.6875
+        dropoff_address:
+          type: string
+          example: "Chợ Bến Thành, Quận 1, TP.HCM"
+        dropoff_lat:
+          type: number
+          format: float
+          example: 10.7725
+        dropoff_lng:
+          type: number
+          format: float
+          example: 106.6980
+        vehicle_type:
+          type: string
+          enum: [BIKE, CAR_4, CAR_7]
+          example: "CAR_4"
+        payment_method:
+          type: string
+          enum: [CASH, DIGITAL_WALLET, CREDIT_CARD]
+          example: "DIGITAL_WALLET"
+        notes_for_driver:
+          type: string
+          example: "Đón trước cổng trường đại học"
+
+    TripStatusResponse:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [CREATED, ACCEPTED, ARRIVED, IN_TRIP, COMPLETED, PAID, CANCELLED]
+          example: "ACCEPTED"
+        search_radius_km:
+          type: number
+          description: Bán kính đang quét tìm tài xế (2km - 10km theo BRULE_01)
+          example: 2.0
+        driver:
+          $ref: '#/components/schemas/AssignedDriverInfo'
+        vehicle:
+          $ref: '#/components/schemas/AssignedVehicleInfo'
+
+    AssignedDriverInfo:
+      type: object
+      properties:
+        driver_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+          example: "Trần Văn Bình"
+        phone_number:
+          type: string
+          description: Đã được ẩn 4 chữ số giữa theo BRULE_08
+          example: "098****321"
+        rating_average:
+          type: number
+          format: float
+          example: 4.85
+        current_location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: float
+              example: 10.8250
+            longitude:
+              type: number
+              format: float
+              example: 106.6890
+
+    AssignedVehicleInfo:
+      type: object
+      properties:
+        vehicle_id:
+          type: string
+          format: uuid
+        license_plate:
+          type: string
+          example: "59A-123.45"
+        vehicle_type:
+          type: string
+          example: "CAR_4"
+        brand_model:
+          type: string
+          example: "Toyota Vios"
+        color:
+          type: string
+          example: "Trắng"
+
+    CancelTripResponse:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: "CANCELLED"
+        cancellation_fee:
+          type: number
+          description: Mức phạt hủy theo BRULE_05 (15.000 VNĐ nếu hủy sau 2 phút)
+          example: 15000.0
+        fee_reason:
+          type: string
+          example: "Khách hủy chuyến sau 2 phút kể từ khi tài xế nhận cuốc."
+
+    LiveTrackingResponse:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: "ARRIVED"
+        driver_latitude:
+          type: number
+          format: float
+          example: 10.8224
+        driver_longitude:
+          type: number
+          format: float
+          example: 106.6876
+        speed_kmh:
+          type: number
+          format: float
+          example: 25.4
+        heading:
+          type: number
+          format: float
+          example: 180.0
+        eta_minutes:
+          type: integer
+          example: 1
+        recorded_at:
+          type: string
+          format: date-time
+          example: "2026-09-13T09:15:32Z"
+
+    TripSummary:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        pickup_address:
+          type: string
+          example: "12 Nguyễn Văn Bảo, Gò Vấp"
+        dropoff_address:
+          type: string
+          example: "Chợ Bến Thành, Quận 1"
+        vehicle_type:
+          type: string
+          example: "CAR_4"
+        actual_fare:
+          type: number
+          example: 106000.0
+        status:
+          type: string
+          example: "PAID"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-09-10T14:30:00Z"
+
+    TripDetail:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        driver_id:
+          type: string
+          format: uuid
+        pickup_address:
+          type: string
+        pickup_lat:
+          type: number
+        pickup_lng:
+          type: number
+        dropoff_address:
+          type: string
+        dropoff_lat:
+          type: number
+        dropoff_lng:
+          type: number
+        vehicle_type:
+          type: string
+        estimated_fare:
+          type: number
+        actual_fare:
+          type: number
+        distance_km:
+          type: number
+        duration_minutes:
+          type: integer
+        status:
+          type: string
+        payment:
+          $ref: '#/components/schemas/PaymentInfo'
+        driver:
+          $ref: '#/components/schemas/AssignedDriverInfo'
+        vehicle:
+          $ref: '#/components/schemas/AssignedVehicleInfo'
+        rating:
+          $ref: '#/components/schemas/RatingResponse'
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    PaymentInfo:
+      type: object
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          example: 106000.0
+        payment_method:
+          type: string
+          enum: [CASH, DIGITAL_WALLET, CREDIT_CARD]
+          example: "DIGITAL_WALLET"
+        payment_status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED, COMPENSATED_CASH]
+          example: "SUCCESS"
+        transaction_ref:
+          type: string
+          example: "TXN_VNPay_20260913_998811"
+        paid_at:
+          type: string
+          format: date-time
+          example: "2026-09-13T09:45:10Z"
+
+    PaymentInitiateResponse:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        payment_id:
+          type: string
+          format: uuid
+        payment_method:
+          type: string
+          example: "DIGITAL_WALLET"
+        payment_url:
+          type: string
+          description: URL chuyển tiếp tới Cổng thanh toán Sandbox (trống nếu là CASH)
+          example: "https://sandbox.vnpay.vn/payment/checkout?token=abcxyz123"
+        qr_code_url:
+          type: string
+          example: "https://api.cabsystem.vn/qrcodes/txn_12345.png"
+
+    PaymentStatusResponse:
+      type: object
+      properties:
+        trip_id:
+          type: string
+          format: uuid
+        payment_status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED, COMPENSATED_CASH]
+          example: "COMPENSATED_CASH"
+        is_compensated:
+          type: boolean
+          description: Đã được chuyển đổi sang Tiền mặt bởi Saga bù trừ (BRULE_07) hay chưa
+          example: true
+        compensation_message:
+          type: string
+          example: "Cổng thanh toán điện tử bị gián đoạn. Vui lòng thanh toán tiền mặt trực tiếp cho tài xế."
+
+    RatingRequest:
+      type: object
+      required:
+        - stars
+      properties:
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: "Tài xế lái xe an toàn, xe sạch sẽ, thái độ lịch sự."
+        feedback_tags:
+          type: array
+          description: Bắt buộc chọn ít nhất 1 tag nếu stars <= 2 (BRULE_09)
+          items:
+            type: string
+          example: ["Lái xe cẩn thận", "Xe thơm tho", "Đúng giờ"]
+
+    RatingResponse:
+      type: object
+      properties:
+        rating_id:
+          type: string
+          format: uuid
+        trip_id:
+          type: string
+          format: uuid
+        stars:
+          type: integer
+          example: 5
+        comment:
+          type: string
+        rated_at:
+          type: string
+          format: date-time
+
+    NotificationItem:
+      type: object
+      properties:
+        notification_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Tài xế đã đến điểm đón!"
+        message:
+          type: string
+          example: "Tài xế Trần Văn Bình (59A-123.45) đã có mặt tại 12 Nguyễn Văn Bảo."
+        channel:
+          type: string
+          enum: [PUSH, SMS, IN_APP]
+          example: "PUSH"
+        is_read:
+          type: boolean
+          example: false
+        sent_at:
+          type: string
+          format: date-time
+          example: "2026-09-13T09:12:00Z"
