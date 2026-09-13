@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: "CAB System - Notification Service (Dịch vụ Thông báo Đa kênh)"
+  description: "API Quản lý và Phát Thông báo Đa kênh (Push FCM, In-app Alert, SMS Mock) cho Khách hàng và Tài xế theo tài liệu SRS.md (SR_21, SR_22, BR_07). Đảm bảo gửi thông báo trong vòng 2 giây kể từ khi nhận sự kiện từ Event Bus."
+  version: "1.0.0"
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    email: "22713431@iuh.edu.vn"
+servers:
+  - url: "https://api.cab.vn/v1/notifications"
+    description: "Production Notification Service Gateway"
+  - url: "http://localhost:8087/v1"
+    description: "Local Development Environment"
+
+paths:
+  /push/customer:
+    post:
+      summary: "Phát thông báo Push Notification đến Khách hàng (SR_21, BR_07)"
+      description: "Gửi thông báo đẩy qua FCM đến ứng dụng khách hàng khi có sự kiện cuốc xe (tài xế nhận chuyến, xe đã đến điểm đón, chuyến đi hoàn tất). Thời gian phản hồi <= 2 giây."
+      operationId: "sendCustomerPushNotification"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerNotificationRequest"
+      responses:
+        "200":
+          description: "Thông báo đã được gửi thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /push/driver:
+    post:
+      summary: "Phát chuông báo & lời mời nhận chuyến tới Tài xế (SR_22, BR_07)"
+      description: "Bắn âm thanh chuông báo và giao diện popup nổi toàn màn hình trên app tài xế khi có lời mời nhận chuyến mới kèm thời gian đếm ngược 15 giây."
+      operationId: "sendDriverDispatchAlert"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverAlertRequest"
+      responses:
+        "200":
+          description: "Thông báo chuông điều phối đã gửi thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /sms/send:
+    post:
+      summary: "Gửi tin nhắn SMS khẩn cấp / Mã OTP / Xác nhận (BR_07)"
+      description: "Kênh dự phòng SMS hoặc gửi OTP đăng nhập/xác nhận khẩn cấp trong trường hợp thiết bị không nhận được push notification."
+      operationId: "sendSmsNotification"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SmsNotificationRequest"
+      responses:
+        "200":
+          description: "SMS đã được bàn giao cho bên cung cấp viễn thông"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+
+  /inbox:
+    get:
+      summary: "Lấy danh sách thông báo In-app của người dùng"
+      description: "Truy vấn hộp thư thông báo in-app cá nhân của tài xế hoặc khách hàng với hỗ trợ phân trang."
+      operationId: "getUserNotifications"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "userId"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+      responses:
+        "200":
+          description: "Danh sách thông báo in-app"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxListResponse"
+
+  /inbox/{notificationId}/read:
+    patch:
+      summary: "Đánh dấu thông báo đã đọc"
+      description: "Cập nhật trạng thái thông báo thành đã đọc."
+      operationId: "markNotificationAsRead"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "notificationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Trạng thái đã được cập nhật thành công"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    CustomerNotificationRequest:
+      type: "object"
+      required:
+        - "customerId"
+        - "title"
+        - "body"
+        - "eventType"
+      properties:
+        customerId:
+          type: "string"
+          format: "uuid"
+        tripId:
+          type: "string"
+          format: "uuid"
+        title:
+          type: "string"
+          example: "Tài xế đã đến điểm đón!"
+        body:
+          type: "string"
+          example: "Tài xế Nguyễn Văn A (Biển số: 51H-999.88) đã đến điểm hẹn. Vui lòng ra xe."
+        eventType:
+          type: "string"
+          enum: ["DRIVER_ACCEPTED", "DRIVER_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "PROMOTION"]
+
+    DriverAlertRequest:
+      type: "object"
+      required:
+        - "driverId"
+        - "tripId"
+        - "pickupAddress"
+        - "dropoffAddress"
+        - "estimatedEarnings"
+        - "timeoutSeconds"
+      properties:
+        driverId:
+          type: "string"
+          format: "uuid"
+        tripId:
+          type: "string"
+          format: "uuid"
+        pickupAddress:
+          type: "string"
+          example: "12 Nguyễn Văn Bảo, Phường 4, Gò Vấp"
+        dropoffAddress:
+          type: "string"
+          example: "Sân bay Tân Sơn Nhất, Tân Bình"
+        estimatedEarnings:
+          type: "number"
+          example: 85000
+        distanceKm:
+          type: "number"
+          example: 5.8
+        timeoutSeconds:
+          type: "integer"
+          default: 15
+          example: 15
+
+    SmsNotificationRequest:
+      type: "object"
+      required:
+        - "phoneNumber"
+        - "message"
+      properties:
+        phoneNumber:
+          type: "string"
+          example: "+84912345678"
+        message:
+          type: "string"
+          example: "[CAB SYSTEM] Ma OTP xac thuc cua ban la 682910. Hieu luc trong 5 phut."
+
+    NotificationResponse:
+      type: "object"
+      properties:
+        notificationId:
+          type: "string"
+          format: "uuid"
+        status:
+          type: "string"
+          enum: ["SENT", "QUEUED", "FAILED"]
+        sentAt:
+          type: "string"
+          format: "date-time"
+        recipient:
+          type: "string"
+
+    InboxItem:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        title:
+          type: "string"
+        body:
+          type: "string"
+        isRead:
+          type: "boolean"
+        createdAt:
+          type: "string"
+          format: "date-time"
+
+    InboxListResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/InboxItem"
+
+  responses:
+    BadRequest:
+      description: "Dữ liệu gửi lên không hợp lệ"
+    Unauthorized:
+      description: "Yêu cầu chưa xác thực JWT hoặc Token không hợp lệ"

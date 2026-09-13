@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Quản lý Chuyến đi (Trip Management Service)
+  description: |
+    Microservice lõi quản lý máy trạng thái vòng đời chuyến đi và chính sách hủy chuyến.
+    - Miền nghiệp vụ: Core Domain (SRS Mục 2.2.1 - STT 4)
+    - Yêu cầu cốt lõi (In-Scope): Quản lý máy trạng thái CREATED ➔ ACCEPTED ➔ ARRIVED ➔ IN_TRIP ➔ COMPLETED ➔ PAID.
+    - Ràng buộc: Áp dụng phí phạt 15.000 VNĐ nếu khách hủy chuyến sau 2 phút (BRULE_05).
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/trips
+    description: Production Trip Server
+  - url: http://localhost:8084/api/v1/trips
+    description: Local Trip Service
+security:
+  - bearerAuth: []
+tags:
+  - name: Trip Lifecycle
+    description: Khởi tạo chuyến đi và chuyển đổi máy trạng thái (SR_08, SR_12)
+  - name: Cancellation & Penalties
+    description: Xử lý khách hàng hoặc tài xế hủy chuyến và tính phí phạt (SR_11, BRULE_05)
+  - name: Trip History
+    description: Tra cứu lịch sử các chuyến đi trong quá khứ (SR_14)
+paths:
+  /trips:
+    post:
+      tags:
+        - Trip Lifecycle
+      summary: Khách hàng tạo yêu cầu đặt chuyến đi mới (SR_08, UC-01)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_id
+                - pickup_address
+                - pickup_lat
+                - pickup_lng
+                - dropoff_address
+                - dropoff_lat
+                - dropoff_lng
+                - vehicle_type
+                - estimated_fare
+              properties:
+                customer_id:
+                  type: string
+                  format: uuid
+                pickup_address:
+                  type: string
+                  example: "12 Nguyễn Văn Bảo, Gò Vấp"
+                pickup_lat:
+                  type: number
+                  example: 10.8223
+                pickup_lng:
+                  type: number
+                  example: 106.6875
+                dropoff_address:
+                  type: string
+                  example: "Chợ Bến Thành, Quận 1"
+                dropoff_lat:
+                  type: number
+                  example: 10.7725
+                dropoff_lng:
+                  type: number
+                  example: 106.6980
+                vehicle_type:
+                  type: string
+                  enum: [BIKE, CAR_4, CAR_7]
+                  example: "CAR_4"
+                estimated_fare:
+                  type: number
+                  example: 106000.0
+      responses:
+        '201':
+          description: Chuyến đi được tạo với trạng thái CREATED
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: "CREATED"
+  /trips/{trip_id}/status:
+    patch:
+      tags:
+        - Trip Lifecycle
+      summary: Chuyển mốc trạng thái chuyến đi (SR_12, UC-08)
+      description: Chuyển đổi tuần tự ACCEPTED ➔ ARRIVED ➔ IN_TRIP ➔ COMPLETED.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [ARRIVED, IN_TRIP, COMPLETED]
+                  example: "ARRIVED"
+      responses:
+        '200':
+          description: Chuyển trạng thái thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: "ARRIVED"
+                  updated_at:
+                    type: string
+                    format: date-time
+  /trips/{trip_id}/cancel:
+    post:
+      tags:
+        - Cancellation & Penalties
+      summary: Hủy chuyến đi và tính phí phạt theo luật (SR_11, BRULE_05)
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  example: "Khách bận đột xuất"
+      responses:
+        '200':
+          description: Hủy chuyến thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: "CANCELLED"
+                  penalty_fee:
+                    type: number
+                    example: 15000.0
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

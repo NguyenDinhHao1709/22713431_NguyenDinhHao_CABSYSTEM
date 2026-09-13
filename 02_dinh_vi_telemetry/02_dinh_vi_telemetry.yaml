@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Định vị & Telemetry (Location & Tracking Service)
+  description: |
+    Microservice phụ trách thu thập tọa độ GPS thời gian thực, lập chỉ mục không gian Geo-Redis và truyền phát Live Tracking.
+    - Miền nghiệp vụ: Supporting Domain (SRS Mục 2.2.1 - STT 2)
+    - Yêu cầu cốt lõi (In-Scope): Định kỳ gửi GPS 1-3s từ Driver App, lưu bộ nhớ đệm Geo-Index trên Redis, tìm xe gần điểm đón.
+    - Giới hạn phạm vi: Không tự xây dựng Map Engine riêng (sử dụng Map API có sẵn theo SRS Mục 2.3.3).
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/location
+    description: Production Location Server
+  - url: http://localhost:8082/api/v1/location
+    description: Local Location Service
+security:
+  - bearerAuth: []
+tags:
+  - name: GPS Broadcast
+    description: Thu nhận tọa độ GPS từ ứng dụng tài xế (SR_05)
+  - name: Proximity Search
+    description: Quét tài xế Online rảnh rỗi trong bán kính điểm đón (SR_06)
+  - name: Live Tracking
+    description: Phát sóng luồng vị trí xe thời gian thực tới khách hàng (SR_13, UC-02)
+paths:
+  /telemetry/ping:
+    post:
+      tags:
+        - GPS Broadcast
+      summary: Tài xế phát sóng tọa độ GPS thời gian thực (SR_05)
+      description: Gửi tọa độ kinh/vĩ độ, tốc độ, góc hướng từ điện thoại tài xế mỗi 1-3 giây lên Redis Cache.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - driver_id
+                - latitude
+                - longitude
+              properties:
+                driver_id:
+                  type: string
+                  format: uuid
+                latitude:
+                  type: number
+                  format: float
+                  example: 10.8224
+                longitude:
+                  type: number
+                  format: float
+                  example: 106.6876
+                speed:
+                  type: number
+                  format: float
+                  example: 28.5
+                heading:
+                  type: number
+                  format: float
+                  example: 180.0
+      responses:
+        '200':
+          description: Cập nhật GPS thành công vào Redis Cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  recorded_at:
+                    type: string
+                    format: date-time
+  /search/nearby-drivers:
+    post:
+      tags:
+        - Proximity Search
+      summary: Tìm danh sách tài xế gần điểm đón trong bán kính R (SR_06, BRULE_01)
+      description: Dùng hàm GEORADIUS trên Redis để lọc các tài xế Online trong bán kính từ 2km đến 10km.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pickup_lat
+                - pickup_lng
+                - radius_km
+                - vehicle_type
+              properties:
+                pickup_lat:
+                  type: number
+                  format: float
+                  example: 10.8223
+                pickup_lng:
+                  type: number
+                  format: float
+                  example: 106.6875
+                radius_km:
+                  type: number
+                  example: 2.0
+                vehicle_type:
+                  type: string
+                  enum: [BIKE, CAR_4, CAR_7]
+                  example: "CAR_4"
+      responses:
+        '200':
+          description: Danh sách ID tài xế gần nhất
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    driver_id:
+                      type: string
+                      format: uuid
+                    distance_km:
+                      type: number
+                      example: 0.8
+                    latitude:
+                      type: number
+                      example: 10.8250
+                    longitude:
+                      type: number
+                      example: 106.6890
+  /tracking/{trip_id}/live-stream:
+    get:
+      tags:
+        - Live Tracking
+      summary: Lấy vị trí thời gian thực phục vụ bản đồ Live Tracking của khách (SR_13, UC-02)
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tọa độ GPS thời gian thực của xe đón
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  driver_latitude:
+                    type: number
+                    example: 10.8224
+                  driver_longitude:
+                    type: number
+                    example: 106.6876
+                  eta_minutes:
+                    type: integer
+                    example: 2
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

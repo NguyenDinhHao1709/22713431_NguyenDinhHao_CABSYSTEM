@@ -1,0 +1,337 @@
+openapi: 3.0.3
+info:
+  title: "CAB System - Admin & Operations Service (Dịch vụ Giám sát & Vận hành)"
+  description: "API Giám sát Bản đồ Vận hành Trực tiếp, Xử lý Can thiệp Sự cố Khẩn cấp (Bắt buộc lý do >= 10 ký tự - BRULE_10), Kiểm duyệt Hồ sơ Xe/Tài xế, và Kiểm toán Thống kê theo SRS.md (SR_03, SR_23, SR_24, SR_25, BR_04, BR_10, BRULE_10)."
+  version: "1.0.0"
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    email: "22713431@iuh.edu.vn"
+servers:
+  - url: "https://api.cab.vn/v1/ops"
+    description: "Production Operations Gateway"
+  - url: "http://localhost:8089/v1"
+    description: "Local Development Environment"
+
+paths:
+  /fleet/live-map:
+    get:
+      summary: "Giám sát bản đồ đội xe thời gian thực (SR_23, BR_04)"
+      description: "Lấy danh sách tọa độ và trạng thái (ONLINE, BUSY) của toàn bộ xe trên bản đồ số, lọc theo khu vực địa lý hoặc loại xe."
+      operationId: "getLiveFleetStatus"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "vehicleType"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["BIKE", "CAR_4", "CAR_7"]
+        - name: "state"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["ONLINE", "BUSY"]
+      responses:
+        "200":
+          description: "Dữ liệu giám sát vị trí đội xe realtime"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FleetLiveMapResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /trips/{tripId}/emergency-intervention:
+    post:
+      summary: "Can thiệp xử lý sự cố cuốc xe khẩn cấp (SR_24, BR_04, BRULE_10)"
+      description: "Điều phối viên can thiệp khi xe gặp sự cố hỏng giữa đường, tai nạn hoặc hủy cuốc khẩn cấp. YÊU CẦU BẮT BUỘC: Nhập lý do giải trình tối thiểu 10 ký tự (BRULE_10). Thao tác được lưu vết 100% vào Audit Log."
+      operationId: "handleTripIncidentIntervention"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "tripId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInterventionRequest"
+      responses:
+        "200":
+          description: "Can thiệp xử lý thành công, sự kiện đã phát tán tới khách và tài xế"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripInterventionResponse"
+        "400":
+          description: "Lý do can thiệp không đủ 10 ký tự hoặc lệnh can thiệp không hợp lệ (BRULE_10)"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /approvals/drivers:
+    get:
+      summary: "Danh sách hồ sơ tài xế chờ duyệt (SR_01, SR_03, BR_05)"
+      description: "Truy vấn các hồ sơ đăng ký tài xế mới và phương tiện đang ở trạng thái PENDING_APPROVAL."
+      operationId: "getPendingDriverApprovals"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Danh sách hồ sơ chờ kiểm duyệt"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingApprovalsResponse"
+
+  /approvals/drivers/{driverId}:
+    patch:
+      summary: "Phê duyệt hoặc Từ chối hồ sơ tài xế & phương tiện (SR_03, BR_04)"
+      description: "Admin/Operator duyệt hồ sơ tài xế đạt chuẩn hoặc từ chối kèm lý do."
+      operationId: "processDriverApproval"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "driverId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApprovalDecisionRequest"
+      responses:
+        "200":
+          description: "Cập nhật trạng thái duyệt hồ sơ thành công"
+
+  /audit-logs:
+    get:
+      summary: "Truy vấn Nhật ký Kiểm toán Hành động Quản trị (SR_25, BR_10)"
+      description: "Lưu vết 100% các thao tác can thiệp quản trị, hủy cuốc, đổi giá cước hoặc phân quyền của nhân sự vận hành."
+      operationId: "getAuditLogs"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "operatorId"
+          in: "query"
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "actionType"
+          in: "query"
+          schema:
+            type: "string"
+        - name: "startDate"
+          in: "query"
+          schema:
+            type: "string"
+            format: "date"
+        - name: "endDate"
+          in: "query"
+          schema:
+            type: "string"
+            format: "date"
+      responses:
+        "200":
+          description: "Danh sách nhật ký kiểm toán"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogsResponse"
+
+  /analytics/revenue:
+    get:
+      summary: "Báo cáo thống kê Doanh thu & Chuyến đi (SR_25, BR_10)"
+      description: "Tổng hợp doanh thu, tổng số cuốc, tỷ lệ hoàn thành, tỷ lệ hủy theo ngày/tuần/tháng."
+      operationId: "getRevenueAnalytics"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "period"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            enum: ["DAY", "WEEK", "MONTH"]
+      responses:
+        "200":
+          description: "Báo cáo thống kê kinh doanh"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsReportResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    FleetLiveMapResponse:
+      type: "object"
+      properties:
+        timestamp:
+          type: "string"
+          format: "date-time"
+        totalOnline:
+          type: "integer"
+        totalBusy:
+          type: "integer"
+        drivers:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              driverId:
+                type: "string"
+                format: "uuid"
+              latitude:
+                type: "number"
+                format: "double"
+              longitude:
+                type: "number"
+                format: "double"
+              state:
+                type: "string"
+                enum: ["ONLINE", "BUSY"]
+              vehicleType:
+                type: "string"
+                enum: ["BIKE", "CAR_4", "CAR_7"]
+
+    TripInterventionRequest:
+      type: "object"
+      required:
+        - "action"
+        - "reason"
+      properties:
+        action:
+          type: "string"
+          enum: ["EMERGENCY_CANCEL", "REASSIGN_DRIVER", "REFUND_OVERRIDE"]
+          description: "Hành động can thiệp sự cố"
+        replacementDriverId:
+          type: "string"
+          format: "uuid"
+          description: "Bắt buộc nếu action là REASSIGN_DRIVER"
+        reason:
+          type: "string"
+          minLength: 10
+          example: "Tài xế bị nổ lốp trên đường đến đón khách, cần điều phối xe thay thế khẩn cấp"
+          description: "BẮT BUỘC: Lý do can thiệp tối thiểu 10 ký tự theo BRULE_10"
+
+    TripInterventionResponse:
+      type: "object"
+      properties:
+        tripId:
+          type: "string"
+          format: "uuid"
+        actionTaken:
+          type: "string"
+        auditLogId:
+          type: "string"
+          format: "uuid"
+        updatedStatus:
+          type: "string"
+        message:
+          type: "string"
+
+    PendingApprovalsResponse:
+      type: "object"
+      properties:
+        pendingDrivers:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              driverId:
+                type: "string"
+                format: "uuid"
+              fullName:
+                type: "string"
+              phoneNumber:
+                type: "string"
+              licensePlate:
+                type: "string"
+              vehicleType:
+                type: "string"
+              submittedAt:
+                type: "string"
+                format: "date-time"
+
+    ApprovalDecisionRequest:
+      type: "object"
+      required:
+        - "decision"
+      properties:
+        decision:
+          type: "string"
+          enum: ["APPROVED", "REJECTED"]
+        rejectionReason:
+          type: "string"
+          example: "Giấy phép lái xe đã hết hạn hoặc ảnh chụp bị mờ."
+
+    AuditLogsResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+        logs:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              logId:
+                type: "string"
+                format: "uuid"
+              operatorId:
+                type: "string"
+                format: "uuid"
+              action:
+                type: "string"
+              targetResource:
+                type: "string"
+              reason:
+                type: "string"
+              createdAt:
+                type: "string"
+                format: "date-time"
+
+    AnalyticsReportResponse:
+      type: "object"
+      properties:
+        period:
+          type: "string"
+        totalTrips:
+          type: "integer"
+          example: 1540
+        completedTrips:
+          type: "integer"
+          example: 1420
+        cancelledTrips:
+          type: "integer"
+          example: 120
+        totalGrossRevenue:
+          type: "number"
+          example: 185000000
+        platformCommission:
+          type: "number"
+          example: 37000000
+
+  responses:
+    Unauthorized:
+      description: "Chưa xác thực hoặc Token không hợp lệ"
+    Forbidden:
+      description: "Không có quyền Quản trị viên / Điều phối viên (RBAC)"

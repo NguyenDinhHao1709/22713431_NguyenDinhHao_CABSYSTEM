@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Điều phối & Ghép xe (Matching & Dispatch Service)
+  description: |
+    Microservice lõi phụ trách thuật toán xếp hạng ưu tiên và phân phối cuốc xe tự động.
+    - Miền nghiệp vụ: Core Domain (SRS Mục 2.2.1 - STT 3)
+    - Yêu cầu cốt lõi (In-Scope): Xếp hạng theo PriorityScore (BRULE_02), gửi lời mời đếm ngược 15s, tự động chuyển tiếp sang tài xế kế tiếp khi từ chối hoặc timeout.
+    - Giới hạn phạm vi: Không can thiệp thủ công ở luồng thông thường; tối đa thử 5 tài xế trước khi báo hết xe.
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/dispatch
+    description: Production Dispatch Server
+  - url: http://localhost:8083/api/v1/dispatch
+    description: Local Dispatch Service
+security:
+  - bearerAuth: []
+tags:
+  - name: Dispatch Engine
+    description: Xếp hạng tài xế và kích hoạt tiến trình ghép cuốc (SR_09, BRULE_02)
+  - name: Offer Resolution
+    description: Tiếp nhận phản hồi Chấp nhận / Từ chối / Timeout từ tài xế (SR_10)
+paths:
+  /dispatch/match-request:
+    post:
+      tags:
+        - Dispatch Engine
+      summary: Kích hoạt thuật toán điều phối chuyến đi (SR_09, UC-01)
+      description: |
+        Nhận sự kiện trip.created, tính toán PriorityScore:
+        `Score = (1/Distance) * 0.6 + (Rating/5.0) * 0.3 + (AcceptanceRate) * 0.1`
+        Gửi lời mời cuốc xe tới tài xế ưu tiên đầu tiên và bật bộ đếm 15 giây.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trip_id
+                - pickup_lat
+                - pickup_lng
+                - vehicle_type
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                pickup_lat:
+                  type: number
+                  format: float
+                  example: 10.8223
+                pickup_lng:
+                  type: number
+                  format: float
+                  example: 106.6875
+                vehicle_type:
+                  type: string
+                  enum: [BIKE, CAR_4, CAR_7]
+                  example: "CAR_4"
+      responses:
+        '200':
+          description: Đã phát lời mời tới tài xế ưu tiên cao nhất
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  assigned_candidate_driver_id:
+                    type: string
+                    format: uuid
+                  countdown_seconds:
+                    type: integer
+                    example: 15
+  /dispatch/offers/{trip_id}/respond:
+    post:
+      tags:
+        - Offer Resolution
+      summary: Xử lý phản hồi mời cuốc từ tài xế (SR_10, UC-07)
+      description: |
+        - Nếu ACCEPT: Gán tài xế vào chuyến, chuyển trạng thái ACCEPTED, kết thúc tìm kiếm.
+        - Nếu REJECT hoặc TIMEOUT: Tự động gửi lời mời tới tài xế ưu tiên kế tiếp trong danh sách.
+      parameters:
+        - name: trip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - driver_id
+                - decision
+              properties:
+                driver_id:
+                  type: string
+                  format: uuid
+                decision:
+                  type: string
+                  enum: [ACCEPT, REJECT, TIMEOUT]
+                  example: "ACCEPT"
+      responses:
+        '200':
+          description: Xử lý phản hồi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: "ACCEPTED"
+                  is_escalated_to_next:
+                    type: boolean
+                    example: false
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

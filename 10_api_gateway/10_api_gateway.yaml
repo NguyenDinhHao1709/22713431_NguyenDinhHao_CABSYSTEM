@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: "CAB System - API Gateway & Event Bus Registry (Dịch vụ Cổng Kết nối & Điều phối Sự kiện)"
+  description: "Đặc tả kiến trúc Gateway trung tâm, Reverse Proxy, Kiểm tra Token Stateless (Pre-routing Auth Filter), Routing Catalog cho 9 Microservices nghiệp vụ và Đăng ký Sự kiện Hermes Event Bus theo SRS.md (Chương 8, SR_02, BR_10)."
+  version: "1.0.0"
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    email: "22713431@iuh.edu.vn"
+servers:
+  - url: "https://api.cab.vn"
+    description: "Production Central Edge Gateway"
+  - url: "http://localhost:8080"
+    description: "Local Development Gateway (Traefik / Kong / Spring Cloud Gateway)"
+
+paths:
+  /health:
+    get:
+      summary: "Kiểm tra tình trạng hoạt động của Gateway & Toàn bộ Dịch vụ Downstream"
+      description: "Tổng hợp trạng thái liveness/readiness của 9 microservices hạ tầng và Kafka/RabbitMQ Message Broker."
+      operationId: "getSystemHealthStatus"
+      responses:
+        "200":
+          description: "Hệ thống và toàn bộ services đang hoạt động bình thường"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemHealthResponse"
+        "503":
+          description: "Có một hoặc nhiều dịch vụ lõi bị gián đoạn"
+
+  /gateway/routes:
+    get:
+      summary: "Liệt kê danh mục Route phân tuyến Reverse Proxy của API Gateway"
+      description: "Xem cấu hình bảng ánh xạ URI path và các bộ lọc bảo mật, Rate Limiting áp dụng cho từng service."
+      operationId: "getGatewayRoutes"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Danh mục tuyến đường API Gateway"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayRoutesResponse"
+
+  /events/registry:
+    get:
+      summary: "Tra cứu danh mục Topic & Schema Sự kiện trên Hermes Message Bus"
+      description: "Liệt kê các sự kiện bất đồng bộ giữa các microservices (trip.created, payment.completed, v.v.)."
+      operationId: "getEventBusRegistry"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Danh mục sự kiện Hermes Event Bus"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventRegistryResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    ServiceHealthItem:
+      type: "object"
+      properties:
+        serviceName:
+          type: "string"
+        status:
+          type: "string"
+          enum: ["UP", "DOWN", "DEGRADED"]
+        responseTimeMs:
+          type: "integer"
+
+    SystemHealthResponse:
+      type: "object"
+      properties:
+        gatewayStatus:
+          type: "string"
+          enum: ["HEALTHY", "UNHEALTHY"]
+        timestamp:
+          type: "string"
+          format: "date-time"
+        services:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ServiceHealthItem"
+        messageBrokerStatus:
+          type: "string"
+          enum: ["CONNECTED", "DISCONNECTED"]
+
+    RouteItem:
+      type: "object"
+      properties:
+        routeId:
+          type: "string"
+        pathPrefix:
+          type: "string"
+        downstreamService:
+          type: "string"
+        authRequired:
+          type: "boolean"
+        rateLimitPerMin:
+          type: "integer"
+
+    GatewayRoutesResponse:
+      type: "object"
+      properties:
+        routes:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/RouteItem"
+
+    EventSchemaItem:
+      type: "object"
+      properties:
+        topic:
+          type: "string"
+          example: "cab.trip.completed"
+        publisher:
+          type: "string"
+          example: "Pricing & Billing Service"
+        subscribers:
+          type: "array"
+          items:
+            type: "string"
+          example: ["Payment Service", "Notification Service", "Admin Service"]
+        payloadSchema:
+          type: "string"
+          example: "{ tripId: UUID, finalFare: Number, completedAt: DateTime }"
+
+    EventRegistryResponse:
+      type: "object"
+      properties:
+        broker:
+          type: "string"
+          example: "Kafka / RabbitMQ (Hermes Architecture)"
+        topics:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/EventSchemaItem"

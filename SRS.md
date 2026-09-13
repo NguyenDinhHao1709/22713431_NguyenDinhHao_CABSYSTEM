@@ -44,12 +44,9 @@
   - [8.3. Sơ đồ Máy Trạng thái Vòng đời Chuyến đi (Trip State Machine Diagram)](#83-sơ-đồ-máy-trạng-thái-vòng-đời-chuyến-đi-trip-state-machine-diagram)
   - [8.4. Mô hình Kiến trúc Hướng Sự kiện Hermes (Hermes Event-Driven Architecture)](#84-mô-hình-kiến-trúc-hướng-sự-kiện-hermes-hermes-event-driven-architecture)
   - [8.5. Cơ chế Điều phối Giao dịch Phân tán Hermes Saga (Hermes Saga Orchestration)](#85-cơ-chế-điều-phối-giao-dịch-phân-tán-hermes-saga-hermes-saga-orchestration)
-- [CHƯƠNG 9: YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS - NFR)](#chương-9-yêu-cầu-phi-chức-năng-non-functional-requirements---nfr)
-  - [9.1. Hiệu năng & Độ trễ (NFR-PERF)](#91-hiệu-năng--độ-trễ-nfr-perf)
-  - [9.2. Khả năng Mở rộng & Tải trọng (NFR-SCAL)](#92-khả-năng-mở-rộng--tải-trọng-nfr-scal)
-  - [9.3. Tính Sẵn sàng & Chịu lỗi (NFR-AVAIL)](#93-tính-sẵn-sàng--chịu-lỗi-nfr-avail)
-  - [9.4. Bảo mật & Toàn vẹn Dữ liệu (NFR-SEC)](#94-bảo-mật--toàn-vẹn-dữ-liệu-nfr-sec)
-  - [9.5. Khả năng Bảo trì & Vận hành (NFR-MAINT)](#95-khả-năng-bảo-trì--vận-hành-nfr-maint)
+- [CHƯƠNG 9: YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS: NFR_01 – NFR_10)](#chương-9-yêu-cầu-phi-chức-năng-non-functional-requirements-nfr_01--nfr_10)
+  - [9.1. Bảng Tổng hợp 10 Yêu cầu Phi Chức năng Chuẩn hóa (NFR_01 – NFR_10)](#91-bảng-tổng-hợp-10-yêu-cầu-phi-chức-năng-chuẩn-hóa-nfr_01--nfr_10)
+  - [9.2. Đặc tả Kỹ thuật & Phương pháp Đo lường Chi tiết 10 NFR](#92-đặc-tả-kỹ-thuật--phương-pháp-đo-lường-chi-tiết-10-nfr)
 - [CHƯƠNG 10: KẾ HOẠCH TRIỂN KHAI DỰ ÁN THEO PHƯƠNG PHÁP HERMES (7 TUẦN)](#chương-10-kế-hoạch-triển-khai-dự-án-theo-phương-pháp-hermes-7-tuần)
   - [10.1. Phân kỳ Giai đoạn & Cột mốc Quyết định (B1 – B4)](#101-phân-kỳ-giai-đoạn--cột-mốc-quyết-định-b1--b4)
   - [10.2. Sơ đồ Tiến độ Thực hiện Đồ án (Gantt Chart)](#102-sơ-đồ-tiến-độ-thực-hiện-đồ-án-gantt-chart)
@@ -1003,30 +1000,70 @@ sequenceDiagram
 
 ---
 
-# CHƯƠNG 9: YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS - NFR)
+# CHƯƠNG 9: YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS: NFR_01 – NFR_10)
 
-## 9.1. Hiệu năng & Độ trễ (Performance & Latency)
-* **NFR-PERF-01:** Thời gian phản hồi API Gateway đối với 95% các yêu cầu truy vấn thông thường phải $< 300\text{ms}$.
-* **NFR-PERF-02:** Thuật toán tìm kiếm, xếp hạng và gửi lời mời đến tài xế hoàn tất trong vòng $< 1.5\text{s}$ kể từ lúc khách bấm xác nhận.
-* **NFR-PERF-03:** Tần suất gửi tọa độ GPS từ ứng dụng tài xế là $2\text{s/lần}$; độ trễ truyền phát Live Tracking qua WebSocket đến khách hàng $< 1\text{s}$.
+Các yêu cầu phi chức năng (**Non-Functional Requirements - NFR**) thiết lập tiêu chuẩn kỹ thuật về chất lượng, hiệu năng, độ tin cậy, an toàn bảo mật và khả năng mở rộng của hệ thống CAB System theo khung chuẩn quốc tế **ISO/IEC 25010**:
 
-## 9.2. Khả năng Mở rộng & Tải trọng (Scalability & Concurrency)
-* **NFR-SCAL-01:** Hệ thống hỗ trợ tối thiểu $20.000$ người dùng đồng thời (Concurrent Users - CCU) và $2.000$ chuyến đi diễn ra cùng một thời điểm.
-* **NFR-SCAL-02:** Kiến trúc Microservices cho phép mở rộng độc lập từng phân hệ (Horizontal Pod Autoscaling - HPA) khi tải tăng đột biến vào giờ cao điểm.
+---
 
-## 9.3. Tính Sẵn sàng & Chịu lỗi (Availability & Fault Tolerance)
-* **NFR-AVAIL-01:** Cam kết thời gian hoạt động hệ thống đạt mức $\ge 99.9\%$ (SLA).
-* **NFR-AVAIL-02 (Fault Isolation):** Lỗi xảy ra ở phân hệ thanh toán điện tử hoặc dịch vụ thông báo Push tuyệt đối **không làm gián đoạn** luồng nghiệp vụ đặt xe và di chuyển cốt lõi.
-* **NFR-AVAIL-03:** Hệ thống hàng đợi tin nhắn (Hermes Event Bus / Kafka) đảm bảo cơ chế phân phát tin cậy At-Least-Once Delivery.
+## 9.1. Bảng Tổng hợp 10 Yêu cầu Phi Chức năng Chuẩn hóa (NFR_01 – NFR_10)
 
-## 9.4. Bảo mật & An toàn Thông tin (Security & Privacy)
-* **NFR-SEC-01:** Xác thực người dùng bằng cơ chế Token JWT (HMAC-SHA256); mật khẩu người dùng được băm an toàn bằng thuật toán BCrypt với Salt Rounds $\ge 10$.
-* **NFR-SEC-02:** Toàn bộ dữ liệu truyền tải trên mạng giữa Client, API Gateway và các Microservices bắt buộc mã hóa qua giao thức HTTPS / TLS 1.3.
-* **NFR-SEC-03:** Tuân thủ tiêu chuẩn an toàn thanh toán (PCI-DSS): Chỉ giao tiếp với cổng thanh toán qua Token hóa (Tokenization), không lưu trữ thông tin thẻ nhạy cảm.
+| Mã NFR | Nhóm Thuộc tính (ISO 25010) | Tên Yêu cầu Phi Chức năng | Chỉ số Đo lường Kỹ thuật (Target KPI / Metric) | Ràng buộc Kiến trúc & Giải pháp Thực thi | Phương pháp Kiểm chứng (Verification) |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **`NFR_01`** | **Hiệu năng (Performance)** | **Thời gian Phản hồi API** | • 95% các API truy vấn có độ trễ phản hồi $t_{\text{resp}} < 300\text{ms}$.<br>• 99% các API cập nhật trạng thái có $t_{\text{resp}} < 500\text{ms}$. | • Phân tán tải qua API Gateway (Reverse Proxy).<br>• Bộ đệm Redis Cache cho dữ liệu tra cứu thường xuyên. | Load Testing (JMeter / k6) với kịch bản 5.000 req/s. |
+| **`NFR_02`** | **Hiệu năng (Performance)** | **Tốc độ Điều phối & Ghép xe** | • Thuật toán lọc và tính PriorityScore hoàn tất trong $< 1.5\text{s}$.<br>• Tổng thời gian tìm thấy xe trung bình $< 30\text{s}$ (đáp ứng `BG_01`). | • Geo-Index chuyên dụng trên Redis In-Memory.<br>• Xử lý đa luồng phi đồng bộ cho vòng lặp mời cuốc 15s. | Automated Benchmark Script, E2E Dispatch Testing. |
+| **`NFR_03`** | **Độ trễ (Latency)** | **Đồng bộ GPS & Live Tracking** | • Tần suất phát sóng GPS tài xế: định kỳ $1 - 3\text{s/lần}$.<br>• Độ trễ truyền phát Live Tracking qua WebSocket đến khách $< 1\text{s}$. | • Sử dụng giao thức WebSocket nhị phân hai chiều.<br>• Redis Pub/Sub điều hướng luồng tọa độ theo TripID. | Đo lường độ trễ mạng Network WebSocket Packet Sniffing. |
+| **`NFR_04`** | **Khả năng Mở rộng (Scalability)** | **Tải trọng & Người dùng Đồng thời** | • Chịu tải tối thiểu $20.000$ người dùng đồng thời (CCU).<br>• Xử lý tối thiểu $2.000$ chuyến đi diễn ra cùng một thời điểm. | • Triển khai Microservices trên nền tảng Docker & Kubernetes.<br>• Cơ chế Horizontal Pod Autoscaling (HPA) tự động co giãn. | Stress Testing (k6) vượt ngưỡng 150% tải thiết kế. |
+| **`NFR_05`** | **Độ tin cậy (Reliability)** | **Tính Sẵn sàng Vận hành (SLA)** | • Cam kết thời gian hệ thống hoạt động ổn định $\ge 99.9\%$ (SLA).<br>• Thời gian phục hồi sau sự cố gián đoạn (MTTR) $< 15\text{ phút}$. | • Triển khai dự phòng Multi-instance (High Availability).<br>• Health Check probes tự động tái khởi động container lỗi. | Uptime Monitoring (Prometheus/Grafana), UptimeRobot. |
+| **`NFR_06`** | **Tính Chịu lỗi (Fault Tolerance)** | **Cô lập Lỗi (Fault Isolation)** | • Lỗi ở Cổng thanh toán hoặc Dịch vụ Thông báo **tuyệt đối không làm sập** luồng đặt xe và di chuyển cốt lõi (đáp ứng `BR_08`). | • Kiến trúc Event-Driven qua Hermes Message Bus (Kafka).<br>• Áp dụng Circuit Breaker Pattern và Saga bù trừ tiền mặt. | Chaos Engineering: Ngắt cưỡng bức container Payment. |
+| **`NFR_07`** | **Bảo mật (Security)** | **Xác thực Đa tầng & Bảo mật Kênh** | • 100% mật khẩu được băm an toàn bằng BCrypt (Cost $\ge 10$).<br>• 100% kết nối Client - Gateway được mã hóa HTTPS / TLS 1.3.<br>• Ẩn 4 số giữa SĐT giữa khách và tài xế theo `BRULE_08`. | • JWT Token Stateless có hạn dùng ngắn kèm Refresh Token.<br>• Cơ chế phân quyền RBAC đa vai trò ở tầng Gateway. | OWASP ZAP Vulnerability Scanning, JWT Tamper Test. |
+| **`NFR_08`** | **Bảo mật Tài chính (Compliance)** | **Tuân thủ Chuẩn PCI-DSS** | • Tuyệt đối không lưu trữ số thẻ tín dụng đầy đủ và mã bí mật CVV/CVC trên CSDL nội bộ.<br>• Tỷ lệ thất thoát dữ liệu thanh toán bằng 0%. | • Áp dụng cơ chế Tokenization của Cổng thanh toán đối tác.<br>• Chỉ lưu trữ Transaction Reference Token và Masked Number. | Security Audit Check, Database Field Inspection. |
+| **`NFR_09`** | **Toàn vẹn (Integrity)** | **Nhật ký Kiểm toán Bất biến** | • Lưu vết $100\%$ các thao tác quản trị và can thiệp nhạy cảm (`BR_10`, `BRULE_10`).<br>• Nhật ký kiểm toán không thể bị sửa đổi hoặc xóa (Append-only). | • Bảng `AUDIT_LOGS` phân quyền ghi nghiêm ngặt.<br>• Ghi nhận đầy đủ: Timestamp, UserID, Action, IP, Details. | Audit Trail Integrity Test, Database Trigger Check. |
+| **`NFR_10`** | **Khả năng Bảo trì (Maintainability)** | **Mở rộng Dịch vụ (Extensibility)** | • Giảm $70\%$ thời gian tích hợp thêm loại dịch vụ/phương thức thanh toán mới mà không sửa đổi mã nguồn lõi (đáp ứng `BR_09`). | • Thiết kế theo Kiến trúc Hướng Dịch Vụ SOA / Microservices.<br>• Cung cấp đầy đủ đặc tả OpenAPI 3.0 / Swagger UI.<br>• Áp dụng Adapter Pattern cho Payment và Map Provider. | Code Review, Module Decoupling Verification. |
 
-## 9.5. Khả năng Bảo trì & Mở rộng Tương lai (Maintainability & Extensibility)
-* **NFR-MAINT-01:** Cung cấp tài liệu đặc tả API chuẩn OpenAPI 3.0 / Swagger UI cho tất cả các dịch vụ.
-* **NFR-MAINT-02:** Cho phép tích hợp thêm các phương thức thanh toán mới, nhà cung cấp bản đồ mới hoặc phương tiện mới (giao hàng, xe điện) thông qua mô hình Adapter Pattern mà không cần sửa đổi mã nguồn lõi.
+---
+
+## 9.2. Đặc tả Kỹ thuật & Phương pháp Đo lường Chi tiết 10 NFR
+
+### 1. NFR_01: Hiệu năng Thời gian Phản hồi API
+- **Mục tiêu:** Đảm bảo trải nghiệm người dùng mượt mà, hạn chế tối đa cảm giác giật lag khi tương tác ứng dụng.
+- **Quy cách:** API Gateway định tuyến trực tiếp đến các microservice; dữ liệu danh mục tĩnh (loại xe, biểu phí mặc định) được cache trong Redis với TTL 1 giờ. 95% request truy vấn trả lời dưới 300ms.
+
+### 2. NFR_02: Tốc độ Điều phối & Ghép xe Tối ưu
+- **Mục tiêu:** Loại bỏ hoàn toàn sự chờ đợi lâu của khách hàng khi đặt xe, hoàn tất chu trình tìm kiếm trong thời gian vàng $< 30\text{s}$.
+- **Quy cách:** Matching Service sử dụng thuật toán geospatial index trên Redis (`GEORADIUS`) để tìm các tài xế trong bán kính $R$, sau đó tính điểm `PriorityScore` trong bộ nhớ RAM, hoàn tất sắp xếp trong $< 1.5\text{s}$.
+
+### 3. NFR_03: Tần suất & Độ trễ Đồng bộ GPS Live Tracking
+- **Mục tiêu:** Khách hàng thấy vị trí xe di chuyển mịn và liên tục trên bản đồ số, không bị giật cục hay nhảy cóc.
+- **Quy cách:** Driver App gửi gói tin telemetry siêu nhẹ `{lat, lng, speed, heading}` qua kết nối TCP/WebSocket định kỳ 2s. Gateway đẩy gói tin qua Redis Pub/Sub và chuyển tiếp tức thời tới Client đang lắng nghe với độ trễ $< 1\text{s}$.
+
+### 4. NFR_04: Khả năng Chịu tải & Người dùng Đồng thời
+- **Mục tiêu:** Hệ thống đứng vững trong giờ cao điểm mưa gió hoặc tan tầm mà không bị treo dịch vụ.
+- **Quy cách:** Hỗ trợ 20.000 CCU. Khi mức sử dụng CPU/Memory của một dịch vụ vượt quá 70%, bộ điều khiển Kubernetes HPA tự động nhân bản (scale-out) thêm instance mới trong vòng 30 giây.
+
+### 5. NFR_05: Tính Sẵn sàng Vận hành (SLA $\ge 99.9\%$)
+- **Mục tiêu:** Đảm bảo hệ thống phục vụ liên tục $24/7$, thời gian ngừng hoạt động ngoài kế hoạch tối đa không quá 8.76 giờ/năm.
+- **Quy cách:** Mỗi microservice chạy tối thiểu 2 bản sao (Replicas) nằm trên các node máy chủ khác nhau. Hệ thống cơ sở dữ liệu cấu hình chế độ Replication Master-Replica có tính năng tự động chuyển đổi dự phòng (Automatic Failover).
+
+### 6. NFR_06: Khả năng Chịu lỗi & Cô lập Sự cố (Fault Isolation)
+- **Mục tiêu:** Tránh hiệu ứng sụp đổ dây chuyền (Cascading Failure).
+- **Quy cách:** Áp dụng thư viện Circuit Breaker (Resilience4j / Istio). Nếu Payment Gateway bên thứ ba phản hồi lỗi liên tục, Circuit Breaker tự động mở (Open State), kích hoạt cơ chế Hermes Saga Fallback chuyển toàn bộ giao dịch sang Tiền mặt mà không làm nghẽn hàng đợi đặt xe.
+
+### 7. NFR_07: Xác thực Đa tầng & Bảo mật Kênh Truyền
+- **Mục tiêu:** Ngăn chặn tuyệt đối các cuộc tấn công đánh cắp dữ liệu, nghe lén (Man-in-the-Middle) và mạo danh.
+- **Quy cách:** 100% kết nối sử dụng chứng chỉ SSL/TLS 1.3. Cặp khóa Access Token (thời hạn 15 phút) và Refresh Token (thời hạn 7 ngày) được lưu trữ bảo mật. Số điện thoại giữa khách và tài xế bị che 4 chữ số giữa (Ví dụ: `091****678`) trên giao diện người dùng.
+
+### 8. NFR_08: Tuân thủ Bảo mật Dữ liệu Thanh toán (PCI-DSS)
+- **Mục tiêu:** Bảo vệ tài sản tài chính của khách hàng, triệt tiêu nguy cơ lộ lọt thông tin thẻ ngân hàng.
+- **Quy cách:** Khách hàng nhập thông tin thẻ trực tiếp trên Form nhúng an toàn của Cổng thanh toán (VNPay / MoMo SDK). Hệ thống CAB System chỉ tiếp nhận mã định danh giao dịch an toàn (`transaction_ref`), hoàn toàn không lưu trữ số PAN, ngày hết hạn hay mã CVV trên hệ thống.
+
+### 9. NFR_09: Toàn vẹn Dữ liệu & Nhật ký Kiểm toán Bất biến (Audit Log)
+- **Mục tiêu:** Minh bạch hóa toàn bộ các hoạt động can thiệp của con người, phục vụ công tác điều tra và hậu kiểm khi phát sinh khiếu nại tranh chấp.
+- **Quy cách:** Mọi thao tác hủy chuyến cưỡng bức, điều xe cứu hộ, khóa tài khoản hoặc sửa đổi biểu phí bắt buộc phải có tài khoản thực hiện, lý do cụ thể ($\ge 10$ ký tự) và được ghi tự động vào bảng `AUDIT_LOGS` bất biến (chỉ ghi chèn - Append-only, không có quyền Update/Delete).
+
+### 10. NFR_10: Khả năng Mở rộng Kiến trúc & Dễ Bảo trì
+- **Mục tiêu:** Đáp ứng tốc độ phát triển nghiệp vụ mới của doanh nghiệp với chi phí và thời gian thấp nhất.
+- **Quy cách:** Toàn bộ hệ thống tuân thủ nguyên lý Loose Coupling (Ghép nối lỏng) và High Cohesion (Gắn kết cao). Các dịch vụ giao tiếp qua REST API (OpenAPI 3.0) và Message Bus sự kiện. Khi mở rộng sang dịch vụ mới như Giao hàng (`CAB_DELIVERY`) hoặc Xe điện (`CAB_EV`), chỉ cần phát triển thêm service độc lập mà không can thiệp vào mã nguồn điều phối cũ.
 
 ---
 

@@ -1,0 +1,205 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Định danh & Xác thực (User & Auth Service)
+  description: |
+    Microservice phụ trách định danh, đăng ký, đăng nhập và phân quyền đa vai trò (RBAC) theo kiến trúc SOA.
+    - Miền nghiệp vụ: Generic Domain (SRS Mục 2.2.1 - STT 1)
+    - Yêu cầu cốt lõi (In-Scope): Đăng ký SĐT/OTP, đăng nhập JWT, phân quyền RBAC (Khách hàng, Tài xế, Operator, Admin).
+    - Giới hạn phạm vi: Không lưu mật khẩu thô (băm BCrypt cost >= 10 theo NFR_07).
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/auth
+    description: Production Auth Server
+  - url: http://localhost:8081/api/v1/auth
+    description: Local Auth Service
+security:
+  - bearerAuth: []
+tags:
+  - name: Authentication
+    description: Đăng ký tài khoản, xác thực mã OTP và đăng nhập JWT (SR_01, SR_02)
+  - name: User Profile
+    description: Quản lý hồ sơ cá nhân người dùng và phân quyền RBAC
+paths:
+  /register/customer:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng ký tài khoản Khách hàng mới (SR_01)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - full_name
+                - password
+              properties:
+                phone_number:
+                  type: string
+                  example: "0912345678"
+                full_name:
+                  type: string
+                  example: "Nguyễn Văn An"
+                email:
+                  type: string
+                  format: email
+                  example: "vanan@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "Password@123"
+      responses:
+        '201':
+          description: Đăng ký thành công, mã OTP đã được gửi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  message:
+                    type: string
+                    example: "Đăng ký bước đầu thành công. Vui lòng xác thực mã OTP."
+  /register/driver:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng ký tài khoản Tài xế và nộp giấy phép lái xe (SR_01, BRULE_06)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - full_name
+                - password
+                - license_number
+                - license_class
+                - license_expiry_date
+              properties:
+                phone_number:
+                  type: string
+                  example: "0987654321"
+                full_name:
+                  type: string
+                  example: "Trần Văn Bình"
+                password:
+                  type: string
+                  format: password
+                license_number:
+                  type: string
+                  example: "790123456789"
+                license_class:
+                  type: string
+                  enum: [A1, B2, C]
+                  example: "B2"
+                license_expiry_date:
+                  type: string
+                  format: date
+                  description: "Thời hạn bằng lái còn lại phải trên 6 tháng theo BRULE_06"
+                  example: "2028-12-31"
+      responses:
+        '201':
+          description: Nộp hồ sơ thành công, trạng thái PENDING_APPROVAL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  driver_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: "PENDING_APPROVAL"
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng nhập hệ thống & Cấp JWT Token (SR_02)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: "Số điện thoại hoặc email đăng nhập"
+                  example: "0912345678"
+                password:
+                  type: string
+                  format: password
+                  example: "Password@123"
+      responses:
+        '200':
+          description: Đăng nhập thành công, trả về Access Token và Refresh Token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token:
+                    type: string
+                  role:
+                    type: string
+                    enum: [CUSTOMER, DRIVER, OPERATOR, ADMIN]
+                    example: "CUSTOMER"
+                  expires_in_seconds:
+                    type: integer
+                    example: 86400
+  /profile/me:
+    get:
+      tags:
+        - User Profile
+      summary: Lấy thông tin hồ sơ của tài khoản hiện tại
+      responses:
+        '200':
+          description: Thông tin hồ sơ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  full_name:
+                    type: string
+                    example: "Nguyễn Văn An"
+                  phone_number:
+                    type: string
+                    description: "Số điện thoại đã che 4 số giữa theo BRULE_08"
+                    example: "091****678"
+                  role:
+                    type: string
+                    example: "CUSTOMER"
+                  status:
+                    type: string
+                    example: "ACTIVE"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

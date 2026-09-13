@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Thanh toán & Đối soát (Payment Integration Service)
+  description: |
+    Microservice phụ trách thanh toán tiền mặt và tích hợp cổng thanh toán trực tuyến điện tử Sandbox.
+    - Miền nghiệp vụ: Generic Domain (SRS Mục 2.2.1 - STT 6)
+    - Yêu cầu cốt lõi (In-Scope): Thu tiền mặt có tài xế xác nhận, Cổng thanh toán Sandbox (VNPay) hỗ trợ demo bù trừ Saga khi cổng lỗi (SRS Mục 2.3.2).
+    - Giới hạn phạm vi: Không xây dựng ví điện tử nạp/rút ngân hàng đa tầng phức tạp (SRS Mục 2.3.3); không lưu thông tin thẻ nhạy cảm (PCI-DSS).
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/payment
+    description: Production Payment Server
+  - url: http://localhost:8086/api/v1/payment
+    description: Local Payment Service
+security:
+  - bearerAuth: []
+tags:
+  - name: Cash Payment
+    description: Thanh toán tiền mặt trực tiếp cho tài xế (SR_16, UC-09)
+  - name: Digital Sandbox Payment
+    description: Cổng thanh toán trực tuyến Sandbox (VNPay) và Webhook IPN (SR_17, UC-04)
+  - name: Saga Compensation
+    description: Cơ chế bù trừ Hermes Saga tự động chuyển sang thu Tiền mặt khi cổng lỗi (SR_18, BRULE_07)
+paths:
+  /payments/cash/confirm:
+    post:
+      tags:
+        - Cash Payment
+      summary: Tài xế xác nhận đã thu đủ tiền mặt từ khách (SR_16, UC-09)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trip_id
+                - amount_collected
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                amount_collected:
+                  type: number
+                  example: 109000.0
+      responses:
+        '200':
+          description: Chuyến đi chuyển trạng thái PAID thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  payment_status:
+                    type: string
+                    example: "SUCCESS"
+  /payments/digital/initiate:
+    post:
+      tags:
+        - Digital Sandbox Payment
+      summary: Khởi tạo thanh toán trực tuyến qua Cổng Sandbox (SR_17)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trip_id
+                - amount
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  example: 109000.0
+      responses:
+        '200':
+          description: Tạo URL thanh toán Sandbox thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transaction_ref:
+                    type: string
+                    example: "TXN_SANDBOX_123456"
+                  payment_url:
+                    type: string
+                    example: "https://sandbox.vnpay.vn/checkout?token=abc"
+  /payments/saga/compensate-cash:
+    post:
+      tags:
+        - Saga Compensation
+      summary: Kích hoạt giao dịch bù trừ Saga chuyển sang thu Tiền mặt (SR_18, BRULE_07)
+      description: Khi Cổng thanh toán timeout > 30s hoặc báo lỗi HTTP 5xx, tự động đổi phương thức sang Tiền mặt và thông báo cho tài xế.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trip_id
+                - failure_reason
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                failure_reason:
+                  type: string
+                  example: "Cổng thanh toán phản hồi Timeout sau 30 giây."
+      responses:
+        '200':
+          description: Đã chuyển đổi sang Tiền mặt thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  fallback_method:
+                    type: string
+                    example: "CASH"
+                  status:
+                    type: string
+                    example: "COMPENSATED_CASH"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

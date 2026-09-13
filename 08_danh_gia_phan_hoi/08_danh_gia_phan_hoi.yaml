@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: "CAB System - Rating & Review Service (Dịch vụ Đánh giá & Phản hồi)"
+  description: "API Tiếp nhận đánh giá chuyến đi 1-5 sao từ khách hàng trong vòng 24h hoàn tất chuyến (BRULE_09), tổng hợp điểm uy tín tín nhiệm tài xế và cảnh báo khi điểm < 4.0 theo SRS.md (SR_19, SR_20, BR_06, BRULE_06)."
+  version: "1.0.0"
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    email: "22713431@iuh.edu.vn"
+servers:
+  - url: "https://api.cab.vn/v1/ratings"
+    description: "Production Rating & Review Service Gateway"
+  - url: "http://localhost:8088/v1"
+    description: "Local Development Environment"
+
+paths:
+  /trips/{tripId}/review:
+    post:
+      summary: "Khách hàng gửi đánh giá & phản hồi chuyến đi (SR_19, BR_06, BRULE_09)"
+      description: "Tiếp nhận số sao (1-5 sao), thẻ tag đánh giá và bình luận văn bản. Chỉ hợp lệ trong vòng 24 giờ kể từ khi chuyến đi đạt trạng thái COMPLETED/PAID (BRULE_09). Tự động kích hoạt tính lại điểm uy tín tài xế."
+      operationId: "submitTripReview"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "tripId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitReviewRequest"
+      responses:
+        "201":
+          description: "Đánh giá được ghi nhận thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          description: "Đã quá hạn 24 giờ đánh giá hoặc dữ liệu không hợp lệ"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: "Chuyến đi này đã được đánh giá trước đó"
+
+    get:
+      summary: "Xem chi tiết đánh giá của một chuyến đi"
+      description: "Truy xuất thông tin đánh giá đã ghi nhận của cuốc xe."
+      operationId: "getTripReview"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "tripId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Chi tiết đánh giá của cuốc xe"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "404":
+          description: "Chuyến đi chưa có đánh giá nào"
+
+  /drivers/{driverId}/rating-summary:
+    get:
+      summary: "Tra cứu điểm uy tín trung bình của tài xế (SR_20, BRULE_06)"
+      description: "Trả về điểm đánh giá trung bình tổng thể, tổng số cuốc được đánh giá, và trạng thái cảnh báo nếu rating < 4.0 (BRULE_06)."
+      operationId: "getDriverRatingSummary"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "driverId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Báo cáo tổng hợp điểm uy tín tài xế"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverRatingSummaryResponse"
+
+  /drivers/{driverId}/reviews:
+    get:
+      summary: "Xem danh sách phản hồi công khai của tài xế"
+      description: "Lấy danh sách các nhận xét công khai của tài xế có phân trang."
+      operationId: "getDriverPublicReviews"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "driverId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 10
+      responses:
+        "200":
+          description: "Danh sách nhận xét công khai"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverReviewsListResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    SubmitReviewRequest:
+      type: "object"
+      required:
+        - "rating"
+      properties:
+        rating:
+          type: "integer"
+          minimum: 1
+          maximum: 5
+          example: 5
+          description: "Số sao đánh giá từ 1 đến 5"
+        tags:
+          type: "array"
+          items:
+            type: "string"
+          example: ["Lái xe an toàn", "Xe sạch sẽ", "Thân thiện"]
+        comment:
+          type: "string"
+          maxLength: 500
+          example: "Tài xế đi đúng lộ trình, xe máy lạnh mát mẻ, phục vụ rất nhiệt tình."
+
+    ReviewResponse:
+      type: "object"
+      properties:
+        reviewId:
+          type: "string"
+          format: "uuid"
+        tripId:
+          type: "string"
+          format: "uuid"
+        customerId:
+          type: "string"
+          format: "uuid"
+        driverId:
+          type: "string"
+          format: "uuid"
+        rating:
+          type: "integer"
+          example: 5
+        tags:
+          type: "array"
+          items:
+            type: "string"
+        comment:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+
+    DriverRatingSummaryResponse:
+      type: "object"
+      properties:
+        driverId:
+          type: "string"
+          format: "uuid"
+        averageRating:
+          type: "number"
+          format: "float"
+          example: 4.85
+        totalReviews:
+          type: "integer"
+          example: 128
+        ratingBreakdown:
+          type: "object"
+          properties:
+            star5:
+              type: "integer"
+              example: 110
+            star4:
+              type: "integer"
+              example: 12
+            star3:
+              type: "integer"
+              example: 4
+            star2:
+              type: "integer"
+              example: 1
+            star1:
+              type: "integer"
+              example: 1
+        isUnderPerformanceWarning:
+          type: "boolean"
+          example: false
+          description: "True nếu averageRating < 4.0 theo BRULE_06"
+
+    DriverReviewsListResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ReviewResponse"
+
+  responses:
+    Unauthorized:
+      description: "Yêu cầu chưa xác thực JWT hoặc Token không hợp lệ"

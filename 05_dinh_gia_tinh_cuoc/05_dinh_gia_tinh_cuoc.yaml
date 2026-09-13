@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: CAB System - Dịch vụ Định giá & Tính cước (Pricing & Billing Service)
+  description: |
+    Microservice phụ trách công thức định giá tạm tính và quyết toán cước phí chính thức.
+    - Miền nghiệp vụ: Core Domain (SRS Mục 2.2.1 - STT 5)
+    - Yêu cầu cốt lõi (In-Scope): Áp dụng công thức biểu phí chuẩn (BRULE_03) và phụ phí cao điểm/ban đêm (BRULE_04).
+    - Giới hạn phạm vi: Không áp dụng thuật toán AI dự đoán thời tiết phức tạp (dùng bảng phụ phí cố định theo giờ theo SRS Mục 2.3.3).
+  version: 1.0.0
+  contact:
+    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+servers:
+  - url: https://api.cabsystem.vn/api/v1/pricing
+    description: Production Pricing Server
+  - url: http://localhost:8085/api/v1/pricing
+    description: Local Pricing Service
+security:
+  - bearerAuth: []
+tags:
+  - name: Fare Estimation
+    description: Tính cước phí tạm tính cho khách hàng trước khi đặt xe (SR_07)
+  - name: Final Settlement
+    description: Quyết toán cước phí thực tế sau khi hoàn thành chuyến đi (SR_15)
+paths:
+  /pricing/estimate:
+    post:
+      tags:
+        - Fare Estimation
+      summary: Ước tính cước phí trước chuyến đi (SR_07, BRULE_03, BRULE_04)
+      description: |
+        Tính cước theo công thức:
+        `EstimatedFare = (BasePrice + max(0, Distance - 2) * PricePerKm) * SurgeMultiplier`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - distance_km
+                - vehicle_type
+              properties:
+                distance_km:
+                  type: number
+                  format: float
+                  example: 7.5
+                vehicle_type:
+                  type: string
+                  enum: [BIKE, CAR_4, CAR_7]
+                  example: "CAR_4"
+                booking_hour:
+                  type: integer
+                  description: "Giờ đặt xe (0-23) để áp dụng hệ số cao điểm"
+                  example: 17
+      responses:
+        '200':
+          description: Cước phí tạm tính
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicle_type:
+                    type: string
+                    example: "CAR_4"
+                  estimated_fare:
+                    type: number
+                    example: 105900.0
+                  surge_multiplier:
+                    type: number
+                    example: 1.2
+                  surge_reason:
+                    type: string
+                    example: "Giờ cao điểm chiều (17h00 - 19h00)"
+  /pricing/finalize:
+    post:
+      tags:
+        - Final Settlement
+      summary: Chốt cước phí thực tế dựa trên lộ trình GPS (SR_15)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trip_id
+                - actual_distance_km
+                - vehicle_type
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                actual_distance_km:
+                  type: number
+                  example: 7.8
+                vehicle_type:
+                  type: string
+                  enum: [BIKE, CAR_4, CAR_7]
+                  example: "CAR_4"
+                waiting_minutes:
+                  type: integer
+                  default: 0
+                  example: 3
+      responses:
+        '200':
+          description: Cước phí thực tế chốt sau chuyến đi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip_id:
+                    type: string
+                    format: uuid
+                  actual_fare:
+                    type: number
+                    example: 109000.0
+                  waiting_fee:
+                    type: number
+                    example: 0.0
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
