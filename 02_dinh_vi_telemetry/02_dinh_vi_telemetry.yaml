@@ -8,7 +8,7 @@ info:
     - Giới hạn phạm vi: Không tự xây dựng Map Engine riêng (sử dụng Map API có sẵn theo SRS Mục 2.3.3).
   version: 1.0.0
   contact:
-    name: "Nguyễn Đình Hảo (MSSV: 22713431)"
+    name: "Nguyễn Đình Hào (MSSV: 22713431)"
     url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
 servers:
   - url: https://api.cabsystem.vn/api/v1/location
