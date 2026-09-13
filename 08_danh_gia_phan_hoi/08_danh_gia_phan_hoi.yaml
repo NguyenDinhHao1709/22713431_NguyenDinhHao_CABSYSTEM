@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: "CAB System - Rating & Review Service (Dịch vụ Đánh giá & Phản hồi)"
-  description: "API Tiếp nhận đánh giá chuyến đi 1-5 sao từ khách hàng trong vòng 24h hoàn tất chuyến (BRULE_09), tổng hợp điểm uy tín tín nhiệm tài xế và cảnh báo khi điểm < 4.0 theo SRS.md (SR_19, SR_20, BR_06, BRULE_06)."
+  description: "API Tiếp nhận đánh giá chuyến đi 1-5 sao từ khách hàng trong vòng 24h hoàn tất chuyến (BRULE_09), quản lý CRUD đánh giá (Sửa nhận xét, Ẩn/Xóa đánh giá vi phạm) và tổng hợp điểm uy tín tín nhiệm tài xế theo SRS.md (SR_19, SR_20, BR_06, BRULE_06, UC-05)."
   version: "1.0.0"
   contact:
     name: "Nguyễn Đình Hảo (MSSV: 22713431)"
@@ -15,8 +15,8 @@ servers:
 paths:
   /trips/{tripId}/review:
     post:
-      summary: "Khách hàng gửi đánh giá & phản hồi chuyến đi (SR_19, BR_06, BRULE_09)"
-      description: "Tiếp nhận số sao (1-5 sao), thẻ tag đánh giá và bình luận văn bản. Chỉ hợp lệ trong vòng 24 giờ kể từ khi chuyến đi đạt trạng thái COMPLETED/PAID (BRULE_09). Tự động kích hoạt tính lại điểm uy tín tài xế."
+      summary: "Khách hàng tạo mới đánh giá chuyến đi (Create Review - SR_19, BR_06, BRULE_09, UC-05)"
+      description: "Tiếp nhận số sao (1-5 sao), thẻ tag đánh giá và bình luận. Chỉ hợp lệ trong vòng 24 giờ sau khi kết thúc chuyến (BRULE_09)."
       operationId: "submitTripReview"
       security:
         - BearerAuth: []
@@ -42,14 +42,11 @@ paths:
                 $ref: "#/components/schemas/ReviewResponse"
         "400":
           description: "Đã quá hạn 24 giờ đánh giá hoặc dữ liệu không hợp lệ"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "409":
           description: "Chuyến đi này đã được đánh giá trước đó"
 
     get:
-      summary: "Xem chi tiết đánh giá của một chuyến đi"
-      description: "Truy xuất thông tin đánh giá đã ghi nhận của cuốc xe."
+      summary: "Xem chi tiết đánh giá của chuyến đi (Read Review - UC-05)"
       operationId: "getTripReview"
       security:
         - BearerAuth: []
@@ -70,10 +67,63 @@ paths:
         "404":
           description: "Chuyến đi chưa có đánh giá nào"
 
+  /reviews/{reviewId}:
+    put:
+      summary: "Khách hàng chỉnh sửa nhận xét đánh giá (Update Review - UC-05)"
+      description: "Cho phép sửa nhận xét văn bản trong vòng 2 giờ kể từ khi gửi đánh giá ban đầu."
+      operationId: "updateTripReview"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "reviewId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                comment:
+                  type: "string"
+                  example: "Tài xế lái xe cẩn thận, cập nhật thêm lời khen."
+                tags:
+                  type: "array"
+                  items:
+                    type: "string"
+      responses:
+        "200":
+          description: "Đánh giá đã được chỉnh sửa"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+
+    delete:
+      summary: "Admin ẩn hoặc xóa đánh giá vi phạm quy tắc cộng đồng (Delete Review)"
+      description: "Quản trị viên xóa bình luận tiêu cực mang tính quấy rối hoặc từ ngữ không phù hợp."
+      operationId: "deleteTripReview"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "reviewId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Đánh giá đã được xóa khỏi hệ thống"
+
   /drivers/{driverId}/rating-summary:
     get:
       summary: "Tra cứu điểm uy tín trung bình của tài xế (SR_20, BRULE_06)"
-      description: "Trả về điểm đánh giá trung bình tổng thể, tổng số cuốc được đánh giá, và trạng thái cảnh báo nếu rating < 4.0 (BRULE_06)."
+      description: "Trả về điểm đánh giá trung bình tổng thể và cảnh báo nếu rating < 4.0 (BRULE_06)."
       operationId: "getDriverRatingSummary"
       security:
         - BearerAuth: []
@@ -94,8 +144,7 @@ paths:
 
   /drivers/{driverId}/reviews:
     get:
-      summary: "Xem danh sách phản hồi công khai của tài xế"
-      description: "Lấy danh sách các nhận xét công khai của tài xế có phân trang."
+      summary: "Xem danh sách phản hồi công khai của tài xế (Read Review List)"
       operationId: "getDriverPublicReviews"
       security:
         - BearerAuth: []
@@ -142,7 +191,6 @@ components:
           minimum: 1
           maximum: 5
           example: 5
-          description: "Số sao đánh giá từ 1 đến 5"
         tags:
           type: "array"
           items:
@@ -194,28 +242,9 @@ components:
         totalReviews:
           type: "integer"
           example: 128
-        ratingBreakdown:
-          type: "object"
-          properties:
-            star5:
-              type: "integer"
-              example: 110
-            star4:
-              type: "integer"
-              example: 12
-            star3:
-              type: "integer"
-              example: 4
-            star2:
-              type: "integer"
-              example: 1
-            star1:
-              type: "integer"
-              example: 1
         isUnderPerformanceWarning:
           type: "boolean"
           example: false
-          description: "True nếu averageRating < 4.0 theo BRULE_06"
 
     DriverReviewsListResponse:
       type: "object"
@@ -226,7 +255,3 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/ReviewResponse"
-
-  responses:
-    Unauthorized:
-      description: "Yêu cầu chưa xác thực JWT hoặc Token không hợp lệ"

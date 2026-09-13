@@ -1,181 +1,282 @@
 openapi: 3.0.3
 info:
-  title: CAB System - Dịch vụ Quản lý Chuyến đi (Trip Management Service)
-  description: |
-    Microservice lõi quản lý máy trạng thái vòng đời chuyến đi và chính sách hủy chuyến.
-    - Miền nghiệp vụ: Core Domain (SRS Mục 2.2.1 - STT 4)
-    - Yêu cầu cốt lõi (In-Scope): Quản lý máy trạng thái CREATED ➔ ACCEPTED ➔ ARRIVED ➔ IN_TRIP ➔ COMPLETED ➔ PAID.
-    - Ràng buộc: Áp dụng phí phạt 15.000 VNĐ nếu khách hủy chuyến sau 2 phút (BRULE_05).
-  version: 1.0.0
+  title: "CAB System - Dịch vụ Quản lý Chuyến đi (Trip Management Service)"
+  description: "Microservice lõi quản lý máy trạng thái vòng đời chuyến đi và đầy đủ nghiệp vụ CRUD chuyến đi (Tạo cuốc, Xem lịch sử, Xem chi tiết lộ trình, Cập nhật trạng thái và Hủy cuốc có phạt) theo SRS.md (SR_08, SR_11, SR_12, SR_14, BRULE_05, UC-01, UC-02, UC-03)."
+  version: "1.0.0"
   contact:
     name: "Nguyễn Đình Hảo (MSSV: 22713431)"
-    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+    url: "https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git"
 servers:
-  - url: https://api.cabsystem.vn/api/v1/trips
-    description: Production Trip Server
-  - url: http://localhost:8084/api/v1/trips
-    description: Local Trip Service
+  - url: "https://api.cabsystem.vn/api/v1/trips"
+    description: "Production Trip Server"
+  - url: "http://localhost:8084/api/v1/trips"
+    description: "Local Trip Service"
+
 security:
   - bearerAuth: []
+
 tags:
-  - name: Trip Lifecycle
-    description: Khởi tạo chuyến đi và chuyển đổi máy trạng thái (SR_08, SR_12)
-  - name: Cancellation & Penalties
-    description: Xử lý khách hàng hoặc tài xế hủy chuyến và tính phí phạt (SR_11, BRULE_05)
-  - name: Trip History
-    description: Tra cứu lịch sử các chuyến đi trong quá khứ (SR_14)
+  - name: "Trip CRUD & Lifecycle"
+    description: "Khởi tạo, truy vấn danh sách, xem chi tiết và chuyển đổi trạng thái chuyến đi (SR_08, SR_12, SR_14)"
+  - name: "Cancellation & Penalties"
+    description: "Xử lý hủy chuyến và tính phí phạt 15.000 VNĐ sau 2 phút theo quy định (SR_11, BRULE_05)"
+
 paths:
   /trips:
     post:
       tags:
-        - Trip Lifecycle
-      summary: Khách hàng tạo yêu cầu đặt chuyến đi mới (SR_08, UC-01)
+        - "Trip CRUD & Lifecycle"
+      summary: "Khởi tạo yêu cầu đặt chuyến đi mới (Create Trip - SR_08, UC-01)"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - customer_id
-                - pickup_address
-                - pickup_lat
-                - pickup_lng
-                - dropoff_address
-                - dropoff_lat
-                - dropoff_lng
-                - vehicle_type
-                - estimated_fare
+                - "customer_id"
+                - "pickup_address"
+                - "pickup_lat"
+                - "pickup_lng"
+                - "dropoff_address"
+                - "dropoff_lat"
+                - "dropoff_lng"
+                - "vehicle_type"
+                - "estimated_fare"
               properties:
                 customer_id:
-                  type: string
-                  format: uuid
+                  type: "string"
+                  format: "uuid"
                 pickup_address:
-                  type: string
+                  type: "string"
                   example: "12 Nguyễn Văn Bảo, Gò Vấp"
                 pickup_lat:
-                  type: number
+                  type: "number"
                   example: 10.8223
                 pickup_lng:
-                  type: number
+                  type: "number"
                   example: 106.6875
                 dropoff_address:
-                  type: string
-                  example: "Chợ Bến Thành, Quận 1"
+                  type: "string"
+                  example: "Sân bay Tân Sơn Nhất, Tân Bình"
                 dropoff_lat:
-                  type: number
-                  example: 10.7725
+                  type: "number"
+                  example: 10.8185
                 dropoff_lng:
-                  type: number
-                  example: 106.6980
+                  type: "number"
+                  example: 106.6588
                 vehicle_type:
-                  type: string
-                  enum: [BIKE, CAR_4, CAR_7]
+                  type: "string"
+                  enum: ["BIKE", "CAR_4", "CAR_7"]
                   example: "CAR_4"
                 estimated_fare:
-                  type: number
-                  example: 106000.0
+                  type: "number"
+                  example: 85000.0
       responses:
-        '201':
-          description: Chuyến đi được tạo với trạng thái CREATED
+        "201":
+          description: "Chuyến đi được tạo thành công với trạng thái CREATED"
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  trip_id:
-                    type: string
-                    format: uuid
-                  status:
-                    type: string
-                    example: "CREATED"
+                $ref: "#/components/schemas/TripDetailResponse"
+
+    get:
+      tags:
+        - "Trip CRUD & Lifecycle"
+      summary: "Tra cứu danh sách lịch sử chuyến đi (Read Trip List - SR_14, UC-02)"
+      description: "Truy vấn danh sách chuyến đi của khách hàng hoặc tài xế với phân trang và lọc theo trạng thái."
+      parameters:
+        - name: "userId"
+          in: "query"
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "role"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["CUSTOMER", "DRIVER"]
+        - name: "status"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["CREATED", "ACCEPTED", "ARRIVED", "IN_TRIP", "COMPLETED", "CANCELLED"]
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 10
+      responses:
+        "200":
+          description: "Danh sách lịch sử chuyến đi có phân trang"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripListResponse"
+
+  /trips/{trip_id}:
+    get:
+      tags:
+        - "Trip CRUD & Lifecycle"
+      summary: "Xem chi tiết một chuyến đi (Read Trip Detail - SR_14)"
+      parameters:
+        - name: "trip_id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Thông tin chi tiết chuyến đi"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripDetailResponse"
+        "404":
+          description: "Không tìm thấy chuyến đi"
+
   /trips/{trip_id}/status:
     patch:
       tags:
-        - Trip Lifecycle
-      summary: Chuyển mốc trạng thái chuyến đi (SR_12, UC-08)
-      description: Chuyển đổi tuần tự ACCEPTED ➔ ARRIVED ➔ IN_TRIP ➔ COMPLETED.
+        - "Trip CRUD & Lifecycle"
+      summary: "Cập nhật tiến trình máy trạng thái chuyến đi (Update Trip Status - SR_12, UC-08)"
+      description: "Tài xế cập nhật trạng thái theo đúng tuần tự: ARRIVED -> IN_TRIP -> COMPLETED (không nhảy cóc trạng thái)."
       parameters:
-        - name: trip_id
-          in: path
+        - name: "trip_id"
+          in: "path"
           required: true
           schema:
-            type: string
-            format: uuid
+            type: "string"
+            format: "uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - status
+                - "status"
               properties:
                 status:
-                  type: string
-                  enum: [ARRIVED, IN_TRIP, COMPLETED]
+                  type: "string"
+                  enum: ["ARRIVED", "IN_TRIP", "COMPLETED"]
                   example: "ARRIVED"
       responses:
-        '200':
-          description: Chuyển trạng thái thành công
+        "200":
+          description: "Chuyển trạng thái thành công"
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  trip_id:
-                    type: string
-                    format: uuid
-                  status:
-                    type: string
-                    example: "ARRIVED"
-                  updated_at:
-                    type: string
-                    format: date-time
+                $ref: "#/components/schemas/TripDetailResponse"
+
   /trips/{trip_id}/cancel:
     post:
       tags:
-        - Cancellation & Penalties
-      summary: Hủy chuyến đi và tính phí phạt theo luật (SR_11, BRULE_05)
+        - "Cancellation & Penalties"
+      summary: "Hủy chuyến đi và tính phí phạt theo quy định (Delete/Cancel Trip - SR_11, BRULE_05, UC-03)"
+      description: "Hủy trong vòng <= 2 phút không phạt. Hủy sau 2 phút tính phí phạt 15.000 VNĐ."
       parameters:
-        - name: trip_id
-          in: path
+        - name: "trip_id"
+          in: "path"
           required: true
           schema:
-            type: string
-            format: uuid
+            type: "string"
+            format: "uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - reason
+                - "reason"
               properties:
                 reason:
-                  type: string
+                  type: "string"
                   example: "Khách bận đột xuất"
       responses:
-        '200':
-          description: Hủy chuyến thành công
+        "200":
+          description: "Hủy chuyến thành công"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
                 properties:
                   trip_id:
-                    type: string
-                    format: uuid
+                    type: "string"
+                    format: "uuid"
                   status:
-                    type: string
+                    type: "string"
                     example: "CANCELLED"
                   penalty_fee:
-                    type: number
+                    type: "number"
                     example: 15000.0
+
 components:
   securitySchemes:
     bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    TripDetailResponse:
+      type: "object"
+      properties:
+        trip_id:
+          type: "string"
+          format: "uuid"
+        customer_id:
+          type: "string"
+          format: "uuid"
+        driver_id:
+          type: "string"
+          format: "uuid"
+        pickup_address:
+          type: "string"
+          example: "12 Nguyễn Văn Bảo, Gò Vấp"
+        dropoff_address:
+          type: "string"
+          example: "Sân bay Tân Sơn Nhất, Tân Bình"
+        vehicle_type:
+          type: "string"
+          enum: ["BIKE", "CAR_4", "CAR_7"]
+        status:
+          type: "string"
+          enum: ["CREATED", "ACCEPTED", "ARRIVED", "IN_TRIP", "COMPLETED", "PAID", "CANCELLED"]
+          example: "CREATED"
+        estimated_fare:
+          type: "number"
+          example: 85000.0
+        final_fare:
+          type: "number"
+          example: 85000.0
+        created_at:
+          type: "string"
+          format: "date-time"
+        completed_at:
+          type: "string"
+          format: "date-time"
+
+    TripListResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+          example: 45
+        page:
+          type: "integer"
+          example: 1
+        limit:
+          type: "integer"
+          example: 10
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TripDetailResponse"

@@ -510,12 +510,32 @@ graph LR
         UC_D4[UC-09: Xác nhận Thu tiền mặt]
     end
 
+    %% Customer Use Cases
+    subgraph UC_Customer_Group [Phân hệ Khách hàng]
+        UC_C1[UC-01: Đặt chuyến & Xem giá dự kiến]
+        UC_C2[UC-02: Theo dõi Lộ trình Live Tracking]
+        UC_C3[UC-03: Hủy chuyến xe]
+        UC_C4[UC-04: Thanh toán Tiền mặt / Điện tử]
+        UC_C5[UC-05: Đánh giá & Nhận xét Tài xế]
+        UC_C6[UC-14: Đăng ký & Xác thực OTP / JWT]
+        UC_C7[UC-15: Quản lý Hồ sơ CRUD Cá nhân]
+    end
+
+    %% Driver Use Cases
+    subgraph UC_Driver_Group [Phân hệ Tài xế]
+        UC_D1[UC-06: Bật/Tắt Trạng thái Online]
+        UC_D2[UC-07: Tiếp nhận / Từ chối Chuyến đi]
+        UC_D3[UC-08: Cập nhật Trạng thái Chuyến đi]
+        UC_D4[UC-09: Xác nhận Thu tiền mặt]
+    end
+
     %% Admin & Ops Use Cases
     subgraph UC_Admin_Group [Phân hệ Vận hành & Quản trị]
         UC_A1[UC-10: Giám sát Chuyến đi Thời gian thực]
         UC_A2[UC-11: Can thiệp Xử lý Sự cố Chuyến đi]
         UC_A3[UC-12: Quản lý Duyệt Hồ sơ Tài xế & Xe]
         UC_A4[UC-13: Xem Báo cáo Thống kê Doanh thu]
+        UC_A5[UC-16: Quản lý Cấu hình Biểu phí CRUD]
     end
 
     Customer --> UC_C1
@@ -523,7 +543,10 @@ graph LR
     Customer --> UC_C3
     Customer --> UC_C4
     Customer --> UC_C5
+    Customer --> UC_C6
+    Customer --> UC_C7
 
+    Driver --> UC_C6
     Driver --> UC_D1
     Driver --> UC_D2
     Driver --> UC_D3
@@ -533,11 +556,13 @@ graph LR
     Admin --> UC_A2
     Admin --> UC_A3
     Admin --> UC_A4
+    Admin --> UC_A5
+    Admin --> UC_C7
 ```
 
 ---
 
-## 6.2. Danh mục 13 Ca Sử dụng Hệ thống (UC-01 – UC-13)
+## 6.2. Danh mục 16 Ca Sử dụng Hệ thống (UC-01 – UC-16)
 
 | Mã Use Case | Tên Ca Sử Dụng | Tác nhân Chính | Mô tả Tóm tắt |
 | :---: | :--- | :--- | :--- |
@@ -554,6 +579,9 @@ graph LR
 | **`UC-11`** | **Can thiệp Xử lý Sự cố Cuốc xe**| Operator, Admin | Gán đè tài xế thay thế hoặc hủy cuốc khẩn cấp khi có sự cố. |
 | **`UC-12`** | **Kiểm duyệt Hồ sơ Tài xế & Xe** | Admin | Phê duyệt/từ chối hồ sơ bằng lái và phương tiện của tài xế mới. |
 | **`UC-13`** | **Báo cáo Thống kê & Doanh thu** | Admin | Xem biểu đồ doanh thu, số lượng chuyến đi, tỷ lệ hoàn thành cuốc. |
+| **`UC-14`** | **Đăng ký & Xác thực Tài khoản** | Customer, Driver | Đăng ký tài khoản mới qua SĐT/OTP, xác thực thông tin và đăng nhập cấp cặp JWT Token. |
+| **`UC-15`** | **Quản lý Hồ sơ & Tài khoản Khách hàng (CRUD Profile)** | Customer, Admin | Khách xem/cập nhật thông tin cá nhân, đổi mật khẩu, hủy tài khoản; Admin quản lý danh sách, xem chi tiết, khóa/xóa tài khoản khách hàng. |
+| **`UC-16`** | **Quản lý Cấu hình Biểu phí Vận hành (Fare Rules CRUD)** | Admin | Tạo, tra cứu danh sách, cập nhật giá mở cửa, giá/km và xóa cấu hình biểu phí các loại phương tiện. |
 
 ---
 
@@ -1307,6 +1335,9 @@ graph LR
 | `BG_04` | `BR_04` | `BPMN-06`: Giám sát Đội xe trên Bản đồ Số | `SR_23`: Giám sát Bản đồ Vận hành | `UC-10` | `AC-SR_23`, `AC-BR_04` |
 | `BG_04`, `BG_05` | `BR_04`, `BR_08` | `BPMN-06`: Điều xe Cứu hộ / Hủy Cuốc Khẩn cấp | `SR_24`: Xử lý Sự cố Chuyến đi | `UC-11` | `AC-SR_24`, `AC-BR_04`, `AC-BR_08` |
 | `BG_04`, `BG_05` | `BR_04`, `BR_10` | `BPMN-08`: Ghi Audit Log & Dashboard Báo cáo | `SR_25`: Kiểm toán & Báo cáo Thống kê | `UC-13` | `AC-SR_25`, `AC-BR_10` |
+| `BG_05` | `BR_05` | `BPMN-07`: Đăng ký & Xác thực Tài khoản | `SR_01`, `SR_02`: Đăng ký & Cấp quyền JWT | `UC-14` | `AC-SR_01`, `AC-SR_02` |
+| `BG_05` | `BR_05`, `BR_10` | `BPMN-07`: Quản lý Hồ sơ Khách hàng CRUD | `SR_01`, `SR_03`: Quản lý Hồ sơ & Trạng thái | `UC-15` | `AC-SR_01`, `AC-BR_05` |
+| `BG_03` | `BR_03` | `BPMN-01`: Cấu hình Biểu phí Vận hành | `SR_07`: Ước tính Giá cước & Biểu phí | `UC-16` | `AC-SR_07`, `AC-BR_03` |
 
 ### 11.6.2. Sơ đồ Chuỗi Phân rã & Truy vết Nghiệp vụ (Traceability Flow)
 

@@ -1,205 +1,434 @@
 openapi: 3.0.3
 info:
-  title: CAB System - Dịch vụ Định danh & Xác thực (User & Auth Service)
-  description: |
-    Microservice phụ trách định danh, đăng ký, đăng nhập và phân quyền đa vai trò (RBAC) theo kiến trúc SOA.
-    - Miền nghiệp vụ: Generic Domain (SRS Mục 2.2.1 - STT 1)
-    - Yêu cầu cốt lõi (In-Scope): Đăng ký SĐT/OTP, đăng nhập JWT, phân quyền RBAC (Khách hàng, Tài xế, Operator, Admin).
-    - Giới hạn phạm vi: Không lưu mật khẩu thô (băm BCrypt cost >= 10 theo NFR_07).
-  version: 1.0.0
+  title: "CAB System - Dịch vụ Định danh & Xác thực (User & Auth Service)"
+  description: "Microservice phụ trách định danh, đăng ký, đăng nhập và phân quyền đa vai trò (RBAC) cùng toàn bộ nghiệp vụ CRUD Quản lý Hồ sơ Khách hàng và Tài xế theo tài liệu SRS.md (SR_01, SR_02, SR_03, BR_05, UC-14, UC-15)."
+  version: "1.0.0"
   contact:
     name: "Nguyễn Đình Hảo (MSSV: 22713431)"
-    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+    url: "https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git"
 servers:
-  - url: https://api.cabsystem.vn/api/v1/auth
-    description: Production Auth Server
-  - url: http://localhost:8081/api/v1/auth
-    description: Local Auth Service
+  - url: "https://api.cabsystem.vn/api/v1/auth"
+    description: "Production Auth Server"
+  - url: "http://localhost:8081/api/v1/auth"
+    description: "Local Auth Service"
+
 security:
   - bearerAuth: []
+
 tags:
-  - name: Authentication
-    description: Đăng ký tài khoản, xác thực mã OTP và đăng nhập JWT (SR_01, SR_02)
-  - name: User Profile
-    description: Quản lý hồ sơ cá nhân người dùng và phân quyền RBAC
+  - name: "Authentication"
+    description: "Đăng ký tài khoản (Create), xác thực OTP và đăng nhập JWT (SR_01, SR_02)"
+  - name: "User Profile (Customer CRUD)"
+    description: "Khách hàng xem, cập nhật thông tin cá nhân, đổi mật khẩu và hủy tài khoản (Read, Update, Delete Profile)"
+  - name: "Admin Customer Management"
+    description: "Quản trị viên quản lý danh sách, xem chi tiết, khóa và xóa tài khoản khách hàng (Admin CRUD)"
+  - name: "Admin Driver Management"
+    description: "Quản trị viên duyệt hồ sơ, xem danh sách và cập nhật trạng thái tài xế (SR_03, BR_04)"
+
 paths:
   /register/customer:
     post:
       tags:
-        - Authentication
-      summary: Đăng ký tài khoản Khách hàng mới (SR_01)
+        - "Authentication"
+      summary: "Đăng ký tài khoản Khách hàng mới (Create Customer - SR_01, UC-14)"
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - phone_number
-                - full_name
-                - password
+                - "phone_number"
+                - "full_name"
+                - "password"
               properties:
                 phone_number:
-                  type: string
+                  type: "string"
                   example: "0912345678"
                 full_name:
-                  type: string
+                  type: "string"
                   example: "Nguyễn Văn An"
                 email:
-                  type: string
-                  format: email
+                  type: "string"
+                  format: "email"
                   example: "vanan@example.com"
                 password:
-                  type: string
-                  format: password
+                  type: "string"
+                  format: "password"
                   minLength: 8
                   example: "Password@123"
       responses:
-        '201':
-          description: Đăng ký thành công, mã OTP đã được gửi
+        "201":
+          description: "Đăng ký thành công, mã OTP xác thực đã được gửi"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
                 properties:
                   user_id:
-                    type: string
-                    format: uuid
+                    type: "string"
+                    format: "uuid"
                   message:
-                    type: string
-                    example: "Đăng ký bước đầu thành công. Vui lòng xác thực mã OTP."
+                    type: "string"
+                    example: "Đăng ký tài khoản thành công. Vui lòng xác thực mã OTP."
+
   /register/driver:
     post:
       tags:
-        - Authentication
-      summary: Đăng ký tài khoản Tài xế và nộp giấy phép lái xe (SR_01, BRULE_06)
+        - "Authentication"
+      summary: "Đăng ký tài khoản Tài xế và nộp giấy phép lái xe (Create Driver - SR_01, SR_03)"
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - phone_number
-                - full_name
-                - password
-                - license_number
-                - license_class
-                - license_expiry_date
+                - "phone_number"
+                - "full_name"
+                - "password"
+                - "license_number"
+                - "license_class"
+                - "license_expiry_date"
               properties:
                 phone_number:
-                  type: string
+                  type: "string"
                   example: "0987654321"
                 full_name:
-                  type: string
+                  type: "string"
                   example: "Trần Văn Bình"
                 password:
-                  type: string
-                  format: password
+                  type: "string"
+                  format: "password"
+                  minLength: 8
+                  example: "Password@123"
                 license_number:
-                  type: string
+                  type: "string"
                   example: "790123456789"
                 license_class:
-                  type: string
-                  enum: [A1, B2, C]
+                  type: "string"
+                  enum: ["A1", "B2", "C"]
                   example: "B2"
                 license_expiry_date:
-                  type: string
-                  format: date
-                  description: "Thời hạn bằng lái còn lại phải trên 6 tháng theo BRULE_06"
+                  type: "string"
+                  format: "date"
                   example: "2028-12-31"
       responses:
-        '201':
-          description: Nộp hồ sơ thành công, trạng thái PENDING_APPROVAL
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  driver_id:
-                    type: string
-                    format: uuid
-                  status:
-                    type: string
-                    example: "PENDING_APPROVAL"
+        "201":
+          description: "Hồ sơ tài xế đã nộp thành công, chờ phê duyệt (PENDING_APPROVAL)"
+
   /login:
     post:
       tags:
-        - Authentication
-      summary: Đăng nhập hệ thống & Cấp JWT Token (SR_02)
+        - "Authentication"
+      summary: "Xác thực đăng nhập và cấp cặp JWT Token Stateless (SR_02, BR_05)"
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - username
-                - password
+                - "phone_number"
+                - "password"
               properties:
-                username:
-                  type: string
-                  description: "Số điện thoại hoặc email đăng nhập"
+                phone_number:
+                  type: "string"
                   example: "0912345678"
                 password:
-                  type: string
-                  format: password
+                  type: "string"
+                  format: "password"
                   example: "Password@123"
       responses:
-        '200':
-          description: Đăng nhập thành công, trả về Access Token và Refresh Token
+        "200":
+          description: "Đăng nhập thành công, trả về Access Token và Refresh Token"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
                 properties:
                   access_token:
-                    type: string
+                    type: "string"
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   refresh_token:
-                    type: string
+                    type: "string"
                   role:
-                    type: string
-                    enum: [CUSTOMER, DRIVER, OPERATOR, ADMIN]
+                    type: "string"
+                    enum: ["CUSTOMER", "DRIVER", "OPERATOR", "ADMIN"]
                     example: "CUSTOMER"
                   expires_in_seconds:
-                    type: integer
+                    type: "integer"
                     example: 86400
+
   /profile/me:
     get:
       tags:
-        - User Profile
-      summary: Lấy thông tin hồ sơ của tài khoản hiện tại
+        - "User Profile (Customer CRUD)"
+      summary: "Xem thông tin hồ sơ cá nhân hiện tại (Read Profile - UC-15)"
       responses:
-        '200':
-          description: Thông tin hồ sơ
+        "200":
+          description: "Thông tin hồ sơ người dùng"
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user_id:
-                    type: string
-                    format: uuid
-                  full_name:
-                    type: string
-                    example: "Nguyễn Văn An"
-                  phone_number:
-                    type: string
-                    description: "Số điện thoại đã che 4 số giữa theo BRULE_08"
-                    example: "091****678"
-                  role:
-                    type: string
-                    example: "CUSTOMER"
-                  status:
-                    type: string
-                    example: "ACTIVE"
+                $ref: "#/components/schemas/UserProfileResponse"
+        "401":
+          description: "Chưa xác thực hoặc token không hợp lệ"
+
+    put:
+      tags:
+        - "User Profile (Customer CRUD)"
+      summary: "Cập nhật thông tin hồ sơ cá nhân (Update Profile - UC-15)"
+      description: "Khách hàng cập nhật họ tên, email, ảnh đại diện cá nhân."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: "Cập nhật thông tin thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileResponse"
+        "400":
+          description: "Dữ liệu cập nhật không hợp lệ"
+
+    delete:
+      tags:
+        - "User Profile (Customer CRUD)"
+      summary: "Khách hàng tự yêu cầu hủy / xóa tài khoản (Delete Profile / Soft Delete - UC-15)"
+      description: "Đánh dấu tài khoản vào trạng thái DEACTIVATED và xóa thông tin phiên đăng nhập."
+      responses:
+        "200":
+          description: "Tài khoản đã được hủy kích hoạt thành công"
+
+  /profile/change-password:
+    post:
+      tags:
+        - "User Profile (Customer CRUD)"
+      summary: "Đổi mật khẩu người dùng (Update Password - UC-15)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "old_password"
+                - "new_password"
+              properties:
+                old_password:
+                  type: "string"
+                  format: "password"
+                  example: "Password@123"
+                new_password:
+                  type: "string"
+                  format: "password"
+                  minLength: 8
+                  example: "NewPassword@456"
+      responses:
+        "200":
+          description: "Mật khẩu đã được thay đổi thành công"
+        "400":
+          description: "Mật khẩu cũ không chính xác hoặc mật khẩu mới không đạt chuẩn bảo mật"
+
+  /admin/customers:
+    get:
+      tags:
+        - "Admin Customer Management"
+      summary: "Admin truy vấn danh sách khách hàng (Read Customer List - UC-15)"
+      description: "Phân trang danh sách khách hàng, hỗ trợ lọc theo trạng thái (ACTIVE/LOCKED) và tìm kiếm theo SĐT/Tên."
+      parameters:
+        - name: "page"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          schema:
+            type: "integer"
+            default: 20
+        - name: "status"
+          in: "query"
+          schema:
+            type: "string"
+            enum: ["ACTIVE", "LOCKED", "DEACTIVATED"]
+        - name: "search"
+          in: "query"
+          schema:
+            type: "string"
+            description: "Tìm theo họ tên hoặc SĐT"
+      responses:
+        "200":
+          description: "Danh sách khách hàng có phân trang"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerListResponse"
+
+  /admin/customers/{customerId}:
+    get:
+      tags:
+        - "Admin Customer Management"
+      summary: "Admin xem chi tiết một khách hàng (Read Customer Detail - UC-15)"
+      parameters:
+        - name: "customerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Chi tiết thông tin khách hàng"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileResponse"
+        "404":
+          description: "Không tìm thấy khách hàng"
+
+    put:
+      tags:
+        - "Admin Customer Management"
+      summary: "Admin cập nhật thông tin khách hàng (Update Customer - UC-15)"
+      parameters:
+        - name: "customerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: "Thông tin khách hàng đã được Admin cập nhật"
+
+    delete:
+      tags:
+        - "Admin Customer Management"
+      summary: "Admin xóa tài khoản khách hàng (Delete Customer / Soft Delete - UC-15)"
+      parameters:
+        - name: "customerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Khách hàng đã bị xóa khỏi hệ thống"
+
+  /admin/customers/{customerId}/status:
+    patch:
+      tags:
+        - "Admin Customer Management"
+      summary: "Admin khóa hoặc kích hoạt tài khoản khách hàng (Update Status - UC-15)"
+      parameters:
+        - name: "customerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              required:
+                - "status"
+              properties:
+                status:
+                  type: "string"
+                  enum: ["ACTIVE", "LOCKED"]
+                  example: "LOCKED"
+                reason:
+                  type: "string"
+                  example: "Tài khoản có dấu hiệu đặt ảo liên tục"
+      responses:
+        "200":
+          description: "Cập nhật trạng thái tài khoản thành công"
+
 components:
   securitySchemes:
     bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    UserProfileResponse:
+      type: "object"
+      properties:
+        user_id:
+          type: "string"
+          format: "uuid"
+        full_name:
+          type: "string"
+          example: "Nguyễn Văn An"
+        phone_number:
+          type: "string"
+          description: "Số điện thoại đã che 4 số giữa theo BRULE_08"
+          example: "091****678"
+        email:
+          type: "string"
+          example: "vanan@example.com"
+        avatar_url:
+          type: "string"
+          example: "https://cdn.cabsystem.vn/avatars/user123.jpg"
+        role:
+          type: "string"
+          enum: ["CUSTOMER", "DRIVER", "OPERATOR", "ADMIN"]
+          example: "CUSTOMER"
+        status:
+          type: "string"
+          enum: ["ACTIVE", "LOCKED", "PENDING_APPROVAL", "DEACTIVATED"]
+          example: "ACTIVE"
+        created_at:
+          type: "string"
+          format: "date-time"
+
+    UpdateProfileRequest:
+      type: "object"
+      properties:
+        full_name:
+          type: "string"
+          example: "Nguyễn Văn An Cập Nhật"
+        email:
+          type: "string"
+          format: "email"
+          example: "vanan.new@example.com"
+        avatar_url:
+          type: "string"
+          example: "https://cdn.cabsystem.vn/avatars/new_avatar.jpg"
+
+    CustomerListResponse:
+      type: "object"
+      properties:
+        total:
+          type: "integer"
+          example: 150
+        page:
+          type: "integer"
+          example: 1
+        limit:
+          type: "integer"
+          example: 20
+        items:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/UserProfileResponse"

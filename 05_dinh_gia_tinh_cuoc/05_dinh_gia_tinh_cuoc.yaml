@@ -1,128 +1,266 @@
 openapi: 3.0.3
 info:
-  title: CAB System - Dịch vụ Định giá & Tính cước (Pricing & Billing Service)
-  description: |
-    Microservice phụ trách công thức định giá tạm tính và quyết toán cước phí chính thức.
-    - Miền nghiệp vụ: Core Domain (SRS Mục 2.2.1 - STT 5)
-    - Yêu cầu cốt lõi (In-Scope): Áp dụng công thức biểu phí chuẩn (BRULE_03) và phụ phí cao điểm/ban đêm (BRULE_04).
-    - Giới hạn phạm vi: Không áp dụng thuật toán AI dự đoán thời tiết phức tạp (dùng bảng phụ phí cố định theo giờ theo SRS Mục 2.3.3).
-  version: 1.0.0
+  title: "CAB System - Dịch vụ Định giá & Tính cước (Pricing & Billing Service)"
+  description: "Microservice phụ trách công thức định giá tạm tính, quyết toán cước phí và toàn bộ CRUD Quản lý Biểu phí Vận hành (Fare Rules CRUD) theo tài liệu SRS.md (SR_07, SR_15, BRULE_03, BRULE_04, UC-16)."
+  version: "1.0.0"
   contact:
     name: "Nguyễn Đình Hảo (MSSV: 22713431)"
-    url: https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git
+    url: "https://github.com/NguyenDinhHao1709/22713431_NguyenDinhHao_CABSYSTEM.git"
 servers:
-  - url: https://api.cabsystem.vn/api/v1/pricing
-    description: Production Pricing Server
-  - url: http://localhost:8085/api/v1/pricing
-    description: Local Pricing Service
+  - url: "https://api.cabsystem.vn/api/v1/pricing"
+    description: "Production Pricing Server"
+  - url: "http://localhost:8085/api/v1/pricing"
+    description: "Local Pricing Service"
+
 security:
   - bearerAuth: []
+
 tags:
-  - name: Fare Estimation
-    description: Tính cước phí tạm tính cho khách hàng trước khi đặt xe (SR_07)
-  - name: Final Settlement
-    description: Quyết toán cước phí thực tế sau khi hoàn thành chuyến đi (SR_15)
+  - name: "Fare Estimation & Settlement"
+    description: "Ước tính cước ban đầu và quyết toán cước phí thực tế dựa trên GPS (SR_07, SR_15)"
+  - name: "Fare Configuration CRUD (Admin)"
+    description: "Quản trị viên cấu hình biểu phí giá mở cửa, giá/km và hệ số giờ cao điểm (Create, Read, Update, Delete Fare Rules - UC-16)"
+
 paths:
   /pricing/estimate:
     post:
       tags:
-        - Fare Estimation
-      summary: Ước tính cước phí trước chuyến đi (SR_07, BRULE_03, BRULE_04)
-      description: |
-        Tính cước theo công thức:
-        `EstimatedFare = (BasePrice + max(0, Distance - 2) * PricePerKm) * SurgeMultiplier`
+        - "Fare Estimation & Settlement"
+      summary: "Ước tính cước phí trước chuyến đi (SR_07, BRULE_03, BRULE_04)"
+      description: "Tính cước theo công thức: EstimatedFare = (BasePrice + max(0, Distance - 2) * PricePerKm) * SurgeMultiplier"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - distance_km
-                - vehicle_type
+                - "distance_km"
+                - "vehicle_type"
               properties:
                 distance_km:
-                  type: number
-                  format: float
+                  type: "number"
+                  format: "float"
                   example: 7.5
                 vehicle_type:
-                  type: string
-                  enum: [BIKE, CAR_4, CAR_7]
+                  type: "string"
+                  enum: ["BIKE", "CAR_4", "CAR_7"]
                   example: "CAR_4"
                 booking_hour:
-                  type: integer
+                  type: "integer"
                   description: "Giờ đặt xe (0-23) để áp dụng hệ số cao điểm"
                   example: 17
       responses:
-        '200':
-          description: Cước phí tạm tính
+        "200":
+          description: "Cước phí tạm tính"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
                 properties:
-                  vehicle_type:
-                    type: string
-                    example: "CAR_4"
                   estimated_fare:
-                    type: number
-                    example: 105900.0
+                    type: "number"
+                    example: 85000.0
+                  base_price:
+                    type: "number"
+                    example: 25000.0
                   surge_multiplier:
-                    type: number
+                    type: "number"
                     example: 1.2
-                  surge_reason:
-                    type: string
-                    example: "Giờ cao điểm chiều (17h00 - 19h00)"
+                  eta_pickup_minutes:
+                    type: "integer"
+                    example: 4
+
   /pricing/finalize:
     post:
       tags:
-        - Final Settlement
-      summary: Chốt cước phí thực tế dựa trên lộ trình GPS (SR_15)
+        - "Fare Estimation & Settlement"
+      summary: "Quyết toán cước phí chính thức sau khi hoàn thành chuyến đi (SR_15)"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              type: "object"
               required:
-                - trip_id
-                - actual_distance_km
-                - vehicle_type
+                - "trip_id"
+                - "actual_distance_km"
+                - "vehicle_type"
               properties:
                 trip_id:
-                  type: string
-                  format: uuid
+                  type: "string"
+                  format: "uuid"
                 actual_distance_km:
-                  type: number
+                  type: "number"
                   example: 7.8
                 vehicle_type:
-                  type: string
-                  enum: [BIKE, CAR_4, CAR_7]
-                  example: "CAR_4"
-                waiting_minutes:
-                  type: integer
-                  default: 0
-                  example: 3
+                  type: "string"
+                  enum: ["BIKE", "CAR_4", "CAR_7"]
+                waiting_time_minutes:
+                  type: "integer"
+                  example: 5
       responses:
-        '200':
-          description: Cước phí thực tế chốt sau chuyến đi
+        "200":
+          description: "Cước phí quyết toán cuối cùng"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
                 properties:
                   trip_id:
-                    type: string
-                    format: uuid
-                  actual_fare:
-                    type: number
-                    example: 109000.0
-                  waiting_fee:
-                    type: number
-                    example: 0.0
+                    type: "string"
+                    format: "uuid"
+                  final_fare:
+                    type: "number"
+                    example: 88500.0
+
+  /pricing/fare-rules:
+    get:
+      tags:
+        - "Fare Configuration CRUD (Admin)"
+      summary: "Xem danh sách các biểu phí cấu hình hiện có (Read Fare Rules - UC-16)"
+      responses:
+        "200":
+          description: "Danh sách biểu phí các loại xe"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/FareRuleItem"
+
+    post:
+      tags:
+        - "Fare Configuration CRUD (Admin)"
+      summary: "Tạo cấu hình biểu phí mới cho dịch vụ/loại xe (Create Fare Rule - UC-16)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FareRuleRequest"
+      responses:
+        "201":
+          description: "Biểu phí được tạo thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FareRuleItem"
+
+  /pricing/fare-rules/{ruleId}:
+    get:
+      tags:
+        - "Fare Configuration CRUD (Admin)"
+      summary: "Xem chi tiết một cấu hình biểu phí (Read Detail - UC-16)"
+      parameters:
+        - name: "ruleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FareRuleItem"
+
+    put:
+      tags:
+        - "Fare Configuration CRUD (Admin)"
+      summary: "Cập nhật thông tin biểu phí cước (Update Fare Rule - UC-16)"
+      parameters:
+        - name: "ruleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FareRuleRequest"
+      responses:
+        "200":
+          description: "Cập nhật biểu phí thành công"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FareRuleItem"
+
+    delete:
+      tags:
+        - "Fare Configuration CRUD (Admin)"
+      summary: "Xóa cấu hình biểu phí (Delete Fare Rule - UC-16)"
+      parameters:
+        - name: "ruleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Biểu phí đã được xóa thành công"
+
 components:
   securitySchemes:
     bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+
+  schemas:
+    FareRuleRequest:
+      type: "object"
+      required:
+        - "vehicle_type"
+        - "base_fare"
+        - "price_per_km"
+      properties:
+        vehicle_type:
+          type: "string"
+          enum: ["BIKE", "CAR_4", "CAR_7"]
+          example: "CAR_4"
+        base_fare:
+          type: "number"
+          example: 25000.0
+          description: "Giá mở cửa 2km đầu tiên"
+        price_per_km:
+          type: "number"
+          example: 10000.0
+          description: "Giá mỗi km tiếp theo"
+        peak_hour_multiplier:
+          type: "number"
+          example: 1.2
+        night_multiplier:
+          type: "number"
+          example: 1.15
+
+    FareRuleItem:
+      type: "object"
+      properties:
+        rule_id:
+          type: "string"
+          format: "uuid"
+        vehicle_type:
+          type: "string"
+          example: "CAR_4"
+        base_fare:
+          type: "number"
+          example: 25000.0
+        price_per_km:
+          type: "number"
+          example: 10000.0
+        peak_hour_multiplier:
+          type: "number"
+          example: 1.2
+        night_multiplier:
+          type: "number"
+          example: 1.15
+        updated_at:
+          type: "string"
+          format: "date-time"
